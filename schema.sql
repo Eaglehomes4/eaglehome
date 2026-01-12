@@ -4,6 +4,20 @@ CREATE TABLE buildings (
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL, -- This will be hashed for security
+    role ENUM('owner', 'secretary') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert the initial users
+INSERT INTO users (username, password, role) VALUES 
+('owner_admin', 'Eagles2026!', 'owner'),
+('secretary_entry', 'Secret2026!', 'secretary');
+
+);
 
 -- Create the Houses/Tenants Table
 CREATE TABLE houses (
