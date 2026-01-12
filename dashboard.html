@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | EAGLES HOME</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .sidebar-item-active { background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900" x-data="{ userRole: 'owner', activeTab: 'overview' }">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-600 p-1.5 rounded-lg text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight">EAGLES HOME</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <p class="text-xs font-bold text-slate-400 uppercase px-2 mb-4">Main Menu</p>
+                
+                <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'sidebar-item-active' : ''" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Dashboard
+                </button>
+
+                <button @click="activeTab = 'utilities'" :class="activeTab === 'utilities' ? 'sidebar-item-active' : ''" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Utility Entry
+                </button>
+
+                <template x-if="userRole === 'owner'">
+                    <div class="pt-6">
+                        <p class="text-xs font-bold text-slate-400 uppercase px-2 mb-4">Administration</p>
+                        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            Reports
+                        </button>
+                    </div>
+                </template>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50">
+                <select x-model="userRole" class="text-xs w-full p-2 border border-slate-200 rounded-md bg-white">
+                    <option value="owner">Logged as: Owner</option>
+                    <option value="secretary">Logged as: Secretary</option>
+                </select>
+                <a href="index.html" class="mt-4 flex items-center justify-center gap-2 w-full bg-red-50 text-red-600 py-2.5 rounded-xl font-bold hover:bg-red-100 transition">
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8">
+            
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-slate-900" x-text="activeTab === 'overview' ? 'Command Center' : 'Digital Utility Ledger'"></h1>
+                    <p class="text-slate-500 font-medium">EAGLES HOME Portfolio • January 2026</p>
+                </div>
+                <template x-if="userRole === 'owner'">
+                    <button class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition">
+                        Lock Month Data
+                    </button>
+                </template>
+            </header>
+
+            <div x-show="activeTab === 'overview'">
+                
+                <template x-if="userRole === 'owner'">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Expected</p>
+                            <h3 class="text-2xl font-black">KES 1.2M</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                            <p class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-2">Total Collected</p>
+                            <h3 class="text-2xl font-black">KES 840,500</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-orange-400">
+                            <p class="text-orange-500 text-xs font-bold uppercase tracking-wider mb-2">Total Arrears</p>
+                            <h3 class="text-2xl font-black">KES 350,200</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-400">
+                            <p class="text-emerald-500 text-xs font-bold uppercase tracking-wider mb-2">Total Credits</p>
+                            <h3 class="text-2xl font-black">KES 45,000</h3>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <h4 class="font-bold text-lg">Portfolio Summary</h4>
+                        <input type="text" placeholder="Search buildings..." class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase">
+                            <tr>
+                                <th class="p-6">Building Name</th>
+                                <th class="p-6">Units</th>
+                                <th class="p-6">Collection Status</th>
+                                <th class="p-6">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-6">
+                                    <div class="font-bold text-slate-900 leading-tight">Josphine Njambi</div>
+                                    <div class="text-xs text-slate-400">JN-Series Reference</div>
+                                </td>
+                                <td class="p-6 text-slate-600 font-medium">54 Units</td>
+                                <td class="p-6">
+                                    <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">92% Collected</span>
+                                </td>
+                                <td class="p-6">
+                                    <button class="text-blue-600 font-bold hover:underline">View Ledger</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-6">
+                                    <div class="font-bold text-slate-900 leading-tight">Rosalia House</div>
+                                    <div class="text-xs text-slate-400">RH-Series Reference</div>
+                                </td>
+                                <td class="p-6 text-slate-600 font-medium">16 Units</td>
+                                <td class="p-6">
+                                    <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">65% Collected</span>
+                                </td>
+                                <td class="p-6">
+                                    <button class="text-blue-600 font-bold hover:underline">View Ledger</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'utilities'">
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-8 bg-blue-600 text-white">
+                        <h3 class="text-xl font-bold">Input Charges</h3>
+                        <p class="text-blue-100 text-sm">Secretary entry for water, electricity, and garbage.</p>
+                    </div>
+                    <div class="p-6 overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-100">
+                                    <th class="pb-4 text-left">House Code</th>
+                                    <th class="pb-4 text-left">Tenant Name</th>
+                                    <th class="pb-4 text-left">Water (KES)</th>
+                                    <th class="pb-4 text-left">Electricity (KES)</th>
+                                    <th class="pb-4 text-left">Garbage</th>
+                                    <th class="pb-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <tr class="group">
+                                    <td class="py-5 font-mono text-blue-600 font-bold">JN-01</td>
+                                    <td class="py-5 font-medium">Hezron Maina</td>
+                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5 text-slate-400">200.00</td>
+                                    <td class="py-5 text-center">
+                                        <button class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-5 font-mono text-blue-600 font-bold">RH-04</td>
+                                    <td class="py-5 font-medium">Simon Ndungu</td>
+                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5 text-slate-400">200.00</td>
+                                    <td class="py-5 text-center">
+                                        <button class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>
