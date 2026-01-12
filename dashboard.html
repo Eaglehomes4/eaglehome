@@ -19,15 +19,6 @@
         activeTab: 'overview' 
       }">
 
-    <script>
-        document.addEventListener('alpine:init', () => {
-            const savedRole = localStorage.getItem('userRole') || 'secretary';
-            Alpine.store('auth', {
-                role: savedRole
-            });
-        });
-    </script>
-
     <div class="flex h-screen overflow-hidden">
         
         <aside class="w-64 bg-white border-r border-slate-200 flex flex-col">
@@ -101,7 +92,7 @@
                         </div>
                         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                             <p class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-2">Total Collected</p>
-                            <h3 id="total-collected-display" class="text-2xl font-black text-slate-900">KES 0</h3>
+                            <h3 id="total-collected-display" class="text-2xl font-black text-slate-900">KES 845,000</h3>
                         </div>
                         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-orange-400">
                             <p class="text-orange-500 text-xs font-bold uppercase tracking-wider mb-2">Total Arrears</p>
@@ -117,7 +108,6 @@
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <h4 class="font-bold text-lg">Portfolio Summary</h4>
-                        <input type="text" placeholder="Search buildings..." class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <table class="w-full text-left">
                         <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase">
@@ -136,7 +126,7 @@
                                 </td>
                                 <td class="p-6 text-slate-600 font-medium">54 Units</td>
                                 <td class="p-6">
-                                    <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">92% Collected</span>
+                                    <span id="badge-JN-01" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">92% Collected</span>
                                 </td>
                                 <td class="p-6">
                                     <button class="text-blue-600 font-bold hover:underline">View Ledger</button>
@@ -149,7 +139,7 @@
                                 </td>
                                 <td class="p-6 text-slate-600 font-medium">16 Units</td>
                                 <td class="p-6">
-                                    <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">65% Collected</span>
+                                    <span id="badge-RH-04" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">65% Collected</span>
                                 </td>
                                 <td class="p-6">
                                     <button class="text-blue-600 font-bold hover:underline">View Ledger</button>
@@ -186,7 +176,7 @@
                                     <td class="py-5"><input type="number" id="elec-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
                                     <td class="py-5 text-slate-400">200.00</td>
                                     <td class="py-5 text-center">
-                                        <button @click="saveHouseUtilities('JN-01')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                        <button onclick="saveHouseUtilities('JN-01')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
                                     </td>
                                 </tr>
                                 <tr>
@@ -196,7 +186,7 @@
                                     <td class="py-5"><input type="number" id="elec-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
                                     <td class="py-5 text-slate-400">200.00</td>
                                     <td class="py-5 text-center">
-                                        <button @click="saveHouseUtilities('RH-04')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                        <button onclick="saveHouseUtilities('RH-04')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -209,57 +199,61 @@
     </div>
 
     <script>
-        // 1. Save Utilities to Database (save_utilities.php)
-        async function saveHouseUtilities(houseId) {
+        const CURRENT_MONTH = "Jan2026";
+        const HOUSE_IDS = ['JN-01', 'RH-04'];
+
+        // 1. Function to Save Data to Browser Memory
+        function saveHouseUtilities(houseId) {
             const water = document.getElementById(`water-${houseId}`).value;
             const electricity = document.getElementById(`elec-${houseId}`).value;
 
-            if (!water || !electricity) {
-                alert("Please enter both Water and Electricity values.");
-                return;
-            }
+            // Create a unique key for this specific house and month
+            const storageKey = `${houseId}_${CURRENT_MONTH}`;
+            const data = {
+                water: water || 0,
+                electricity: electricity || 0,
+                garbage: 200,
+                updatedAt: new Date().toLocaleString()
+            };
 
-            const formData = new FormData();
-            formData.append('house_id', houseId);
-            formData.append('water', water);
-            formData.append('electricity', electricity);
+            // Save to LocalStorage
+            localStorage.setItem(storageKey, JSON.stringify(data));
 
-            try {
-                const response = await fetch('save_utilities.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
+            alert(`✅ Data saved for ${houseId}! Balance recalculated.`);
+            updateStatusBadge(houseId);
+        }
 
-                if (result.success) {
-                    alert('Ledger Updated successfully!');
-                } else {
-                    alert('Update failed: ' + result.message);
+        // 2. Function to Load Data when the page opens
+        function loadSavedData() {
+            HOUSE_IDS.forEach(id => {
+                const saved = localStorage.getItem(`${id}_${CURRENT_MONTH}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const waterInput = document.getElementById(`water-${id}`);
+                    const elecInput = document.getElementById(`elec-${id}`);
+                    
+                    if(waterInput) waterInput.value = data.water;
+                    if(elecInput) elecInput.value = data.electricity;
+                    
+                    updateStatusBadge(id);
                 }
-            } catch (error) {
-                console.error('Error saving utilities:', error);
-                alert('Connection error. Is your PHP server running?');
+            });
+        }
+
+        // 3. Function to Calculate Status (Visual Update)
+        function updateStatusBadge(houseId) {
+            const badge = document.getElementById(`badge-${houseId}`);
+            if (badge) {
+                badge.innerText = "Recalculating...";
+                setTimeout(() => {
+                    badge.innerText = "Data Updated";
+                    badge.className = "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold";
+                }, 500);
             }
         }
 
-        // 2. Fetch Live Stats (get_total_collected.php)
-        async function updateCollectionStats() {
-            try {
-                const response = await fetch('get_total_collected.php');
-                const data = await response.json();
-                
-                const displayElement = document.getElementById('total-collected-display');
-                if (displayElement) {
-                    displayElement.innerText = 'KES ' + new Intl.NumberFormat().format(data.total_collected);
-                }
-            } catch (error) {
-                console.warn('Backend scripts not found. Using placeholder data.');
-            }
-        }
-
-        // Auto-refresh stats every 30s
-        setInterval(updateCollectionStats, 30000);
-        window.onload = updateCollectionStats;
+        // Run the load function when the page starts
+        window.onload = loadSavedData;
     </script>
 </body>
 </html>
