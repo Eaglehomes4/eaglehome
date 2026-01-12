@@ -83,10 +83,12 @@
                             <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Expected</p>
                             <h3 class="text-2xl font-black">KES 1.2M</h3>
                         </div>
+                        
                         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                             <p class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-2">Total Collected</p>
-                            <h3 class="text-2xl font-black">KES 840,500</h3>
+                            <h3 id="total-collected-display" class="text-2xl font-black text-slate-900">KES 0</h3>
                         </div>
+
                         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-orange-400">
                             <p class="text-orange-500 text-xs font-bold uppercase tracking-wider mb-2">Total Arrears</p>
                             <h3 class="text-2xl font-black">KES 350,200</h3>
@@ -192,5 +194,31 @@
         </main>
     </div>
 
+    <script>
+        // Function to fetch the latest collection total from the bank API records
+        async function updateCollectionStats() {
+            try {
+                // Ensure get_total_collected.php exists and returns { "total_collected": 12345 }
+                const response = await fetch('get_total_collected.php');
+                const data = await response.json();
+                
+                // Find the element on your dashboard that shows "Total Collected"
+                const displayElement = document.getElementById('total-collected-display');
+                
+                if (displayElement) {
+                    // Format the number to KES currency style (e.g., KES 840,500)
+                    displayElement.innerText = 'KES ' + new Intl.NumberFormat().format(data.total_collected);
+                }
+            } catch (error) {
+                console.error('Error fetching bank data:', error);
+            }
+        }
+
+        // Check for new payments every 30 seconds
+        setInterval(updateCollectionStats, 30000);
+
+        // Also check once immediately when the page loads
+        window.onload = updateCollectionStats;
+    </script>
 </body>
 </html>
