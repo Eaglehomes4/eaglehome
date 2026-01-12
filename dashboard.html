@@ -15,7 +15,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900" 
       x-data="{ 
-        userRole: localStorage.getItem('userRole') || 'secretary', 
+        userRole: localStorage.getItem('userRole') || 'owner', 
         activeTab: 'overview' 
       }">
 
@@ -63,9 +63,9 @@
                     <option value="owner">Logged as: Owner</option>
                     <option value="secretary">Logged as: Secretary</option>
                 </select>
-                <a href="index.html" class="flex items-center justify-center gap-2 w-full bg-red-50 text-red-600 py-2.5 rounded-xl font-bold hover:bg-red-100 transition">
+                <button class="flex items-center justify-center gap-2 w-full bg-red-50 text-red-600 py-2.5 rounded-xl font-bold hover:bg-red-100 transition">
                     Logout
-                </a>
+                </button>
             </div>
         </aside>
 
@@ -172,18 +172,26 @@
                                 <tr class="group">
                                     <td class="py-5 font-mono text-blue-600 font-bold">JN-01</td>
                                     <td class="py-5 font-medium">Hezron Maina</td>
-                                    <td class="py-5"><input type="number" id="water-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
-                                    <td class="py-5"><input type="number" id="elec-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5">
+                                        <input type="number" id="water-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
+                                    <td class="py-5">
+                                        <input type="number" id="elec-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
                                     <td class="py-5 text-slate-400">200.00</td>
                                     <td class="py-5 text-center">
                                         <button onclick="saveHouseUtilities('JN-01')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr class="group">
                                     <td class="py-5 font-mono text-blue-600 font-bold">RH-04</td>
                                     <td class="py-5 font-medium">Simon Ndungu</td>
-                                    <td class="py-5"><input type="number" id="water-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
-                                    <td class="py-5"><input type="number" id="elec-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5">
+                                        <input type="number" id="water-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
+                                    <td class="py-5">
+                                        <input type="number" id="elec-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
                                     <td class="py-5 text-slate-400">200.00</td>
                                     <td class="py-5 text-center">
                                         <button onclick="saveHouseUtilities('RH-04')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
@@ -202,57 +210,55 @@
         const CURRENT_MONTH = "Jan2026";
         const HOUSE_IDS = ['JN-01', 'RH-04'];
 
-        // 1. Function to Save Data to Browser Memory
+        // 1. Save Utility Data
         function saveHouseUtilities(houseId) {
-            const water = document.getElementById(`water-${houseId}`).value;
-            const electricity = document.getElementById(`elec-${houseId}`).value;
+            const waterValue = document.getElementById(`water-${houseId}`).value;
+            const elecValue = document.getElementById(`elec-${houseId}`).value;
 
-            // Create a unique key for this specific house and month
             const storageKey = `${houseId}_${CURRENT_MONTH}`;
-            const data = {
-                water: water || 0,
-                electricity: electricity || 0,
+            const entryData = {
+                water: waterValue || 0,
+                electricity: elecValue || 0,
                 garbage: 200,
-                updatedAt: new Date().toLocaleString()
+                lastUpdated: new Date().toISOString()
             };
 
-            // Save to LocalStorage
-            localStorage.setItem(storageKey, JSON.stringify(data));
-
-            alert(`✅ Data saved for ${houseId}! Balance recalculated.`);
-            updateStatusBadge(houseId);
+            localStorage.setItem(storageKey, JSON.stringify(entryData));
+            
+            // Visual feedback
+            updateStatusBadge(houseId, true);
+            alert(`Success: Utilities for ${houseId} updated in system.`);
         }
 
-        // 2. Function to Load Data when the page opens
+        // 2. Load Data on Startup
         function loadSavedData() {
             HOUSE_IDS.forEach(id => {
-                const saved = localStorage.getItem(`${id}_${CURRENT_MONTH}`);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    const waterInput = document.getElementById(`water-${id}`);
-                    const elecInput = document.getElementById(`elec-${id}`);
+                const savedJson = localStorage.getItem(`${id}_${CURRENT_MONTH}`);
+                if (savedJson) {
+                    const data = JSON.parse(savedJson);
                     
-                    if(waterInput) waterInput.value = data.water;
-                    if(elecInput) elecInput.value = data.electricity;
+                    // Fill inputs if they exist
+                    const wInput = document.getElementById(`water-${id}`);
+                    const eInput = document.getElementById(`elec-${id}`);
                     
-                    updateStatusBadge(id);
+                    if (wInput) wInput.value = data.water;
+                    if (eInput) eInput.value = data.electricity;
+                    
+                    updateStatusBadge(id, false);
                 }
             });
         }
 
-        // 3. Function to Calculate Status (Visual Update)
-        function updateStatusBadge(houseId) {
+        // 3. UI Helper for Badges
+        function updateStatusBadge(houseId, isNewUpdate) {
             const badge = document.getElementById(`badge-${houseId}`);
             if (badge) {
-                badge.innerText = "Recalculating...";
-                setTimeout(() => {
-                    badge.innerText = "Data Updated";
-                    badge.className = "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold";
-                }, 500);
+                badge.innerText = isNewUpdate ? "Updated Now" : "Data Synced";
+                badge.className = "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold";
             }
         }
 
-        // Run the load function when the page starts
+        // Initialize
         window.onload = loadSavedData;
     </script>
 </body>
