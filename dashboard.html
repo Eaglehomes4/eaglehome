@@ -76,7 +76,6 @@
             </header>
 
             <div x-show="activeTab === 'overview'">
-                
                 <template x-if="userRole === 'owner'">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
@@ -168,21 +167,29 @@
                                 <tr class="group">
                                     <td class="py-5 font-mono text-blue-600 font-bold">JN-01</td>
                                     <td class="py-5 font-medium">Hezron Maina</td>
-                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
-                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5">
+                                        <input type="number" id="water-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
+                                    <td class="py-5">
+                                        <input type="number" id="elec-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
                                     <td class="py-5 text-slate-400">200.00</td>
                                     <td class="py-5 text-center">
-                                        <button class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                        <button @click="saveHouseUtilities('JN-01')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="py-5 font-mono text-blue-600 font-bold">RH-04</td>
                                     <td class="py-5 font-medium">Simon Ndungu</td>
-                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
-                                    <td class="py-5"><input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00"></td>
+                                    <td class="py-5">
+                                        <input type="number" id="water-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
+                                    <td class="py-5">
+                                        <input type="number" id="elec-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                    </td>
                                     <td class="py-5 text-slate-400">200.00</td>
                                     <td class="py-5 text-center">
-                                        <button class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                        <button @click="saveHouseUtilities('RH-04')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -195,18 +202,52 @@
     </div>
 
     <script>
-        // Function to fetch the latest collection total from the bank API records
+        // --- 1. NEW: Save Utility Function ---
+        async function saveHouseUtilities(houseId) {
+            // Get values from the input fields in the table row using the unique IDs
+            const water = document.getElementById(`water-${houseId}`).value;
+            const electricity = document.getElementById(`elec-${houseId}`).value;
+
+            // Simple validation
+            if (!water || !electricity) {
+                alert("Please enter both Water and Electricity values.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('house_id', houseId);
+            formData.append('water', water);
+            formData.append('electricity', electricity);
+
+            try {
+                // Change 'save_utilities.php' to your actual endpoint
+                const response = await fetch('save_utilities.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Ledger Updated! New Status: ' + (result.new_status || 'Success'));
+                    // Optionally refresh or update the UI
+                    // location.reload(); 
+                } else {
+                    alert('Update failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error saving utilities:', error);
+                alert('Connection error. Check console for details.');
+            }
+        }
+
+        // --- 2. Existing: Collection Stats Function ---
         async function updateCollectionStats() {
             try {
-                // Ensure get_total_collected.php exists and returns { "total_collected": 12345 }
                 const response = await fetch('get_total_collected.php');
                 const data = await response.json();
                 
-                // Find the element on your dashboard that shows "Total Collected"
                 const displayElement = document.getElementById('total-collected-display');
-                
                 if (displayElement) {
-                    // Format the number to KES currency style (e.g., KES 840,500)
                     displayElement.innerText = 'KES ' + new Intl.NumberFormat().format(data.total_collected);
                 }
             } catch (error) {
@@ -214,10 +255,8 @@
             }
         }
 
-        // Check for new payments every 30 seconds
+        // Check for updates every 30 seconds
         setInterval(updateCollectionStats, 30000);
-
-        // Also check once immediately when the page loads
         window.onload = updateCollectionStats;
     </script>
 </body>
