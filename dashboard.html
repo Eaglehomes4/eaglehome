@@ -11,13 +11,37 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .sidebar-item-active { background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; color: #3b82f6; }
         [x-cloak] { display: none !important; }
+        input[type="date"] { font-size: 0.8rem; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900" 
       x-data="{ 
         userRole: localStorage.getItem('userRole') || 'owner', 
-        activeTab: 'overview' 
-      }">
+        activeTab: 'overview',
+        selectedBuilding: 'ROSALIA HOUSE', 
+        editMode: false,
+        tenants: {
+            'ROSALIA HOUSE': [
+                { no: 'RH-01', name: 'Hezron Maina', phone: '0712345678', rent: 15000, deposit: 15000, entryDate: '2025-01-01', exitDate: '', exitReason: '' },
+                { no: 'RH-04', name: 'Simon Ndungu', phone: '0722000111', rent: 12000, deposit: 12000, entryDate: '2024-06-12', exitDate: '', exitReason: '' }
+            ],
+            'JOSPHINE NJAMBI': [
+                { no: 'JN-01', name: 'Alice Wairimu', phone: '0733444555', rent: 18000, deposit: 18000, entryDate: '2023-11-20', exitDate: '', exitReason: '' },
+                { no: 'JN-02', name: 'John Doe', phone: '0799888777', rent: 18000, deposit: 18000, entryDate: '2024-02-10', exitDate: '', exitReason: '' }
+            ]
+        },
+        init() {
+            const saved = localStorage.getItem('eagles_data');
+            if(saved) {
+                this.tenants = JSON.parse(saved);
+            }
+        },
+        saveData() {
+            localStorage.setItem('eagles_data', JSON.stringify(this.tenants));
+            alert('All changes saved to the digital ledger!');
+            this.editMode = false;
+        }
+      }" x-init="init()">
 
     <div class="flex h-screen overflow-hidden">
         
@@ -36,7 +60,7 @@
                 
                 <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'sidebar-item-active' : ''" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                    Dashboard
+                    Command Center
                 </button>
 
                 <button @click="activeTab = 'utilities'" :class="activeTab === 'utilities' ? 'sidebar-item-active' : ''" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
@@ -49,17 +73,14 @@
                         <p class="text-xs font-bold text-slate-400 uppercase px-2 mb-4">Administration</p>
                         <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                            Reports
+                            Financial Reports
                         </button>
                     </div>
                 </template>
             </nav>
 
             <div class="p-4 border-t border-slate-100 bg-slate-50">
-                <select 
-                    x-model="userRole" 
-                    @change="localStorage.setItem('userRole', userRole)"
-                    class="text-xs w-full p-2 border border-slate-200 rounded-md bg-white mb-4">
+                <select x-model="userRole" @change="localStorage.setItem('userRole', userRole)" class="text-xs w-full p-2 border border-slate-200 rounded-md bg-white mb-4">
                     <option value="owner">Logged as: Owner</option>
                     <option value="secretary">Logged as: Secretary</option>
                 </select>
@@ -74,7 +95,7 @@
             <header class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-900" x-text="activeTab === 'overview' ? 'Command Center' : 'Digital Utility Ledger'"></h1>
-                    <p class="text-slate-500 font-medium">Portfolio • January 2026</p>
+                    <p class="text-slate-500 font-medium">Eagle Homes Portfolio • January 2026</p>
                 </div>
                 <template x-if="userRole === 'owner'">
                     <button class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition">
@@ -84,67 +105,87 @@
             </header>
 
             <div x-show="activeTab === 'overview'" x-cloak>
-                <template x-if="userRole === 'owner'">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Expected</p>
-                            <h3 class="text-2xl font-black">KES 1.2M</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <p class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-2">Total Collected</p>
-                            <h3 id="total-collected-display" class="text-2xl font-black text-slate-900">KES 845,000</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-orange-400">
-                            <p class="text-orange-500 text-xs font-bold uppercase tracking-wider mb-2">Total Arrears</p>
-                            <h3 class="text-2xl font-black">KES 350,200</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-400">
-                            <p class="text-emerald-500 text-xs font-bold uppercase tracking-wider mb-2">Total Credits</p>
-                            <h3 class="text-2xl font-black">KES 45,000</h3>
-                        </div>
+                
+                <div class="mb-8 flex justify-between items-end bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Viewing Building</label>
+                        <select x-model="selectedBuilding" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 min-w-[240px]">
+                            <template x-for="(list, name) in tenants" :key="name">
+                                <option :value="name" x-text="name"></option>
+                            </template>
+                        </select>
                     </div>
-                </template>
+
+                    <template x-if="userRole === 'owner'">
+                        <div class="flex gap-3">
+                            <button @click="editMode = !editMode" 
+                                    :class="editMode ? 'bg-orange-50 text-orange-600 border-orange-200' : 'border-blue-600 text-blue-600 hover:bg-blue-50'"
+                                    class="px-6 py-3 rounded-xl font-bold border transition flex items-center gap-2">
+                                <svg x-show="!editMode" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span x-text="editMode ? 'Cancel Editing' : 'Edit Tenant Details'"></span>
+                            </button>
+                            <button x-show="editMode" @click="saveData()" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 transition">
+                                Save All Changes
+                            </button>
+                        </div>
+                    </template>
+                </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                        <h4 class="font-bold text-lg">Portfolio Summary</h4>
-                    </div>
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">
                             <tr>
-                                <th class="p-6">Building Name</th>
-                                <th class="p-6">Units</th>
-                                <th class="p-6">Collection Status</th>
-                                <th class="p-6">Action</th>
+                                <th class="p-5">Unit</th>
+                                <th class="p-5">Tenant Name</th>
+                                <th class="p-5">Phone</th>
+                                <th class="p-5">Rent (KES)</th>
+                                <th class="p-5">Deposit</th>
+                                <th class="p-5">Entry Date</th>
+                                <th class="p-5">Exit Date</th>
+                                <th class="p-5">Notes/Reason</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="p-6">
-                                    <div class="font-bold text-slate-900 leading-tight">Josphine Njambi</div>
-                                    <div class="text-xs text-slate-400">JN-Series Reference</div>
-                                </td>
-                                <td class="p-6 text-slate-600 font-medium">54 Units</td>
-                                <td class="p-6">
-                                    <span id="badge-JN-01" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">92% Collected</span>
-                                </td>
-                                <td class="p-6">
-                                    <button class="text-blue-600 font-bold hover:underline">View Ledger</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="p-6">
-                                    <div class="font-bold text-slate-900 leading-tight">Rosalia House</div>
-                                    <div class="text-xs text-slate-400">RH-Series Reference</div>
-                                </td>
-                                <td class="p-6 text-slate-600 font-medium">16 Units</td>
-                                <td class="p-6">
-                                    <span id="badge-RH-04" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">65% Collected</span>
-                                </td>
-                                <td class="p-6">
-                                    <button class="text-blue-600 font-bold hover:underline">View Ledger</button>
-                                </td>
-                            </tr>
+                            <template x-for="(tenant, index) in tenants[selectedBuilding]" :key="index">
+                                <tr class="hover:bg-slate-50/50 transition group">
+                                    <td class="p-5 font-mono font-bold text-blue-600" x-text="tenant.no"></td>
+                                    
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="text" x-model="tenant.name" class="border rounded px-2 py-1 w-full bg-white border-slate-300">
+                                        <span x-show="!editMode" class="font-semibold text-slate-700" x-text="tenant.name"></span>
+                                    </td>
+
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="text" x-model="tenant.phone" class="border rounded px-2 py-1 w-full bg-white border-slate-300">
+                                        <span x-show="!editMode" x-text="tenant.phone || '-'"></span>
+                                    </td>
+
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="number" x-model="tenant.rent" class="border rounded px-2 py-1 w-24 bg-white border-slate-300">
+                                        <span x-show="!editMode" class="font-bold" x-text="tenant.rent.toLocaleString()"></span>
+                                    </td>
+
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="number" x-model="tenant.deposit" class="border rounded px-2 py-1 w-24 bg-white border-slate-300">
+                                        <span x-show="!editMode" class="text-emerald-600 font-bold" x-text="tenant.deposit.toLocaleString()"></span>
+                                    </td>
+
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="date" x-model="tenant.entryDate" class="border rounded px-2 py-1 bg-white border-slate-300">
+                                        <span x-show="!editMode" class="text-slate-600" x-text="tenant.entryDate"></span>
+                                    </td>
+
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="date" x-model="tenant.exitDate" class="border rounded px-2 py-1 bg-white border-slate-300">
+                                        <span x-show="!editMode" class="text-red-500" x-text="tenant.exitDate || '-'"></span>
+                                    </td>
+
+                                    <td class="p-5">
+                                        <input x-show="editMode" type="text" x-model="tenant.exitReason" class="border rounded px-2 py-1 w-full bg-white border-slate-300" placeholder="e.g. Relocated">
+                                        <span x-show="!editMode" class="text-slate-400 italic" x-text="tenant.exitReason || '-'"></span>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -153,8 +194,13 @@
             <div x-show="activeTab === 'utilities'" x-cloak>
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-8 bg-blue-600 text-white">
-                        <h3 class="text-xl font-bold">Input Charges</h3>
-                        <p class="text-blue-100 text-sm">Secretary entry for water, electricity, and garbage.</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">Monthly Utility Entry</h3>
+                                <p class="text-blue-100 text-sm">Building: <span x-text="selectedBuilding"></span></p>
+                            </div>
+                            <span class="bg-blue-500 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">January 2026 Billing</span>
+                        </div>
                     </div>
                     <div class="p-6 overflow-x-auto">
                         <table class="w-full">
@@ -169,34 +215,22 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
-                                <tr class="group">
-                                    <td class="py-5 font-mono text-blue-600 font-bold">JN-01</td>
-                                    <td class="py-5 font-medium">Hezron Maina</td>
-                                    <td class="py-5">
-                                        <input type="number" id="water-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
-                                    </td>
-                                    <td class="py-5">
-                                        <input type="number" id="elec-JN-01" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
-                                    </td>
-                                    <td class="py-5 text-slate-400">200.00</td>
-                                    <td class="py-5 text-center">
-                                        <button onclick="saveHouseUtilities('JN-01')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
-                                    </td>
-                                </tr>
-                                <tr class="group">
-                                    <td class="py-5 font-mono text-blue-600 font-bold">RH-04</td>
-                                    <td class="py-5 font-medium">Simon Ndungu</td>
-                                    <td class="py-5">
-                                        <input type="number" id="water-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
-                                    </td>
-                                    <td class="py-5">
-                                        <input type="number" id="elec-RH-04" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
-                                    </td>
-                                    <td class="py-5 text-slate-400">200.00</td>
-                                    <td class="py-5 text-center">
-                                        <button onclick="saveHouseUtilities('RH-04')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
-                                    </td>
-                                </tr>
+                                <template x-for="tenant in tenants[selectedBuilding]">
+                                    <tr class="group">
+                                        <td class="py-5 font-mono text-blue-600 font-bold" x-text="tenant.no"></td>
+                                        <td class="py-5 font-medium" x-text="tenant.name"></td>
+                                        <td class="py-5">
+                                            <input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                        </td>
+                                        <td class="py-5">
+                                            <input type="number" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                                        </td>
+                                        <td class="py-5 text-slate-400">200.00</td>
+                                        <td class="py-5 text-center">
+                                            <button @click="alert('Utility data updated for ' + tenant.no)" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Update</button>
+                                        </td>
+                                    </tr>
+                                </template>
                             </tbody>
                         </table>
                     </div>
@@ -206,60 +240,5 @@
         </main>
     </div>
 
-    <script>
-        const CURRENT_MONTH = "Jan2026";
-        const HOUSE_IDS = ['JN-01', 'RH-04'];
-
-        // 1. Save Utility Data
-        function saveHouseUtilities(houseId) {
-            const waterValue = document.getElementById(`water-${houseId}`).value;
-            const elecValue = document.getElementById(`elec-${houseId}`).value;
-
-            const storageKey = `${houseId}_${CURRENT_MONTH}`;
-            const entryData = {
-                water: waterValue || 0,
-                electricity: elecValue || 0,
-                garbage: 200,
-                lastUpdated: new Date().toISOString()
-            };
-
-            localStorage.setItem(storageKey, JSON.stringify(entryData));
-            
-            // Visual feedback
-            updateStatusBadge(houseId, true);
-            alert(`Success: Utilities for ${houseId} updated in system.`);
-        }
-
-        // 2. Load Data on Startup
-        function loadSavedData() {
-            HOUSE_IDS.forEach(id => {
-                const savedJson = localStorage.getItem(`${id}_${CURRENT_MONTH}`);
-                if (savedJson) {
-                    const data = JSON.parse(savedJson);
-                    
-                    // Fill inputs if they exist
-                    const wInput = document.getElementById(`water-${id}`);
-                    const eInput = document.getElementById(`elec-${id}`);
-                    
-                    if (wInput) wInput.value = data.water;
-                    if (eInput) eInput.value = data.electricity;
-                    
-                    updateStatusBadge(id, false);
-                }
-            });
-        }
-
-        // 3. UI Helper for Badges
-        function updateStatusBadge(houseId, isNewUpdate) {
-            const badge = document.getElementById(`badge-${houseId}`);
-            if (badge) {
-                badge.innerText = isNewUpdate ? "Updated Now" : "Data Synced";
-                badge.className = "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold";
-            }
-        }
-
-        // Initialize
-        window.onload = loadSavedData;
-    </script>
 </body>
 </html>
