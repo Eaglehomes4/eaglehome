@@ -509,17 +509,7 @@
                     if (savedData) {
                         this.propertyData = JSON.parse(savedData);
                     } else {
-                        // Initialize with default data
-                        this.propertyData = this.getDefaultPropertyData();
-                        this.saveData();
-                    }
-                    
-                    // Store original data for cancel functionality
-                    this.originalData = JSON.parse(JSON.stringify(this.propertyData));
-                },
-
-                getDefaultPropertyData() {
-                 // THIS IS WHERE YOU DEFINE ALL 36 BUILDINGS
+                        // Initialize with complete 36 buildings data
                         this.propertyData = {
                             "1. ROSALIA HOUSE": [
                                 { no: "1", name: "Paul Murimi", rent: 3000, deposit: 3000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -613,7 +603,7 @@
                                 { no: "7", name: "Landlord", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
                                 { no: "8", name: "Antony Ogamba", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "5. MARY NYAMBURA HOUSE": [
+                            "5.NYAMBURA HOUSE": [
                                 { no: "1", name: "Kelvin Mutua", rent: 13000, deposit: 13000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2", name: "Vacant", rent: 12000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
                                 { no: "3", name: "Dominic Kioi", rent: 13000, deposit: 13000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -631,7 +621,7 @@
                                 { no: "15", name: "Hellen Chege", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "16", name: "Rhoda Nyambura", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "6. MARTIN KIGANJO": [
+                            "6. KIGANJO HOUSE": [
                                 { no: "1", name: "Peter Gathee", rent: 2000, deposit: 2000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2", name: "Kelvin Ndungu", rent: 2000, deposit: 2000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "3", name: "Ageline Nzilu", rent: 2000, deposit: 2000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -658,7 +648,7 @@
                                 { no: "10", name: "Joseph Musyoka", rent: 3150, deposit: 3150, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "11", name: "Paul Ngugi", rent: 4650, deposit: 4650, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "8. BENSON GICHUKI": [
+                            "8. GICHUKI HOUSE": [
                                 { no: "1", name: "John Gachinga", rent: 9700, deposit: 9700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2", name: "Dora Mwangi", rent: 9700, deposit: 9700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "3", name: "Caroline Wanjiru", rent: 10700, deposit: 10700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -676,7 +666,7 @@
                                 { no: "15", name: "Samuel Mwangi", rent: 9700, deposit: 9700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "16", name: "Wilson Ndungu", rent: 9700, deposit: 9700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "9. JOEL KARANI": [
+                            "9. JOEL HOUSE": [
                                 { no: "1 (Shop)", name: "Jonnah Kariuki", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2 (Shop)", name: "Vacant", rent: 7000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
                                 { no: "3 (Shop)", name: "Vacant", rent: 6500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
@@ -786,7 +776,7 @@
                                 { no: "6", name: "Daniel Ndibui", rent: 9000, deposit: 9000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "7", name: "Rosemary Wanjiru", rent: 9000, deposit: 9000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "15. FRANCIS MUGO HOUSE": [
+                            "15. MUGO HOUSE": [
                                 { no: "1", name: "Elias Maara", rent: 9200, deposit: 9200, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2", name: "Landlord", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
                                 { no: "3", name: "Jenifer Nyambura", rent: 7700, deposit: 7700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -807,7 +797,7 @@
                                 { no: "4", name: "Zipporah Wangeci", rent: 3000, deposit: 3000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "5", name: "David Macharia", rent: 3500, deposit: 3500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "17. EBENEZER COURT": [
+                            "17. EBENEZER HOUSE": [
                                 { no: "R1", name: "Store", rent: 4500, deposit: 4500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "R2", name: "Vacant", rent: 4500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
                                 { no: "R3", name: "David Ngaruiya", rent: 4500, deposit: 4500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -841,31 +831,37 @@
                                 { no: "S4", name: "Landlady", rent: 5000, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
                                 { no: "G3", name: "Vacant", rent: 1500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" }
                             ],
-                            "18. UNNAMED BLOCK (F11 - 3J)": [
-                                { no: "F11", name: "Benjamin Ndambuki", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F10", name: "Victor Ihugo", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "2F", name: "James Karanja", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F12", name: "Naftaly Maina", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "3K", name: "Joseph Ngugi", rent: 11000, deposit: 11000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F13", name: "Reuben Murimi", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F1", name: "Marshal Birit", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F14", name: "Ann Ndungu", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F2", name: "Beatrice Mwaniki", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F15", name: "Mercy Kathure", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F3", name: "Caroline Ngugi", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F16", name: "Martha Wambui", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F4", name: "Hannah Mwaura", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "2A", name: "Fridah Mukai", rent: 8000, deposit: 8000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F5", name: "Samson Siele", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "2B", name: "Elizabeth Njoki", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F6", name: "Thomas Kagai", rent: 8000, deposit: 8000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "2C", name: "Phylis Wanjiru", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F7", name: "Brian Gichobi", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "2D", name: "Shirine Njeri", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F8", name: "Raphael Waweru", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "2E", name: "Monicah Mukora", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F9", name: "Lewis Waweru", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "3A-3J", name: "Various Tenants", rent: 7500, deposit: 7500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
+                            "18. ELSHADAI HOUSE": [
+                                { no: "1", name: "OCCUPIED", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "2", name: "VACANT", rent: 7000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "3", name: "MARK MBURU", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
+                                { no: "4", name: "KINYUA", rent: 8000, deposit: 8000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "5", name: "BONIFACE MUTUKU", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "6", name: "GEORGE MBUGUA", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "7", name: "JANE NYAMBURA", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "8", name: "TERESIAH WANJIKU", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "9", name: "SIMON MWANGI", rent: 8000, deposit: 8000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "10", name: "KADHAMBI", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "11", name: "JOSPHINE", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "12", name: "VACANT", rent: 18000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "13", name: "VACANT", rent: 18000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "G14", name: "Occupied", rent: 3000, deposit: 3000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "15", name: "OCCUPIED", rent: 3000, deposit: 3000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "1DA", name: "MAKENA", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "1DB", name: "VACANT", rent: 4000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "2D", name: "VACANT", rent: 8000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "3D", name: "VACANT", rent: 8000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "4D", name: "JANET KINYUA", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "5D", name: "KELVIN", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "6D", name: "ERICK PATRICK", rent: 2500, deposit: 2500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "7D", name: "Occupied", rent: 2500, deposit: 2500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "8D", name: "OCCUPIED", rent: 2000, deposit: 2000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "10D", name: "PASTOR NGUGI", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "11D", name: "KENNEDDY NJENGA", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "12D", name: "ERICK WANJAMA", rent: 4150, deposit: 4150, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "13D", name: "JOSEPH", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
+                                { no: "14D", name: "OCCUPIED", rent: 3150, deposit: 3150, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "15D", name: "STEPHEN MUNGAI", rent: 3150, deposit: 3150, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
                             "19. KIMIA HOUSE": [
                                 { no: "G1", name: "Simon Mbugua", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -913,47 +909,37 @@
                                 { no: "5B", name: "Johnpeter Chiira", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "5C", name: "Michael Mutia", rent: 6000, deposit: 6000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "21. HOUSE (G1 - T41)": [
-                                { no: "G1", name: "Priscilla Mumbi", rent: 5350, deposit: 5350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "G2", name: "Kamau Patrick", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "G3", name: "N/A", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "G4-5", name: "Landlord", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
-                                { no: "G6", name: "Lucy Wanjiku", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "G7", name: "James Kanyongoro", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "G8", name: "Antony Kinyanjui", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "G9", name: "Elijah Gakure", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F10", name: "Mwangi Waweru", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F11", name: "Brian Maina", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F12", name: "Eunice Muthoni", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F13", name: "Brayern Chasia", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F14", name: "Paul Mwangi", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F15", name: "Phelix Onyango", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F16", name: "Joseph Mutua", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F17", name: "Simon", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "F18", name: "Praxides Ouma", rent: 6850, deposit: 6850, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T19", name: "Pantrick Njau", rent: 6850, deposit: 6850, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T20", name: "Faith Njoki", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T21", name: "Victor Owino", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T22", name: "Narikso Ndegwa", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T23", name: "Noah Kaiga", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T24", name: "Teresiah Njeri", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T25", name: "Misreth Doroth", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T26", name: "Lydia Wakuthii", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T27", name: "Moses Mwangi", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T28", name: "Ambrose Ogembo", rent: 6850, deposit: 6850, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T29", name: "Antony Mbaria", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T30", name: "Julius Wanjiku", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T31", name: "Peter Nderitu", rent: 7350, deposit: 7350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T32", name: "Freshia Muchira", rent: 7350, deposit: 7350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T33", name: "Kamau Waititu", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T34", name: "Bivon Nyakundi", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T35", name: "Sarah Mwende", rent: 6850, deposit: 6850, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T36", name: "N/A", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T37", name: "Daniel Watiri", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T38", name: "Elizabeth Wangari", rent: 7350, deposit: 7350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T39", name: "Jesee Macharia", rent: 7350, deposit: 7350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T40", name: "Joseph Ombato", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
-                                { no: "T41", name: "Ann Kirimi Njoka", rent: 4350, deposit: 4350, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
+                            "21. WAGITHU HOUSE": [
+                                { no: "1", name: "JOHN MACHARIA", rent: 13500, deposit: 13500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "2", name: "JANE MUTHONI", rent: 9000, deposit: 9000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "3", name: "GLADYS MUMBI", rent: 10500, deposit: 10500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "4", name: "G. MWANGI", rent: 13000, deposit: 13000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "5", name: "EVERYNE", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "6", name: "LOISE NJERI", rent: 9000, deposit: 9000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "7", name: "ANN MAITAI", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "8", name: "C. MWANGI", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "9", name: "VACANT", rent: 10500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "10/11/12", name: "MARY WANJIRU", rent: 18000, deposit: 18000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B1", name: "FRED CHEGE", rent: 13200, deposit: 13200, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B2", name: "JACOB NYOIKE", rent: 12500, deposit: 12500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B3", name: "MUHIA", rent: 6000, deposit: 6000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B4", name: "WINFRED NYAMBURA", rent: 6000, deposit: 6000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B5", name: "WANGUI", rent: 9500, deposit: 9500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B6", name: "JANE NYAMBURA", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B7", name: "ROSEMARY WANGECI", rent: 5000, deposit: 5000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B8", name: "JUDY", rent: 9000, deposit: 9000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B9", name: "PURITY", rent: 12000, deposit: 12000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B10", name: "MERCY WANJERI", rent: 11700, deposit: 11700, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C1", name: "VACANT", rent: 12500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "C2", name: "KEZIAH WANJIKU", rent: 13200, deposit: 13200, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C3", name: "SUSAN", rent: 6000, deposit: 6000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C4", name: "JOYCE KARUGUYA", rent: 6000, deposit: 6000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C5", name: "WAMBUI", rent: 12000, deposit: 12000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C6", name: "JUDY", rent: 7000, deposit: 7000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C7", name: "DOREEN WANJIKU", rent: 5200, deposit: 5200, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C8", name: "KOECH", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C9", name: "DANIEL NJOROGE", rent: 12500, deposit: 12500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "C10", name: "BON MWANIKI", rent: 12500, deposit: 12500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
                             "22. JAMES MBAI HOUSE": [
                                 { no: "1", name: "Lucy Mwende", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -1045,7 +1031,7 @@
                                 { no: "Shop", name: "Landlord", rent: 4650, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
                                 { no: "T1-T5", name: "Jeff / Emma / Golder / Trevor / David", rent: 6150, deposit: 6150, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "26. MICHEAL KINUTHIA HOUSE (Water)": [
+                            "26. KINUTHIA HOUSE": [
                                 { no: "1", name: "Titus Gachoki", rent: 1800, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Water Bill Only" },
                                 { no: "2", name: "Judy Maina", rent: 600, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Water Bill Only" },
                                 { no: "3", name: "Mercy Wandurwa", rent: 750, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Water Bill Only" },
@@ -1067,7 +1053,7 @@
                                 { no: "6", name: "Landlord", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
                                 { no: "12", name: "Margaret Chege", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "28. SAMUEL NGUMBI / BABA NDOGO": [
+                            "28. SAMUEL NGUMBI": [
                                 { no: "1", name: "Simon Nyambura", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2", name: "Sikuru Aruga", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "3", name: "Occupied", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
@@ -1078,7 +1064,7 @@
                                 { no: "B.D. 1", name: "Kelvin Oduor", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "B.D. 2", name: "Beatrice Mburu", rent: 8000, deposit: 8000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
                             ],
-                            "29. MARY HOUSE KAHAWA WENDANI": [
+                            "29. MARY HOUSE": [
                                 { no: "1", name: "Occupied", rent: 6000, deposit: 6000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "2", name: "Store", rent: 4000, deposit: 4000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "3", name: "Caretaker", rent: 4000, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Staff" },
@@ -1156,8 +1142,55 @@
                                 { no: "24", name: "Steve Omuga", rent: 2500, deposit: 2500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "25", name: "George Otieno", rent: 2500, deposit: 2500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
                                 { no: "26", name: "Christian Akinyi", rent: 2500, deposit: 2500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
+                            ],
+                            "33. ELIZABETH HOUSE": [
+                                { no: "1", name: "LANDLORD", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
+                                { no: "2", name: "LANDLORD", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
+                                { no: "3", name: "VACANT", rent: 5000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "4", name: "VACANT", rent: 5000, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "5", name: "ELIZABETH NDOTONO", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "6", name: "SAMUEL WACHIRA", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "7", name: "LANDLORD", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" },
+                                { no: "8", name: "BLESSED CHERUTO", rent: 5000, deposit: 5000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "9", name: "CATHERINE NKATHA", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "10", name: "PAUL SANDE", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "11", name: "SIMON MACHARIA", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "12", name: "HENRY RONO", rent: 5000, deposit: 5000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "13", name: "RHODAH NJERI", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "14", name: "EVAN NGUGI", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "15", name: "JUNIOR JUNIOR", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "16", name: "KENNEDDY MUNGAI", rent: 5000, deposit: 5000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "17", name: "OPHIR WANJIKU", rent: 6500, deposit: 6500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
+                            ],
+                            "34. BABA NDOGO": [
+                                { no: "1", name: "Simon Nyambura", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "2", name: "Sikuru Aruga", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "3", name: "Occupied", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "4-6", name: "Vacant", rent: 1500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "7", name: "Caretaker", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Staff" },
+                                { no: "8", name: "Vacant", rent: 1500, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "9", name: "Vacant", rent: 1800, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "B.D. 1", name: "Kelvin Oduor", rent: 10000, deposit: 10000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "B.D. 2", name: "Beatrice Mburu", rent: 8000, deposit: 8000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" }
+                            ],
+                            "35. MIRACLE 2 HOUSE": [
+                                { no: "1", name: "TENANT NAME", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "2", name: "TENANT NAME", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "3", name: "VACANT", rent: 0, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "4", name: "LANDLORD", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" }
+                            ],
+                            "36. TOLL HOUSE": [
+                                { no: "1", name: "TENANT NAME", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "2", name: "TENANT NAME", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "" },
+                                { no: "3", name: "VACANT", rent: 0, deposit: 0, phone: "", entryDate: "", exitDate: "", exitReason: "Vacant" },
+                                { no: "4", name: "LANDLORD", rent: 0, deposit: 0, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "Landlord Unit" }
                             ]
-                    };
+                        };
+                        this.saveData();
+                    }
+                    
+                    // Store original data for cancel functionality
+                    this.originalData = JSON.parse(JSON.stringify(this.propertyData));
                 },
 
                 onRoleChange() {
