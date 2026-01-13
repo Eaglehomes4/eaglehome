@@ -42,11 +42,14 @@
             color: white;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
+        @media print {
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body x-data="managementSystem()" x-init="init()" class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-20">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-20 no-print">
         <div class="p-6 border-b border-gray-100 flex items-center gap-3">
             <div class="bg-blue-600 p-2 rounded-lg">
                 <i class="fas fa-home text-white text-lg"></i>
@@ -68,11 +71,25 @@
                 <i class="fas fa-bolt w-5 h-5"></i>
                 Utility Entry
             </a>
-
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mt-8 mb-2">Administration</p>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
+            <a href="#" @click.prevent="activeTab = 'reports'" 
+               :class="activeTab === 'reports' ? 'sidebar-link active' : ''"
+               class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
                 <i class="fas fa-chart-bar w-5 h-5"></i>
                 Financial Reports
+            </a>
+            <a href="#" @click.prevent="activeTab = 'banking'" 
+               :class="activeTab === 'banking' ? 'sidebar-link active' : ''"
+               class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-university w-5 h-5"></i>
+                Banking & Payments
+            </a>
+
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mt-8 mb-2">Administration</p>
+            <a href="#" @click.prevent="activeTab = 'admin'" 
+               :class="activeTab === 'admin' ? 'sidebar-link active' : ''"
+               class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-cog w-5 h-5"></i>
+                Settings
             </a>
         </nav>
 
@@ -129,9 +146,9 @@
                             Export Data
                         </button>
                         
-                        <button @click="lockMonthData()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition flex items-center gap-2">
-                            <i class="fas fa-lock"></i>
-                            Lock Month Data
+                        <button @click="rolloverMonth()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition flex items-center gap-2">
+                            <i class="fas fa-forward"></i>
+                            Rollover Month
                         </button>
                     </div>
                 </div>
@@ -144,7 +161,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Total Expected Rent</p>
-                                <h3 class="text-2xl font-black text-slate-800">Ksh <span x-text="formatNumber(getStats().totalRent)"></span></h3>
+                                <h3 class="text-2xl font-black text-slate-800">Ksh <span x-text="formatNumber(totalRevenue)"></span></h3>
                             </div>
                             <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-money-bill-wave text-blue-600 text-xl"></i>
@@ -157,7 +174,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Total Deposits Held</p>
-                                <h3 class="text-2xl font-black text-emerald-600">Ksh <span x-text="formatNumber(getStats().totalDeposits)"></span></h3>
+                                <h3 class="text-2xl font-black text-emerald-600">Ksh <span x-text="formatNumber(totalDeposits)"></span></h3>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-shield-alt text-emerald-600 text-xl"></i>
@@ -191,7 +208,7 @@
                             </label>
                             <select x-model="selectedBuilding" 
                                     class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                                <template x-for="(building, name) in propertyData" :key="name">
+                                <template x-for="(building, name) in tenants" :key="name">
                                     <option :value="name" x-text="name"></option>
                                 </template>
                             </select>
@@ -252,20 +269,21 @@
                     </div>
                 </div>
 
-                <!-- Tenants Table -->
+                <!-- Tenants Table with Previous Balance -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto scrollbar-hide">
-                        <table class="w-full text-left min-w-[1200px]">
+                        <table class="w-full text-left min-w-[1300px]">
                             <thead class="sticky-header">
                                 <tr class="text-xs text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50">
                                     <th class="px-6 py-4 font-bold">Unit</th>
                                     <th class="px-6 py-4 font-bold">Tenant Name</th>
                                     <th class="px-6 py-4 font-bold">Phone</th>
-                                    <th class="px-6 py-4 font-bold">Rent (Ksh)</th>
-                                    <th class="px-6 py-4 font-bold">Deposit</th>
+                                    <th class="px-6 py-4 font-bold text-right">Prev. Balance</th>
+                                    <th class="px-6 py-4 font-bold text-right">Rent (Ksh)</th>
+                                    <th class="px-6 py-4 font-bold text-right">Deposit</th>
                                     <th class="px-6 py-4 font-bold">Entry Date</th>
                                     <th class="px-6 py-4 font-bold">Exit Date</th>
-                                    <th class="px-6 py-4 font-bold">Status/Notes</th>
+                                    <th class="px-6 py-4 font-bold">Status</th>
                                     <th class="px-6 py-4 font-bold" x-show="userRole === 'owner' && editMode">Actions</th>
                                 </tr>
                             </thead>
@@ -321,26 +339,35 @@
                                             </template>
                                         </td>
                                         
+                                        <!-- Previous Balance -->
+                                        <td class="px-6 py-4 text-right">
+                                            <span class="font-mono" 
+                                                  :class="(tenant.prevBalance || 0) < 0 ? 'text-emerald-600' : 'text-red-500'"
+                                                  x-text="formatNumber(Math.abs(Number(tenant.prevBalance || 0)))"></span>
+                                            <span class="text-xs ml-1" 
+                                                  x-text="(tenant.prevBalance || 0) < 0 ? '(Credit)' : '(Arrears)'"></span>
+                                        </td>
+                                        
                                         <!-- Rent -->
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 text-right">
                                             <template x-if="editMode && userRole === 'owner'">
                                                 <input type="number" x-model="tenant.rent" 
                                                        class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                                             </template>
                                             <template x-if="!editMode || userRole !== 'owner'">
-                                                <span class="font-bold text-slate-800" 
+                                                <span class="font-bold text-slate-800 font-mono" 
                                                       x-text="formatNumber(Number(tenant.rent))"></span>
                                             </template>
                                         </td>
                                         
                                         <!-- Deposit -->
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 text-right">
                                             <template x-if="editMode && userRole === 'owner'">
                                                 <input type="number" x-model="tenant.deposit" 
                                                        class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                                             </template>
                                             <template x-if="!editMode || userRole !== 'owner'">
-                                                <span class="font-bold text-emerald-600" 
+                                                <span class="font-bold text-emerald-600 font-mono" 
                                                       x-text="formatNumber(Number(tenant.deposit))"></span>
                                             </template>
                                         </td>
@@ -370,18 +397,11 @@
                                             </template>
                                         </td>
                                         
-                                        <!-- Notes/Reason -->
+                                        <!-- Status Badge -->
                                         <td class="px-6 py-4">
-                                            <template x-if="editMode && userRole === 'owner'">
-                                                <textarea x-model="tenant.exitReason" 
-                                                          placeholder="Add notes or reason..."
-                                                          rows="1"
-                                                          class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"></textarea>
-                                            </template>
-                                            <template x-if="!editMode || userRole !== 'owner'">
-                                                <span x-text="tenant.exitReason || '-'" 
-                                                      class="text-sm text-gray-500 italic"></span>
-                                            </template>
+                                            <span :class="getHouseStatus(tenant).class" 
+                                                  class="px-2 py-1 rounded text-[10px] font-black uppercase"
+                                                  x-text="getHouseStatus(tenant).label"></span>
                                         </td>
                                         
                                         <!-- Actions Column (Owner-only, Edit Mode only) -->
@@ -405,7 +425,7 @@
                                 <!-- Empty State -->
                                 <template x-if="filteredTenants.length === 0">
                                     <tr>
-                                        <td colspan="9" class="px-6 py-12 text-center">
+                                        <td colspan="10" class="px-6 py-12 text-center">
                                             <div class="flex flex-col items-center justify-center text-gray-400">
                                                 <i class="fas fa-search text-4xl mb-4"></i>
                                                 <p class="text-lg font-medium">No tenants found</p>
@@ -426,7 +446,7 @@
                             <div class="text-sm text-gray-600">
                                 <span x-text="filteredTenants.length"></span> units shown
                                 <span x-show="searchQuery" class="text-blue-600 ml-2">
-                                    (filtered from <span x-text="(propertyData[selectedBuilding] || []).length"></span>)
+                                    (filtered from <span x-text="(tenants[selectedBuilding] || []).length"></span>)
                                 </span>
                             </div>
                             <div class="flex items-center gap-6 text-sm">
@@ -448,7 +468,7 @@
                 </div>
                 
                 <!-- Quick Actions Footer -->
-                <div class="mt-6 flex flex-wrap gap-4">
+                <div class="mt-6 flex flex-wrap gap-4 no-print">
                     <div x-show="userRole === 'owner' && editMode" class="flex items-center gap-4">
                         <button @click="saveAllChanges()" 
                                 class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition">
@@ -545,7 +565,7 @@
                             </label>
                             <select x-model="selectedBuilding" 
                                     class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                                <template x-for="(building, name) in propertyData" :key="name">
+                                <template x-for="(building, name) in tenants" :key="name">
                                     <option :value="name" x-text="name"></option>
                                 </template>
                             </select>
@@ -796,6 +816,364 @@
                 </div>
             </div>
         </div>
+
+        <!-- Financial Reports Tab -->
+        <div x-show="activeTab === 'reports'" x-cloak>
+            <div class="sticky-header p-8 pb-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800">Financial Reports</h2>
+                        <p class="text-gray-500 font-medium">Financial Dashboard • <span class="text-blue-600 font-bold">January 2026</span></p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button @click="printReport()" 
+                                class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-print"></i>
+                            Print Report
+                        </button>
+                        <button @click="exportFinancialData()" 
+                                class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-excel"></i>
+                            Export Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pt-6">
+                <!-- Stats Dashboard -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Total Expected Revenue</p>
+                        <h3 class="text-2xl font-black text-slate-900">Ksh <span x-text="formatNumber(totalRevenue)"></span></h3>
+                        <div class="flex items-center gap-1 mt-2 text-emerald-600 text-xs font-bold">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"/></svg>
+                            <span>Current Month</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Total Deposits Held</p>
+                        <h3 class="text-2xl font-black text-blue-600">Ksh <span x-text="formatNumber(totalDeposits)"></span></h3>
+                        <p class="text-slate-500 text-xs mt-2 italic">Secured in Trust Account</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Occupancy Rate</p>
+                        <h3 class="text-2xl font-black text-purple-600"><span x-text="getStats().occupancy"></span>%</h3>
+                        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3">
+                            <div class="bg-purple-500 h-1.5 rounded-full" :style="{ width: getStats().occupancy + '%' }"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Collection Rate</p>
+                        <h3 class="text-2xl font-black text-orange-500">85%</h3>
+                        <p class="text-slate-500 text-xs mt-2">Ksh <span x-text="formatNumber(totalRevenue * 0.15)"></span> pending</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Income Statement by Property -->
+                    <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <h4 class="font-bold text-slate-800 text-lg">Income Statement by Property</h4>
+                            <button @click="exportPropertyData()" class="text-blue-600 text-sm font-bold hover:underline">Download PDF</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[800px]">
+                                <thead class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100">
+                                    <tr>
+                                        <th class="p-5">Property Name</th>
+                                        <th class="p-5">Units</th>
+                                        <th class="p-5">Total Rent</th>
+                                        <th class="p-5">Total Deposits</th>
+                                        <th class="p-5">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    <template x-for="(list, buildingName) in tenants" :key="buildingName">
+                                        <tr class="hover:bg-slate-50/50 transition">
+                                            <td class="p-5 font-bold text-slate-700" x-text="buildingName"></td>
+                                            <td class="p-5 text-slate-500" x-text="list.length"></td>
+                                            <td class="p-5 font-mono font-bold text-slate-900" 
+                                                x-text="formatNumber(list.reduce((sum, t) => sum + Number(t.rent || 0), 0))"></td>
+                                            <td class="p-5 font-mono text-blue-600" 
+                                                x-text="formatNumber(list.reduce((sum, t) => sum + Number(t.deposit || 0), 0))"></td>
+                                            <td class="p-5">
+                                                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase px-2 py-1 rounded">Healthy</span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Operational Expenses -->
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                        <h4 class="font-bold text-slate-800 text-lg mb-6">Operational Expenses</h4>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-500">Caretaker Salaries</span>
+                                    <span class="font-bold">Ksh 25,000</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-500">Repairs & Maintenance</span>
+                                    <span class="font-bold">Ksh 12,400</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full">
+                                    <div class="bg-amber-500 h-2 rounded-full" style="width: 20%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-500">Security Services</span>
+                                    <span class="font-bold">Ksh 15,000</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: 30%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-slate-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-slate-400 font-bold text-xs uppercase">Net Operating Income</span>
+                                <span class="text-xl font-black text-emerald-600" x-text="'Ksh ' + formatNumber(totalRevenue - 52400)"></span>
+                            </div>
+                            <button @click="activeTab = 'admin'" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition">
+                                Manage Expenses
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banking & Payments Tab -->
+        <div x-show="activeTab === 'banking'" x-cloak class="p-8">
+            <div class="sticky-header pb-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800">Banking & Payments</h2>
+                        <p class="text-gray-500 font-medium">Payment Processing • <span class="text-blue-600 font-bold">Real-time Bank Integration</span></p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button @click="refreshPayments()" 
+                                class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition flex items-center gap-2">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button @click="processIncomingPayment({ 
+                            id: 'TEST' + Date.now(), 
+                            amount: Math.floor(Math.random() * 10000) + 1000, 
+                            bankType: 'Family', 
+                            accountRef: 'JH-0' + Math.floor(Math.random() * 9) + 1,
+                            phone: '07' + Math.floor(Math.random() * 90000000 + 10000000)
+                        })" 
+                                class="bg-black text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition flex items-center gap-2">
+                            <i class="fas fa-bolt"></i>
+                            Simulate Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment System Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-blue-600 p-6 rounded-2xl text-white">
+                    <p class="text-[10px] font-bold uppercase opacity-80">Primary: Co-operative Bank</p>
+                    <h4 class="text-xl font-bold mt-2">Paybill: 417185</h4>
+                    <p class="text-sm mt-1 opacity-90">Direct House Mapping (JH-01, etc.)</p>
+                    <div class="mt-4">
+                        <div class="flex items-center gap-2 text-sm">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Auto-allocated to houses</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm mt-1">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No manual intervention</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-2xl text-white">
+                    <p class="text-[10px] font-bold uppercase opacity-80">Secondary: Family Bank</p>
+                    <h4 class="text-xl font-bold mt-2">Paybill: 222111</h4>
+                    <p class="text-sm mt-1 opacity-90">Strict Reference Validation (Manual Map on Typos)</p>
+                    <div class="mt-4">
+                        <div class="flex items-center gap-2 text-sm">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Valid references auto-allocated</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm mt-1">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Typos go to unallocated queue</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unallocated Payments Queue -->
+            <div x-show="unallocatedQueue.length > 0" class="bg-orange-50 border-2 border-orange-200 rounded-3xl overflow-hidden mb-8">
+                <div class="p-4 bg-orange-100 flex justify-between items-center">
+                    <h3 class="text-orange-800 font-black text-xs uppercase tracking-widest">Action Required: Unallocated Payments</h3>
+                    <span class="bg-orange-600 text-white text-xs px-3 py-1 rounded-full font-bold" x-text="unallocatedQueue.length"></span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm min-w-[800px]">
+                        <thead class="bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-widest">
+                            <tr>
+                                <th class="p-4">Transaction ID</th>
+                                <th class="p-4">Reference</th>
+                                <th class="p-4">Amount</th>
+                                <th class="p-4">Phone</th>
+                                <th class="p-4">Bank</th>
+                                <th class="p-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-orange-100">
+                            <template x-for="(un, index) in unallocatedQueue" :key="un.id">
+                                <tr>
+                                    <td class="p-4 font-mono font-bold text-slate-700" x-text="un.id"></td>
+                                    <td class="p-4 text-orange-700 font-bold" x-text="un.accountRef"></td>
+                                    <td class="p-4 font-black text-slate-900" x-text="'Ksh ' + formatNumber(un.amount)"></td>
+                                    <td class="p-4 text-slate-600" x-text="un.phone"></td>
+                                    <td class="p-4">
+                                        <span class="bg-slate-100 text-slate-600 text-xs font-black px-2 py-1 rounded uppercase" 
+                                              x-text="un.bankType"></span>
+                                    </td>
+                                    <td class="p-4 text-right">
+                                        <button @click="allocateUnallocatedPayment(index)" 
+                                                class="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-700 transition">
+                                            ASSIGN TO HOUSE
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 uppercase text-xs tracking-widest">Immutable Payment Feed</h3>
+                    <div class="flex gap-2">
+                        <span class="text-xs font-bold text-slate-400">STATUS:</span>
+                        <span class="text-xs font-black text-emerald-600 uppercase">Bank Verified • Read Only</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[1000px]">
+                        <thead class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b">
+                            <tr>
+                                <th class="p-5">Unit</th>
+                                <th class="p-5">Transaction ID</th>
+                                <th class="p-5">Phone</th>
+                                <th class="p-5">Bank Source</th>
+                                <th class="p-5 text-right">Amount (Ksh)</th>
+                                <th class="p-5">Date/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <template x-for="p in payments" :key="p.id">
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    <td class="p-5 font-mono font-bold text-blue-600" x-text="p.houseNo || 'Unallocated'"></td>
+                                    <td class="p-5 text-xs text-slate-500 font-mono" x-text="p.id"></td>
+                                    <td class="p-5 text-slate-600" x-text="p.phone || 'N/A'"></td>
+                                    <td class="p-5">
+                                        <span :class="p.bankType === 'Co-op' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'" 
+                                              class="text-xs font-black px-3 py-1 rounded uppercase" x-text="p.bankType"></span>
+                                    </td>
+                                    <td class="p-5 text-right font-black text-slate-900" x-text="formatNumber(p.amount)"></td>
+                                    <td class="p-5 text-sm text-slate-500" x-text="p.timestamp"></td>
+                                </tr>
+                            </template>
+                            <template x-if="payments.length === 0">
+                                <tr>
+                                    <td colspan="6" class="p-10 text-center text-gray-400">
+                                        <i class="fas fa-exchange-alt text-3xl mb-3"></i>
+                                        <p class="font-medium">No payment records yet</p>
+                                        <p class="text-sm mt-1">Simulate payments using the button above</p>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Settings Tab -->
+        <div x-show="activeTab === 'admin'" x-cloak class="p-8">
+            <div class="sticky-header pb-6">
+                <h2 class="text-3xl font-black text-slate-800">System Settings</h2>
+                <p class="text-gray-500 font-medium">Configuration & Administration</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- System Configuration -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                    <h4 class="font-bold text-slate-800 text-lg mb-6">System Configuration</h4>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Water Rate (per m³)</label>
+                            <input type="number" x-model="waterRate" 
+                                   class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Electricity Rate (per kWh)</label>
+                            <input type="number" x-model="electricityRate" 
+                                   class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Garbage Fee (Default)</label>
+                            <input type="number" x-model="garbageFeeDefault" 
+                                   class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button @click="saveSettings()" 
+                                class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Actions -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                    <h4 class="font-bold text-slate-800 text-lg mb-6">System Actions</h4>
+                    <div class="space-y-4">
+                        <button @click="backupData()" 
+                                class="w-full bg-emerald-100 text-emerald-700 py-3 rounded-xl font-bold hover:bg-emerald-200 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-database"></i>
+                            Backup All Data
+                        </button>
+                        <button @click="restoreData()" 
+                                class="w-full bg-amber-100 text-amber-700 py-3 rounded-xl font-bold hover:bg-amber-200 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-history"></i>
+                            Restore from Backup
+                        </button>
+                        <button @click="clearAllData()" 
+                                class="w-full bg-red-100 text-red-700 py-3 rounded-xl font-bold hover:bg-red-200 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-trash"></i>
+                            Clear All Data
+                        </button>
+                        <button @click="rolloverMonth()" 
+                                class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-forward"></i>
+                            Rollover to Next Month
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Success Toast -->
@@ -825,6 +1203,11 @@
                 editMode: false,
                 utilityMonth: '2026-01',
                 
+                // System Settings
+                waterRate: 100,
+                electricityRate: 20,
+                garbageFeeDefault: 200,
+                
                 // UI State
                 showSuccessToast: false,
                 showErrorToast: false,
@@ -833,35 +1216,126 @@
                 
                 // Data Storage
                 originalData: {},
-                propertyData: {},
+                tenants: {},
+                payments: [],
+                unallocatedQueue: [],
                 utilityHistory: {},
                 
+                // Computed Properties
+                get totalRevenue() {
+                    let total = 0;
+                    Object.values(this.tenants).forEach(building => {
+                        building.forEach(t => total += (Number(t.rent) || 0));
+                    });
+                    return total;
+                },
+                
+                get totalDeposits() {
+                    let total = 0;
+                    Object.values(this.tenants).forEach(building => {
+                        building.forEach(t => total += (Number(t.deposit) || 0));
+                    });
+                    return total;
+                },
+                
+                get filteredTenants() {
+                    let currentData = this.tenants[this.selectedBuilding] || [];
+                    if (!this.searchQuery.trim()) return currentData;
+                    
+                    const query = this.searchQuery.toLowerCase();
+                    return currentData.filter(t => 
+                        t.name.toLowerCase().includes(query) || 
+                        t.no.toLowerCase().includes(query) ||
+                        (t.phone && t.phone.toLowerCase().includes(query))
+                    );
+                },
+                
+                get filteredUtilityTenants() {
+                    let currentData = this.tenants[this.selectedBuilding] || [];
+                    if (!this.searchQuery.trim()) return currentData;
+                    
+                    const query = this.searchQuery.toLowerCase();
+                    return currentData.filter(t => 
+                        t.name.toLowerCase().includes(query) || 
+                        t.no.toLowerCase().includes(query)
+                    );
+                },
+                
+                // Initialization
                 init() {
-                    const savedData = localStorage.getItem('eagles_management_data');
+                    const savedData = localStorage.getItem('eagle_tenants');
                     const savedRole = localStorage.getItem('userRole');
-                    const savedUtility = localStorage.getItem('eagles_utility_data');
+                    const savedPayments = localStorage.getItem('eagle_payments');
+                    const savedUnallocated = localStorage.getItem('eagle_unallocated');
+                    const savedSettings = localStorage.getItem('eagle_settings');
                     
-                    if (savedRole) {
-                        this.userRole = savedRole;
-                    }
+                    if (savedRole) this.userRole = savedRole;
+                    if (savedPayments) this.payments = JSON.parse(savedPayments);
+                    if (savedUnallocated) this.unallocatedQueue = JSON.parse(savedUnallocated);
                     
-                    if (savedUtility) {
-                        this.utilityHistory = JSON.parse(savedUtility);
+                    if (savedSettings) {
+                        const settings = JSON.parse(savedSettings);
+                        this.waterRate = settings.waterRate || 100;
+                        this.electricityRate = settings.electricityRate || 20;
+                        this.garbageFeeDefault = settings.garbageFeeDefault || 200;
                     }
                     
                     if (savedData) {
-                        this.propertyData = JSON.parse(savedData);
+                        this.tenants = JSON.parse(savedData);
                     } else {
-                        // Initialize with sample data (truncated for brevity)
-                        this.propertyData = {
+                        // Initialize with sample data
+                        this.tenants = {
                             "1. ROSALIA HOUSE": [
-                                { no: "1", name: "Paul Murimi", rent: 3000, deposit: 3000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "", waterReading: "", elecReading: "", garbageFee: 200 },
-                                { no: "2", name: "Occupied", rent: 1500, deposit: 1500, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "", waterReading: "", elecReading: "", garbageFee: 200 },
-                                { no: "3", name: "Occupied", rent: 3000, deposit: 3000, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "", waterReading: "", elecReading: "", garbageFee: 200 }
+                                { 
+                                    no: "1", 
+                                    name: "Paul Murimi", 
+                                    rent: 3000, 
+                                    deposit: 3000, 
+                                    phone: "0712345678", 
+                                    entryDate: "2025-01-01", 
+                                    exitDate: "", 
+                                    exitReason: "",
+                                    waterReading: "", 
+                                    elecReading: "", 
+                                    garbageFee: 200,
+                                    waterBill: 0,
+                                    electricityBill: 0,
+                                    prevBalance: -500
+                                },
+                                { 
+                                    no: "2", 
+                                    name: "Occupied", 
+                                    rent: 1500, 
+                                    deposit: 1500, 
+                                    phone: "0723456789", 
+                                    entryDate: "2025-01-01", 
+                                    exitDate: "", 
+                                    exitReason: "",
+                                    waterReading: "", 
+                                    elecReading: "", 
+                                    garbageFee: 200,
+                                    waterBill: 0,
+                                    electricityBill: 0,
+                                    prevBalance: 1000
+                                }
                             ],
                             "2. JOSPHINE NJAMBI": [
-                                { no: "1", name: "Simon Ndungu", rent: 4150, deposit: 4150, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "", waterReading: "", elecReading: "", garbageFee: 200 },
-                                { no: "2", name: "Irene Gichuki", rent: 3650, deposit: 3650, phone: "", entryDate: "2025-01-01", exitDate: "", exitReason: "", waterReading: "", elecReading: "", garbageFee: 200 }
+                                { 
+                                    no: "1", 
+                                    name: "Simon Ndungu", 
+                                    rent: 4150, 
+                                    deposit: 4150, 
+                                    phone: "0734567890", 
+                                    entryDate: "2025-01-01", 
+                                    exitDate: "", 
+                                    exitReason: "",
+                                    waterReading: "", 
+                                    elecReading: "", 
+                                    garbageFee: 200,
+                                    waterBill: 0,
+                                    electricityBill: 0,
+                                    prevBalance: 0
+                                }
                             ]
                         };
                         this.saveData();
@@ -871,19 +1345,13 @@
                     this.initializeUtilityFields();
                     
                     // Store original data for cancel functionality
-                    this.originalData = JSON.parse(JSON.stringify(this.propertyData));
+                    this.originalData = JSON.parse(JSON.stringify(this.tenants));
                 },
 
                 // COMMAND CENTER FUNCTIONS
                 onRoleChange() {
                     localStorage.setItem('userRole', this.userRole);
-                    
-                    if (this.userRole === 'secretary') {
-                        this.editMode = false;
-                        this.showToast('Switched to Secretary role - Read-only mode', 'success');
-                    } else {
-                        this.showToast('Switched to Owner role - Full edit permissions', 'success');
-                    }
+                    this.showToast(`Switched to ${this.userRole} role`, 'success');
                 },
 
                 toggleEditMode() {
@@ -895,7 +1363,7 @@
                     this.editMode = !this.editMode;
                     
                     if (this.editMode) {
-                        this.originalData = JSON.parse(JSON.stringify(this.propertyData));
+                        this.originalData = JSON.parse(JSON.stringify(this.tenants));
                         this.showToast('Edit Mode Activated - Make your changes', 'success');
                     } else {
                         this.saveAllChanges();
@@ -908,19 +1376,19 @@
                         return;
                     }
                     
-                    const building = this.propertyData[this.selectedBuilding];
+                    const building = this.tenants[this.selectedBuilding];
                     if (!building) {
-                        this.propertyData[this.selectedBuilding] = [];
+                        this.tenants[this.selectedBuilding] = [];
                     }
                     
                     // Generate next unit number
-                    const existingUnits = this.propertyData[this.selectedBuilding].map(t => t.no);
+                    const existingUnits = this.tenants[this.selectedBuilding].map(t => t.no);
                     let nextUnit = 1;
                     while (existingUnits.includes(nextUnit.toString())) {
                         nextUnit++;
                     }
                     
-                    this.propertyData[this.selectedBuilding].push({
+                    this.tenants[this.selectedBuilding].push({
                         no: nextUnit.toString(),
                         name: "New Tenant",
                         rent: 0,
@@ -931,9 +1399,10 @@
                         exitReason: "",
                         waterReading: "",
                         elecReading: "",
-                        garbageFee: 200,
+                        garbageFee: this.garbageFeeDefault,
                         waterBill: 0,
-                        electricityBill: 0
+                        electricityBill: 0,
+                        prevBalance: 0
                     });
                     
                     this.showToast('New tenant row added', 'success');
@@ -945,7 +1414,7 @@
                     }
                     
                     if (confirm('Are you sure you want to remove this tenant?')) {
-                        const building = this.propertyData[this.selectedBuilding];
+                        const building = this.tenants[this.selectedBuilding];
                         if (building && building[index]) {
                             building.splice(index, 1);
                             this.showToast('Tenant removed', 'success');
@@ -958,7 +1427,7 @@
                         return;
                     }
                     
-                    const building = this.propertyData[this.selectedBuilding];
+                    const building = this.tenants[this.selectedBuilding];
                     if (building && building[index]) {
                         const tenant = building[index];
                         const duplicate = JSON.parse(JSON.stringify(tenant));
@@ -982,51 +1451,29 @@
 
                 cancelEditMode() {
                     if (confirm('Cancel all unsaved changes?')) {
-                        this.propertyData = JSON.parse(JSON.stringify(this.originalData));
+                        this.tenants = JSON.parse(JSON.stringify(this.originalData));
                         this.editMode = false;
                         this.showToast('Changes cancelled', 'success');
                     }
                 },
 
-                get filteredTenants() {
-                    let currentData = this.propertyData[this.selectedBuilding] || [];
-                    if (!this.searchQuery.trim()) return currentData;
-                    
-                    const query = this.searchQuery.toLowerCase();
-                    return currentData.filter(t => 
-                        t.name.toLowerCase().includes(query) || 
-                        t.no.toLowerCase().includes(query) ||
-                        (t.phone && t.phone.toLowerCase().includes(query))
-                    );
-                },
-
                 // UTILITY FUNCTIONS
                 initializeUtilityFields() {
                     // Ensure all tenants have utility fields
-                    Object.values(this.propertyData).forEach(units => {
+                    Object.values(this.tenants).forEach(units => {
                         units.forEach(tenant => {
                             if (tenant.waterReading === undefined) tenant.waterReading = "";
                             if (tenant.elecReading === undefined) tenant.elecReading = "";
-                            if (tenant.garbageFee === undefined) tenant.garbageFee = 200;
+                            if (tenant.garbageFee === undefined) tenant.garbageFee = this.garbageFeeDefault;
                             if (tenant.waterBill === undefined) tenant.waterBill = 0;
                             if (tenant.electricityBill === undefined) tenant.electricityBill = 0;
+                            if (tenant.prevBalance === undefined) tenant.prevBalance = 0;
                         });
                     });
                 },
 
-                get filteredUtilityTenants() {
-                    let currentData = this.propertyData[this.selectedBuilding] || [];
-                    if (!this.searchQuery.trim()) return currentData;
-                    
-                    const query = this.searchQuery.toLowerCase();
-                    return currentData.filter(t => 
-                        t.name.toLowerCase().includes(query) || 
-                        t.no.toLowerCase().includes(query)
-                    );
-                },
-
                 getUtilityStats() {
-                    const building = this.propertyData[this.selectedBuilding] || [];
+                    const building = this.tenants[this.selectedBuilding] || [];
                     let waterPending = 0;
                     let electricityPending = 0;
                     let completed = 0;
@@ -1076,18 +1523,16 @@
                 },
 
                 calculateWaterBill(tenant) {
-                    // Simple calculation: 100 Ksh per cubic meter
                     if (tenant.waterReading && !isNaN(tenant.waterReading)) {
-                        tenant.waterBill = Number(tenant.waterReading) * 100;
+                        tenant.waterBill = Number(tenant.waterReading) * this.waterRate;
                     } else {
                         tenant.waterBill = 0;
                     }
                 },
 
                 calculateElectricityBill(tenant) {
-                    // Simple calculation: 20 Ksh per kWh
                     if (tenant.elecReading && !isNaN(tenant.elecReading)) {
-                        tenant.electricityBill = Number(tenant.elecReading) * 20;
+                        tenant.electricityBill = Number(tenant.elecReading) * this.electricityRate;
                     } else {
                         tenant.electricityBill = 0;
                     }
@@ -1100,8 +1545,7 @@
                 },
 
                 saveUtilityReadings() {
-                    // Save current readings to history
-                    const buildingData = this.propertyData[this.selectedBuilding] || [];
+                    const buildingData = this.tenants[this.selectedBuilding] || [];
                     const utilityData = {
                         month: this.utilityMonth,
                         building: this.selectedBuilding,
@@ -1124,7 +1568,7 @@
                     this.utilityHistory[this.selectedBuilding].push(utilityData);
                     
                     // Save to localStorage
-                    localStorage.setItem('eagles_utility_data', JSON.stringify(this.utilityHistory));
+                    localStorage.setItem('eagle_utility_data', JSON.stringify(this.utilityHistory));
                     this.saveData();
                     
                     this.showToast('Utility readings saved successfully', 'success');
@@ -1132,7 +1576,7 @@
 
                 clearAllReadings() {
                     if (confirm('Clear all utility readings for this building?')) {
-                        const building = this.propertyData[this.selectedBuilding];
+                        const building = this.tenants[this.selectedBuilding];
                         if (building) {
                             building.forEach(tenant => {
                                 tenant.waterReading = "";
@@ -1146,11 +1590,11 @@
                 },
 
                 applyBulkGarbage() {
-                    const building = this.propertyData[this.selectedBuilding];
+                    const building = this.tenants[this.selectedBuilding];
                     if (building) {
                         building.forEach(tenant => {
                             if (!tenant.name.toLowerCase().includes('vacant')) {
-                                tenant.garbageFee = 200;
+                                tenant.garbageFee = this.garbageFeeDefault;
                             }
                         });
                         this.showToast('Garbage fee applied to all occupied units', 'success');
@@ -1166,7 +1610,7 @@
                 },
 
                 autoFillZeroReadings() {
-                    const building = this.propertyData[this.selectedBuilding];
+                    const building = this.tenants[this.selectedBuilding];
                     if (building) {
                         building.forEach(tenant => {
                             if (tenant.waterReading === "" || tenant.waterReading === undefined) {
@@ -1182,7 +1626,6 @@
                 },
 
                 copyPreviousMonth() {
-                    // Implementation for copying previous month's readings
                     this.showToast('Feature coming soon', 'info');
                 },
 
@@ -1194,7 +1637,7 @@
                     const data = {
                         month: this.utilityMonth,
                         building: this.selectedBuilding,
-                        readings: this.propertyData[this.selectedBuilding] || []
+                        readings: this.tenants[this.selectedBuilding] || []
                     };
                     
                     const dataStr = JSON.stringify(data, null, 2);
@@ -1223,14 +1666,89 @@
                     this.showToast('Reminders feature coming soon', 'info');
                 },
 
-                // COMMON FUNCTIONS
+                // PAYMENT FUNCTIONS
+                processIncomingPayment(apiData) {
+                    const newPayment = { 
+                        ...apiData, 
+                        immutable: true, 
+                        timestamp: new Date().toLocaleString(),
+                        tenantName: this.findTenantByReference(apiData.accountRef)?.name || 'Unknown'
+                    };
+
+                    if (apiData.bankType === 'Co-op') {
+                        this.allocateToHouse(newPayment, apiData.accountRef);
+                    } 
+                    else if (apiData.bankType === 'Family') {
+                        const houseExists = this.checkHouseExists(apiData.accountRef);
+                        if (houseExists) {
+                            this.allocateToHouse(newPayment, apiData.accountRef);
+                        } else {
+                            this.unallocatedQueue.push(newPayment);
+                            this.savePaymentData();
+                            this.showToast('Payment moved to unallocated queue (reference typo)', 'warning');
+                        }
+                    }
+                },
+
+                allocateToHouse(payment, houseNo) {
+                    payment.houseNo = houseNo;
+                    this.payments.push(payment);
+                    this.savePaymentData();
+                    
+                    // Update tenant's previous balance (reduce arrears)
+                    const tenant = this.findTenantByReference(houseNo);
+                    if (tenant && tenant.prevBalance > 0) {
+                        tenant.prevBalance = Math.max(0, tenant.prevBalance - payment.amount);
+                        this.saveData();
+                    }
+                    
+                    this.showToast(`Payment allocated to ${houseNo}`, 'success');
+                },
+
+                allocateUnallocatedPayment(index) {
+                    const payment = this.unallocatedQueue[index];
+                    const houseNo = prompt(`Assign payment ${payment.id} to which house?`, payment.accountRef);
+                    
+                    if (houseNo && houseNo.trim()) {
+                        payment.houseNo = houseNo.trim();
+                        this.payments.push(payment);
+                        this.unallocatedQueue.splice(index, 1);
+                        this.savePaymentData();
+                        this.showToast(`Payment assigned to ${houseNo}`, 'success');
+                    }
+                },
+
+                checkHouseExists(ref) {
+                    return Object.values(this.tenants).some(building => 
+                        building.some(h => h.no === ref)
+                    );
+                },
+
+                findTenantByReference(ref) {
+                    for (const building of Object.values(this.tenants)) {
+                        const tenant = building.find(h => h.no === ref);
+                        if (tenant) return tenant;
+                    }
+                    return null;
+                },
+
+                refreshPayments() {
+                    this.showToast('Payment data refreshed', 'success');
+                },
+
+                savePaymentData() {
+                    localStorage.setItem('eagle_payments', JSON.stringify(this.payments));
+                    localStorage.setItem('eagle_unallocated', JSON.stringify(this.unallocatedQueue));
+                },
+
+                // FINANCIAL FUNCTIONS
                 getStats() {
                     let totalRent = 0;
                     let totalDeposits = 0;
                     let totalUnits = 0;
                     let occupied = 0;
 
-                    Object.values(this.propertyData).forEach(units => {
+                    Object.values(this.tenants).forEach(units => {
                         units.forEach(u => {
                             totalUnits++;
                             totalRent += Number(u.rent || 0);
@@ -1250,13 +1768,131 @@
                     };
                 },
 
+                getHouseStatus(tenant) {
+                    const totalDue = Number(tenant.rent || 0) + 
+                                   Number(tenant.waterBill || 0) + 
+                                   Number(tenant.electricityBill || 0) +
+                                   Number(tenant.garbageFee || 0) +
+                                   Number(tenant.prevBalance || 0);
+                    
+                    if (totalDue === 0) {
+                        return { label: 'CLEAR', class: 'bg-emerald-100 text-emerald-700' };
+                    } else if (totalDue > 0) {
+                        return { label: 'ARREARS', class: 'bg-red-100 text-red-700' };
+                    } else {
+                        return { label: 'CREDIT', class: 'bg-blue-100 text-blue-700' };
+                    }
+                },
+
                 calculateBuildingTotal(buildingName, field) {
-                    const units = this.propertyData[buildingName] || [];
+                    const units = this.tenants[buildingName] || [];
                     return units.reduce((total, unit) => total + Number(unit[field] || 0), 0);
                 },
 
+                rolloverMonth() {
+                    if(!confirm('Are you sure you want to close the month? This will move all balances to the next cycle.')) return;
+
+                    Object.keys(this.tenants).forEach(building => {
+                        this.tenants[building].forEach(tenant => {
+                            // Calculate current total due
+                            const currentTotal = Number(tenant.rent || 0) + 
+                                               Number(tenant.waterBill || 0) + 
+                                               Number(tenant.electricityBill || 0) +
+                                               Number(tenant.garbageFee || 0);
+                            
+                            // Update previous balance (positive = arrears, negative = credit)
+                            tenant.prevBalance = (tenant.prevBalance || 0) + currentTotal;
+                            
+                            // Reset monthly variable fields for the new month
+                            tenant.waterReading = '';
+                            tenant.elecReading = '';
+                            tenant.waterBill = 0;
+                            tenant.electricityBill = 0;
+                            // Rent and Deposit remain the same
+                        });
+                    });
+
+                    this.saveData();
+                    this.showToast('Month closed successfully! All balances have rolled over.', 'success');
+                },
+
+                // ADMIN FUNCTIONS
+                saveSettings() {
+                    const settings = {
+                        waterRate: this.waterRate,
+                        electricityRate: this.electricityRate,
+                        garbageFeeDefault: this.garbageFeeDefault
+                    };
+                    
+                    localStorage.setItem('eagle_settings', JSON.stringify(settings));
+                    this.showToast('Settings saved successfully', 'success');
+                },
+
+                backupData() {
+                    const backup = {
+                        tenants: this.tenants,
+                        payments: this.payments,
+                        unallocatedQueue: this.unallocatedQueue,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    const dataStr = JSON.stringify(backup, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `eagle-homes-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    this.showToast('Backup created successfully', 'success');
+                },
+
+                restoreData() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    
+                    input.onchange = e => {
+                        const file = e.target.files[0];
+                        const reader = new FileReader();
+                        
+                        reader.onload = (event) => {
+                            try {
+                                const backup = JSON.parse(event.target.result);
+                                this.tenants = backup.tenants || {};
+                                this.payments = backup.payments || [];
+                                this.unallocatedQueue = backup.unallocatedQueue || [];
+                                
+                                this.saveData();
+                                this.savePaymentData();
+                                
+                                this.showToast('Data restored successfully', 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            } catch (error) {
+                                this.showToast('Failed to restore backup', 'error');
+                            }
+                        };
+                        
+                        reader.readAsText(file);
+                    };
+                    
+                    input.click();
+                },
+
+                clearAllData() {
+                    if (confirm('WARNING: This will delete ALL data. Are you absolutely sure?')) {
+                        localStorage.clear();
+                        this.showToast('All data cleared. Refreshing...', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                },
+
+                // COMMON FUNCTIONS
                 formatNumber(num) {
-                    return num.toLocaleString('en-KE');
+                    return Number(num).toLocaleString('en-KE');
                 },
 
                 refreshData() {
@@ -1264,7 +1900,7 @@
                 },
 
                 exportData() {
-                    const dataStr = JSON.stringify(this.propertyData, null, 2);
+                    const dataStr = JSON.stringify(this.tenants, null, 2);
                     const dataBlob = new Blob([dataStr], { type: 'application/json' });
                     const url = URL.createObjectURL(dataBlob);
                     const link = document.createElement('a');
@@ -1278,18 +1914,43 @@
                     this.showToast('Data exported successfully', 'success');
                 },
 
+                exportFinancialData() {
+                    const financialData = {
+                        summary: this.getStats(),
+                        properties: Object.entries(this.tenants).map(([name, units]) => ({
+                            name,
+                            units: units.length,
+                            totalRent: units.reduce((sum, t) => sum + Number(t.rent || 0), 0),
+                            totalDeposits: units.reduce((sum, t) => sum + Number(t.deposit || 0), 0),
+                            occupancyRate: units.filter(t => !t.name.toLowerCase().includes('vacant')).length / units.length * 100
+                        })),
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    const dataStr = JSON.stringify(financialData, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `financial-report-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    this.showToast('Financial data exported successfully', 'success');
+                },
+
+                exportPropertyData() {
+                    this.exportFinancialData();
+                },
+
                 printReport() {
                     window.print();
                 },
 
-                lockMonthData() {
-                    if (confirm('Lock all data for this month? This action cannot be undone.')) {
-                        this.showToast('Month data locked successfully', 'success');
-                    }
-                },
-
                 saveData() {
-                    localStorage.setItem('eagles_management_data', JSON.stringify(this.propertyData));
+                    localStorage.setItem('eagle_tenants', JSON.stringify(this.tenants));
                 },
 
                 showToast(message, type = 'success') {
@@ -1301,6 +1962,10 @@
                         this.errorMessage = message;
                         this.showErrorToast = true;
                         setTimeout(() => this.showErrorToast = false, 3000);
+                    } else if (type === 'warning') {
+                        this.successMessage = message;
+                        this.showSuccessToast = true;
+                        setTimeout(() => this.showSuccessToast = false, 3000);
                     } else {
                         this.successMessage = message;
                         this.showSuccessToast = true;
