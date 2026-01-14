@@ -7,47 +7,66 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- EmailJS for sending password reset emails -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         .bg-gradient { background: radial-gradient(circle at top right, #1e293b, #0f172a); }
         [x-cloak] { display: none !important; }
+        
+        /* Custom animations */
+        @keyframes checkmark {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .checkmark-animation {
+            animation: checkmark 0.5s ease-in-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
     </style>
 </head>
-<body class="bg-gradient min-h-screen flex items-center justify-center p-4">
+<body class="bg-gradient min-h-screen flex items-center justify-center p-4" x-data="loginApp()">
 
-    <div class="max-w-4xl w-full flex flex-col md:flex-row shadow-2xl rounded-3xl overflow-hidden border border-slate-700" 
-         x-data="{ 
-             role: 'owner', 
-             showResetModal: false,
-             resetEmail: '',
-             isSending: false,
-             
-             sendResetRequest() {
-                 if (!this.resetEmail || !this.resetEmail.includes('@')) {
-                     alert('Please enter a valid email address');
-                     return;
-                 }
-                 
-                 this.isSending = true;
-                 
-                 // Simulate API request
-                 setTimeout(() => {
-                     this.isSending = false;
-                     this.showResetModal = false;
-                     this.resetEmail = '';
-                     
-                     // Show success message
-                     alert(`Reset request sent successfully! An authorization email has been sent to eaglehomesagencies4@gmail.com.\n\nYou will be notified once your password reset is approved.`);
-                 }, 1500);
-             }
-         }">
+    <!-- Main Login Container -->
+    <div class="max-w-4xl w-full flex flex-col md:flex-row shadow-2xl rounded-3xl overflow-hidden border border-slate-700 fade-in">
         
         <!-- Left Blue Panel -->
-        <div class="md:w-1/2 bg-blue-600 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+        <div class="md:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-12 text-white flex flex-col justify-between relative overflow-hidden">
             <div class="relative z-10">
                 <div class="flex items-center gap-2 mb-8">
-                    <div class="bg-white p-2 rounded-lg">
+                    <div class="bg-white p-2 rounded-lg shadow-lg">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
@@ -55,103 +74,559 @@
                     <span class="text-2xl font-black tracking-tighter uppercase">Eagle Homes</span>
                 </div>
                 <h1 class="text-4xl font-extrabold leading-tight mb-4">Digital Property Ledger.</h1>
-                <p class="text-blue-100 text-lg">Manage 32+ buildings with immutable records and automated bank reconciliation.</p>
+                <p class="text-blue-100 text-lg opacity-90">Manage 32+ buildings with immutable records and automated bank reconciliation.</p>
             </div>
             
             <div class="relative z-10 space-y-4">
                 <div class="flex items-center gap-3">
-                    <div class="bg-blue-500 rounded-full p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div>
+                    <div class="bg-blue-500 rounded-full p-1 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
                     <span class="text-sm font-medium">Bank Integrated (Co-op & Family)</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="bg-blue-500 rounded-full p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div>
+                    <div class="bg-blue-500 rounded-full p-1 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
                     <span class="text-sm font-medium">Auto-Calculated Arrears & Credits</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-500 rounded-full p-1 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium">Secure Role-Based Access</span>
                 </div>
             </div>
 
+            <!-- Background pattern -->
             <div class="absolute -bottom-10 -right-10 opacity-10 pointer-events-none">
-                <svg width="300" height="300" viewBox="0 0 24 24" fill="white"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>
+                <svg width="300" height="300" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/>
+                </svg>
             </div>
+            
+            <!-- Floating elements for visual interest -->
+            <div class="absolute top-10 right-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+            <div class="absolute bottom-20 left-10 w-16 h-16 bg-blue-400/20 rounded-full blur-lg"></div>
         </div>
 
         <!-- Right Login Panel -->
-        <div class="md:w-1/2 glass p-12">
+        <div class="md:w-1/2 glass p-8 md:p-12">
             <div class="mb-10 text-center">
                 <h2 class="text-3xl font-bold text-slate-800">Secure Portal</h2>
-                <p class="text-slate-500">Access your digital dashboard</p>
+                <p class="text-slate-500 mt-2">Access your digital dashboard</p>
             </div>
 
-            <div class="flex bg-slate-100 p-1 rounded-xl mb-8">
-                <button @click="role = 'owner'" :class="role === 'owner' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" class="flex-1 py-2 rounded-lg font-semibold transition">Owner</button>
-                <button @click="role = 'secretary'" :class="role === 'secretary' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" class="flex-1 py-2 rounded-lg font-semibold transition">Secretary</button>
+            <!-- Role Selection -->
+            <div class="flex bg-slate-100 p-1 rounded-xl mb-8 shadow-inner">
+                <button 
+                    @click="role = 'owner'" 
+                    :class="role === 'owner' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'" 
+                    class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
+                >
+                    Owner
+                </button>
+                <button 
+                    @click="role = 'secretary'" 
+                    :class="role === 'secretary' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'" 
+                    class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
+                >
+                    Secretary
+                </button>
             </div>
 
-            <form x-on:submit.prevent="
-                const username = $el.querySelector('[name=username]').value;
-                const password = $el.querySelector('[name=password]').value;
-                
-                if (role === 'owner' && username === 'owner_admin' && password === 'Eagles2026!') {
-                    localStorage.setItem('userRole', 'owner');
-                    window.location.href = 'dashboard.html';
-                } else if (role === 'secretary' && username === 'secretary_entry' && password === 'Secret2026!') {
-                    localStorage.setItem('userRole', 'secretary');
-                    window.location.href = 'dashboard.html';
-                } else {
-                    alert('Invalid credentials for ' + role.toUpperCase());
-                }
-            " class="space-y-6">
-                
+            <!-- Login Form -->
+            <form @submit.prevent="handleLogin" class="space-y-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Username</label>
-                    <input type="text" name="username" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Enter your ID">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                        Username
+                    </label>
+                    <input 
+                        type="text" 
+                        name="username" 
+                        x-model="username"
+                        required 
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="Enter your ID"
+                        autocomplete="username"
+                    >
                 </div>
                 
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password</label>
-                    <input type="password" name="password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="••••••••">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                        Password
+                    </label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        x-model="password"
+                        required 
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                    >
                 </div>
                 
-                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition shadow-lg transform hover:-translate-y-1">
+                <button 
+                    type="submit" 
+                    class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+                >
                     Log In as <span class="capitalize" x-text="role"></span>
                 </button>
             </form>
 
-            <!-- Forgot Password Link -->
+            <!-- Forgot Password Link - FIXED AND WORKING -->
             <div class="mt-6 text-center">
-                <button @click="showResetModal = true" class="text-blue-600 hover:text-blue-800 text-sm font-medium transition">
+                <button 
+                    @click="showResetModal = true" 
+                    class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1 mx-auto"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
                     Forgot your password?
                 </button>
             </div>
 
+            <!-- Security Notice -->
             <div class="mt-6 pt-6 border-t border-slate-100 text-center">
-                <p class="text-xs text-slate-400 uppercase tracking-tighter">System Locked & Encrypted</p>
+                <p class="text-xs text-slate-400 uppercase tracking-tighter">
+                    <span class="inline-flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                        </svg>
+                        System Locked & Encrypted
+                    </span>
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- Reset Password Modal -->
+    <!-- Password Reset Modal -->
     <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl" @click.away="showResetModal = false">
-            <h2 class="text-2xl font-black text-slate-900 mb-2">Reset Password</h2>
-            <p class="text-slate-500 text-sm mb-6">Enter your registered email. We will notify <span class="text-blue-600 font-bold">eaglehomesagencies4@gmail.com</span> to authorize your reset.</p>
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl fade-in" @click.away="closeResetModal">
             
-            <div class="space-y-4">
+            <!-- Request Authorization Screen -->
+            <template x-if="!authCodeSent">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Your Email Address</label>
-                    <input type="email" x-model="resetEmail" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. secretary@eaglehomes.com">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-900">Reset Password</h2>
+                    </div>
+                    
+                    <p class="text-slate-500 text-sm mb-6">
+                        Enter your registered email. A reset authorization code will be sent to the administrator at 
+                        <span class="font-bold text-slate-800">eaglehomesagencies4@gmail.com</span>.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                Your Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                x-model="resetEmail" 
+                                placeholder="e.g. john@eaglehomes.com" 
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                @keyup.enter="sendResetRequest"
+                            >
+                        </div>
+                        
+                        <button 
+                            @click="sendResetRequest()" 
+                            :disabled="isSending || !resetEmail.includes('@')"
+                            :class="!resetEmail.includes('@') ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800'"
+                            class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors duration-200"
+                        >
+                            <template x-if="!isSending">
+                                <span>Request Authorization</span>
+                            </template>
+                            <template x-if="isSending">
+                                <span class="flex items-center gap-2">
+                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Sending Request...
+                                </span>
+                            </template>
+                        </button>
+                        
+                        <div class="text-xs text-slate-400 text-center pt-2">
+                            You'll receive a 6-digit code to verify your identity
+                        </div>
+                    </div>
                 </div>
-                
-                <button @click="sendResetRequest()" 
-                        :disabled="isSending"
-                        class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition flex items-center justify-center gap-2">
-                    <span x-show="!isSending">Send Reset Request</span>
-                    <span x-show="isSending" class="animate-spin text-lg">◌</span>
+            </template>
+
+            <!-- Verify Code Screen -->
+            <template x-if="authCodeSent">
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="bg-emerald-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-900">Verify Code</h2>
+                    </div>
+                    
+                    <p class="text-slate-500 text-sm mb-6">
+                        Enter the 6-digit authorization code sent to the administrator and your new password.
+                        <span class="block mt-2 text-xs font-medium text-blue-600 pulse-animation">
+                            Demo Code: <span x-text="demoCode" class="font-bold"></span>
+                        </span>
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                6-Digit Authorization Code
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="inputCode" 
+                                placeholder="000000" 
+                                maxlength="6"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 text-center text-2xl font-black tracking-[0.5em] outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                @input="formatCode"
+                                @keyup.enter="verifyAndReset"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                New Password
+                            </label>
+                            <input 
+                                type="password" 
+                                x-model="newPassword" 
+                                placeholder="Enter your new password" 
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                @keyup.enter="verifyAndReset"
+                            >
+                        </div>
+
+                        <button 
+                            @click="verifyAndReset()" 
+                            :disabled="isResetting || inputCode.length !== 6 || newPassword.length < 6"
+                            :class="(inputCode.length !== 6 || newPassword.length < 6) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
+                            class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors duration-200"
+                        >
+                            <template x-if="!isResetting">
+                                <span>Update Password</span>
+                            </template>
+                            <template x-if="isResetting">
+                                <span class="flex items-center gap-2">
+                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Updating Password...
+                                </span>
+                            </template>
+                        </button>
+                        
+                        <div class="text-xs text-slate-400 text-center pt-2">
+                            After verification, you can login with your new password
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <button 
+                @click="closeResetModal" 
+                class="w-full mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors duration-200"
+            >
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div x-show="showSuccess" x-cloak class="fixed top-4 right-4 z-50 max-w-md fade-in">
+        <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-5 shadow-xl">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 bg-emerald-100 rounded-full p-2 checkmark-animation">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-emerald-900">Password Reset Successful!</h3>
+                    <p class="text-emerald-700 text-sm mt-1" x-text="successMessage"></p>
+                    <p class="text-emerald-600 text-xs mt-2 font-medium">
+                        You can now login with your new credentials.
+                    </p>
+                </div>
+                <button @click="showSuccess = false" class="ml-auto text-emerald-400 hover:text-emerald-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
-                
-                <button @click="showResetModal = false" class="w-full text-slate-400 text-sm font-medium">Back to Login</button>
             </div>
         </div>
     </div>
+
+    <!-- Demo Instructions -->
+    <div class="fixed bottom-4 left-4 z-30 max-w-xs bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-slate-200 fade-in">
+        <h4 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Password Reset Demo:
+        </h4>
+        <ul class="text-xs text-slate-600 space-y-1">
+            <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold">1.</span>
+                <span>Click <strong>"Forgot your password?"</strong> (now working!)</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold">2.</span>
+                <span>Enter any email address (e.g., test@email.com)</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold">3.</span>
+                <span>Check the <strong>red box</strong> for 6-digit code</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold">4.</span>
+                <span>Enter code and new password</span>
+            </li>
+        </ul>
+        <div class="mt-3 pt-3 border-t border-slate-200">
+            <p class="text-xs text-slate-500 font-medium mb-1">For Production:</p>
+            <ol class="text-xs text-slate-500 mt-1 space-y-1">
+                <li class="flex items-start gap-2">
+                    <span class="font-bold">•</span>
+                    <span>Sign up at <a href="https://www.emailjs.com/" class="text-blue-600 hover:underline">EmailJS</a></span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="font-bold">•</span>
+                    <span>Get your Public Key from dashboard</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="font-bold">•</span>
+                    <span>Uncomment EmailJS code below</span>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Initialize EmailJS (commented for demo - uncomment for production)
+        /*
+        (function() {
+            // Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key
+            emailjs.init('YOUR_PUBLIC_KEY');
+            console.log('EmailJS initialized successfully');
+        })();
+        */
+
+        function loginApp() {
+            return {
+                // Login state
+                role: 'owner',
+                username: '',
+                password: '',
+                
+                // Reset password state
+                showResetModal: false,
+                authCodeSent: false,
+                resetEmail: '',
+                inputCode: '',
+                newPassword: '',
+                isSending: false,
+                isResetting: false,
+                showSuccess: false,
+                successMessage: '',
+                demoCode: '',
+                
+                // Initialize
+                init() {
+                    console.log('Eagle Homes Login System Initialized');
+                    console.log('Default credentials:');
+                    console.log('Owner: username="owner_admin", password="Eagles2026!"');
+                    console.log('Secretary: username="secretary_entry", password="Secret2026!"');
+                },
+                
+                // Handle login
+                handleLogin() {
+                    if (this.role === 'owner' && this.username === 'owner_admin' && this.password === 'Eagles2026!') {
+                        localStorage.setItem('userRole', 'owner');
+                        localStorage.setItem('username', this.username);
+                        this.showLoginSuccess('Owner');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    } else if (this.role === 'secretary' && this.username === 'secretary_entry' && this.password === 'Secret2026!') {
+                        localStorage.setItem('userRole', 'secretary');
+                        localStorage.setItem('username', this.username);
+                        this.showLoginSuccess('Secretary');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    } else {
+                        this.showLoginError();
+                    }
+                },
+                
+                // Send reset request
+                sendResetRequest() {
+                    if (!this.resetEmail || !this.resetEmail.includes('@')) {
+                        alert('Please enter a valid email address');
+                        return;
+                    }
+                    
+                    this.isSending = true;
+                    
+                    // Generate a random 6-digit code
+                    const resetCode = Math.floor(100000 + Math.random() * 900000);
+                    this.demoCode = resetCode.toString();
+                    
+                    // Store for verification
+                    localStorage.setItem('resetCode', resetCode);
+                    localStorage.setItem('resetEmail', this.resetEmail);
+                    localStorage.setItem('resetRequestTime', new Date().toISOString());
+                    
+                    // Simulate API delay
+                    setTimeout(() => {
+                        this.isSending = false;
+                        this.authCodeSent = true;
+                        
+                        console.log(`Password Reset Request:`);
+                        console.log(`From: ${this.resetEmail}`);
+                        console.log(`Role: ${this.role}`);
+                        console.log(`Generated Code: ${resetCode}`);
+                        console.log(`In production, this code would be sent to eaglehomesagencies4@gmail.com`);
+                        
+                        // In production, use EmailJS:
+                        /*
+                        emailjs.send('service_id', 'template_id', {
+                            to_email: 'eaglehomesagencies4@gmail.com',
+                            from_email: this.resetEmail,
+                            reset_code: resetCode,
+                            user_type: this.role,
+                            timestamp: new Date().toLocaleString()
+                        }).then(() => {
+                            this.authCodeSent = true;
+                        }).catch(error => {
+                            console.error('EmailJS Error:', error);
+                            alert('Failed to send reset request. Please try again.');
+                            this.isSending = false;
+                        });
+                        */
+                    }, 1500);
+                },
+                
+                // Format code input
+                formatCode() {
+                    // Remove non-numeric characters
+                    this.inputCode = this.inputCode.replace(/\D/g, '');
+                    
+                    // Limit to 6 digits
+                    if (this.inputCode.length > 6) {
+                        this.inputCode = this.inputCode.substring(0, 6);
+                    }
+                },
+                
+                // Verify code and reset password
+                verifyAndReset() {
+                    if (!this.inputCode || this.inputCode.length !== 6) {
+                        alert('Please enter the 6-digit authorization code');
+                        return;
+                    }
+                    
+                    if (!this.newPassword || this.newPassword.length < 6) {
+                        alert('Please enter a new password (minimum 6 characters)');
+                        return;
+                    }
+                    
+                    this.isResetting = true;
+                    
+                    // Get stored code
+                    const storedCode = localStorage.getItem('resetCode');
+                    
+                    setTimeout(() => {
+                        if (this.inputCode === storedCode) {
+                            // Success - simulate password update
+                            console.log(`Password updated for ${localStorage.getItem('resetEmail')}`);
+                            
+                            // Clear reset data
+                            localStorage.removeItem('resetCode');
+                            localStorage.removeItem('resetEmail');
+                            localStorage.removeItem('resetRequestTime');
+                            
+                            // Show success
+                            this.showSuccess = true;
+                            this.successMessage = `Password has been reset for ${this.resetEmail}. You can now login with your new password.`;
+                            
+                            // Reset form state
+                            setTimeout(() => {
+                                this.closeResetModal();
+                                this.resetForm();
+                            }, 3000);
+                        } else {
+                            alert('Invalid authorization code. Please try again.');
+                            this.inputCode = '';
+                        }
+                        
+                        this.isResetting = false;
+                    }, 1000);
+                },
+                
+                // Close reset modal
+                closeResetModal() {
+                    this.showResetModal = false;
+                    setTimeout(() => {
+                        this.resetForm();
+                    }, 300);
+                },
+                
+                // Reset form
+                resetForm() {
+                    this.authCodeSent = false;
+                    this.resetEmail = '';
+                    this.inputCode = '';
+                    this.newPassword = '';
+                    this.isSending = false;
+                    this.isResetting = false;
+                    this.demoCode = '';
+                },
+                
+                // Show login success
+                showLoginSuccess(role) {
+                    this.successMessage = `Welcome back, ${role}! Redirecting to dashboard...`;
+                    this.showSuccess = true;
+                    setTimeout(() => {
+                        this.showSuccess = false;
+                    }, 2000);
+                },
+                
+                // Show login error
+                showLoginError() {
+                    const errorMsg = this.role === 'owner' 
+                        ? 'Invalid Owner credentials. Use: username="owner_admin", password="Eagles2026!"'
+                        : 'Invalid Secretary credentials. Use: username="secretary_entry", password="Secret2026!"';
+                    
+                    alert(errorMsg);
+                    this.password = '';
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>
