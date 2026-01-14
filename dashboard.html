@@ -60,6 +60,15 @@
         }
         @media print {
             .no-print { display: none !important; }
+            body { background: white !important; }
+            #printable-area { 
+                border: none !important; 
+                box-shadow: none !important; 
+                width: 100% !important; 
+                max-width: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+            }
         }
     </style>
 </head>
@@ -105,6 +114,12 @@
                 <i class="fas fa-chart-bar w-5 h-5"></i>
                 Reports
             </a>
+            <a href="#" @click.prevent="activeTab = 'statement'" 
+               :class="activeTab === 'statement' ? 'sidebar-link active' : ''"
+               class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-file-invoice-dollar w-5 h-5"></i>
+                Landlord Statement
+            </a>
 
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mt-8 mb-2">Administration</p>
             <a href="#" @click.prevent="activeTab = 'properties'" 
@@ -132,6 +147,23 @@
                 </select>
                 <p class="text-xs text-gray-500 mt-1" x-text="userRole === 'owner' ? 'Full edit permissions' : 'Read-only mode'"></p>
             </div>
+            
+            <!-- Owner Only: Credential Manager -->
+            <template x-if="userRole === 'owner' && activeTab === 'settings'">
+                <div class="bg-white p-4 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-slate-800 mb-3 text-sm">System Credential Manager</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Secretary New Password</p>
+                            <input type="password" id="sec_pass" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <button @click="updateSecretaryPassword()" 
+                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">
+                            Update Secretary Password
+                        </button>
+                    </div>
+                </div>
+            </template>
             
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -870,6 +902,155 @@
             </div>
         </div>
 
+        <!-- Landlord Statement Tab -->
+        <div x-show="activeTab === 'statement'" x-cloak>
+            <div class="sticky-header p-8 pb-6 no-print">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800">Landlord Statement</h2>
+                        <p class="text-gray-500 font-medium">Monthly settlement report for landlords</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button @click="printStatement()" 
+                                class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition flex items-center gap-2">
+                            <i class="fas fa-print"></i>
+                            Print Statement
+                        </button>
+                        <button @click="generateStatement()" 
+                                class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-alt"></i>
+                            Generate Statement
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pt-6">
+                <!-- Landlord Statement Content -->
+                <div class="max-w-5xl mx-auto bg-white p-8 shadow-2xl rounded-sm border border-slate-200" id="printable-area">
+                    <div class="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-8">
+                        <div>
+                            <h1 class="text-4xl font-black tracking-tighter text-slate-900">LANDLORD STATEMENT</h1>
+                            <p class="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Eagle Homes Property Management</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-slate-800">Date: <span x-text="currentMonth"></span></p>
+                            <p class="text-sm text-slate-500">Property: <span x-text="selectedProperty || 'All Properties'"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Property Selection -->
+                    <div class="mb-8 no-print">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Select Property for Statement</label>
+                        <select x-model="selectedProperty" @change="loadStatementData()"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Properties</option>
+                            <template x-for="(property, name) in properties" :key="name">
+                                <option :value="name" x-text="name"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Statement Table -->
+                    <div class="overflow-x-auto mb-8">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-white uppercase tracking-tighter">
+                                    <th class="p-2 border border-slate-900">Unit</th>
+                                    <th class="p-2 border border-slate-900">Tenant</th>
+                                    <th class="p-2 border border-slate-900 text-right">Rent</th>
+                                    <th class="p-2 border border-slate-900 text-right">Paid</th>
+                                    <th class="p-2 border border-slate-900">Date</th>
+                                    <th class="p-2 border border-slate-900 text-right">Deposit</th>
+                                    <th class="p-2 border border-slate-900 text-right">Garbage</th>
+                                    <th class="p-2 border border-slate-900 text-right">Balance</th>
+                                    <th class="p-2 border border-slate-900">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="tenant in statementTenants" :key="tenant.id">
+                                    <tr>
+                                        <td class="p-2 border border-slate-200 font-bold" x-text="tenant.unit"></td>
+                                        <td class="p-2 border border-slate-200" x-text="tenant.name"></td>
+                                        <td class="p-2 border border-slate-200 text-right" x-text="formatNumber(tenant.rent)"></td>
+                                        <td class="p-2 border border-slate-200 text-right font-bold text-blue-700" 
+                                            x-text="formatNumber(tenant.paid)"></td>
+                                        <td class="p-2 border border-slate-200 text-[10px]" x-text="tenant.paymentDate || '-'"></td>
+                                        <td class="p-2 border border-slate-200 text-right" x-text="formatNumber(tenant.deposit)"></td>
+                                        <td class="p-2 border border-slate-200 text-right">200</td>
+                                        <td class="p-2 border border-slate-200 text-right font-bold" 
+                                            :class="tenant.balance > 0 ? 'text-red-500' : 'text-emerald-600'"
+                                            x-text="formatNumber(tenant.balance)"></td>
+                                        <td class="p-2 border border-slate-200 italic text-[10px]" x-text="tenant.status"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Financial Summary -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <!-- Expenses Section -->
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-black text-slate-800 uppercase text-sm">Expenses (Manual Entry)</h3>
+                                <button @click="addExpense()" class="no-print bg-slate-100 px-3 py-1 rounded text-xs font-bold hover:bg-slate-200 transition">
+                                    + ADD EXPENSE
+                                </button>
+                            </div>
+                            <div class="space-y-1 text-sm">
+                                <template x-for="(expense, index) in expenses" :key="index">
+                                    <div class="flex justify-between border-b border-dotted py-2">
+                                        <span x-text="expense.description"></span>
+                                        <span class="font-mono text-red-600" x-text="'Ksh ' + formatNumber(expense.amount)"></span>
+                                    </div>
+                                </template>
+                                <div class="flex justify-between font-bold pt-2 border-t-2 border-slate-200">
+                                    <span>TOTAL EXPENSES</span>
+                                    <span class="text-red-600">Ksh <span x-text="formatNumber(totalExpenses)"></span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commission & Net Summary -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="font-black text-slate-800 uppercase text-sm mb-4">Commission & Settlement</h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Gross Collected</span>
+                                    <span class="font-bold">Ksh <span x-text="formatNumber(totalCollected)"></span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Management Commission (<span x-text="(commissionRate * 100)"></span>%)</span>
+                                    <span class="font-bold text-red-500">- Ksh <span x-text="formatNumber(commission)"></span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Operating Expenses</span>
+                                    <span class="font-bold text-red-500">- Ksh <span x-text="formatNumber(totalExpenses)"></span></span>
+                                </div>
+                                <div class="flex justify-between pt-4 border-t-4 border-double border-slate-400">
+                                    <span class="font-black text-slate-900 uppercase">Net Balance to Landlord</span>
+                                    <span class="font-black text-2xl text-emerald-700">Ksh <span x-text="formatNumber(netToLandlord)"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Print Button -->
+                    <div class="mt-12 flex gap-4 no-print">
+                        <button @click="printStatement()" 
+                                class="flex-1 bg-slate-900 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition">
+                            Download PDF Statement
+                        </button>
+                        <button @click="saveStatement()" 
+                                class="flex-1 bg-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition">
+                            Save Statement
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Properties Management Tab -->
         <div x-show="activeTab === 'properties'" x-cloak>
             <div class="sticky-header p-8 pb-6">
@@ -983,6 +1164,12 @@
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-2">Default Garbage Fee</label>
                                 <input type="number" x-model="settings.garbageFee" 
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Commission Rate (%)</label>
+                                <input type="number" x-model="commissionRate" step="0.01"
                                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                             </div>
                             
@@ -1176,6 +1363,30 @@
         </div>
     </div>
 
+    <!-- Forgot Password Modal (Login Page would have this, included here for reference) -->
+    <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl" @click.away="showResetModal = false">
+            <h2 class="text-2xl font-black text-slate-900 mb-2">Reset Password</h2>
+            <p class="text-slate-500 text-sm mb-6">Enter your registered email. We will notify <span class="text-blue-600 font-bold">eaglehomesagencies4@gmail.com</span> to authorize your reset.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Your Email Address</label>
+                    <input type="email" x-model="resetEmail" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. secretary@eaglehomes.com">
+                </div>
+                
+                <button @click="sendResetRequest()" 
+                        :disabled="isSending"
+                        class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition flex items-center justify-center gap-2">
+                    <span x-show="!isSending">Send Reset Request</span>
+                    <span x-show="isSending" class="animate-spin text-lg">◌</span>
+                </button>
+                
+                <button @click="showResetModal = false" class="w-full text-slate-400 text-sm font-medium">Back to Login</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Success Toast -->
     <div x-show="showToast" x-transition
          :class="toastType === 'success' ? 'bg-green-500' : 'bg-red-500'"
@@ -1209,6 +1420,16 @@
                 reportStartDate: new Date().toISOString().slice(0, 7),
                 reportEndDate: new Date().toISOString().slice(0, 7),
                 reportData: {},
+                
+                // Landlord Statement States
+                expenses: [],
+                commissionRate: 0.10, // 10% Commission
+                statementTenants: [],
+                
+                // Password Reset States
+                showResetModal: false,
+                resetEmail: '',
+                isSending: false,
                 
                 // Modal States
                 showAddPropertyModal: false,
@@ -1418,6 +1639,18 @@
                         .slice(0, 5);
                 },
                 
+                get totalExpenses() {
+                    return this.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+                },
+                
+                get commission() {
+                    return this.totalCollected * this.commissionRate;
+                },
+                
+                get netToLandlord() {
+                    return this.totalCollected - this.totalExpenses - this.commission;
+                },
+                
                 // Initialization
                 init() {
                     // Load saved data from localStorage
@@ -1425,14 +1658,18 @@
                     const savedPayments = localStorage.getItem('eagle_payments');
                     const savedSettings = localStorage.getItem('eagle_settings');
                     const savedRole = localStorage.getItem('userRole');
+                    const savedExpenses = localStorage.getItem('eagle_expenses');
+                    const savedCommissionRate = localStorage.getItem('commissionRate');
                     
                     if (savedRole) this.userRole = savedRole;
                     if (savedSettings) this.settings = JSON.parse(savedSettings);
+                    if (savedCommissionRate) this.commissionRate = parseFloat(savedCommissionRate);
+                    if (savedExpenses) this.expenses = JSON.parse(savedExpenses);
                     
                     if (savedProperties) {
                         this.properties = JSON.parse(savedProperties);
                     } else {
-                        // Initialize with sample data (from your provided data)
+                        // Initialize with sample data
                         this.initializeSampleData();
                     }
                     
@@ -1445,19 +1682,25 @@
                 },
                 
                 initializeSampleData() {
-                    // This would be populated with your 36 houses data
-                    // For brevity, I'll initialize with a few sample properties
+                    // Sample data structure
                     this.properties = {
-                        "1. ROSALIA HOUSE": [
-                            { unit: "1", name: "Paul Murimi", rent: 3000, deposit: 3000, phone: "", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                            { unit: "2", name: "Occupied", rent: 1500, deposit: 1500, phone: "", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                            { unit: "3", name: "Occupied", rent: 3000, deposit: 3000, phone: "", status: "occupied", entryDate: "2025-01-01", notes: "" },
+                        "ROSALIA HOUSE": [
+                            { unit: "1", name: "Paul Murimi", rent: 3000, deposit: 3000, phone: "0712345678", status: "occupied", entryDate: "2025-01-01", notes: "" },
+                            { unit: "2", name: "Jane Mwangi", rent: 1500, deposit: 1500, phone: "0723456789", status: "occupied", entryDate: "2025-01-01", notes: "" },
+                            { unit: "3", name: "John Kamau", rent: 3000, deposit: 3000, phone: "0734567890", status: "occupied", entryDate: "2025-01-01", notes: "" },
                         ],
-                        "2. JOSPHINE NJAMBI": [
-                            { unit: "1", name: "Simon Ndungu", rent: 4150, deposit: 4150, phone: "", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                            { unit: "2", name: "Irene Gichuki", rent: 3650, deposit: 3650, phone: "", status: "occupied", entryDate: "2025-01-01", notes: "" },
+                        "JOSPHINE NJAMBI": [
+                            { unit: "1", name: "Simon Ndungu", rent: 4150, deposit: 4150, phone: "0745678901", status: "occupied", entryDate: "2025-01-01", notes: "" },
+                            { unit: "2", name: "Irene Gichuki", rent: 3650, deposit: 3650, phone: "0756789012", status: "occupied", entryDate: "2025-01-01", notes: "" },
                         ]
                     };
+                    
+                    // Sample payments
+                    this.payments = [
+                        { id: 1, property: "ROSALIA HOUSE", unit: "1", tenant: "Paul Murimi", amount: 3000, method: "mpesa", status: "paid", date: "2025-01-05" },
+                        { id: 2, property: "ROSALIA HOUSE", unit: "2", tenant: "Jane Mwangi", amount: 1500, method: "cash", status: "paid", date: "2025-01-06" },
+                        { id: 3, property: "JOSPHINE NJAMBI", unit: "1", tenant: "Simon Ndungu", amount: 4150, method: "bank", status: "paid", date: "2025-01-07" },
+                    ];
                     
                     // Save initial data
                     this.saveData();
@@ -1680,6 +1923,103 @@
                     this.showToastMessage('Payment marked as paid', 'success');
                 },
                 
+                // Landlord Statement Functions
+                loadStatementData() {
+                    if (!this.selectedProperty) {
+                        // Load all tenants
+                        this.statementTenants = this.allTenants.map(tenant => {
+                            const paidAmount = this.payments
+                                .filter(p => p.property === tenant.property && p.unit === tenant.unit && p.status === 'paid')
+                                .reduce((sum, p) => sum + p.amount, 0);
+                            
+                            const latestPayment = this.payments
+                                .filter(p => p.property === tenant.property && p.unit === tenant.unit)
+                                .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                            
+                            return {
+                                ...tenant,
+                                paid: paidAmount,
+                                balance: tenant.rent - paidAmount,
+                                paymentDate: latestPayment ? latestPayment.date : null,
+                                status: paidAmount >= tenant.rent ? 'Paid' : 'Pending'
+                            };
+                        });
+                    } else {
+                        // Load tenants for selected property only
+                        const propertyTenants = this.allTenants.filter(t => t.property === this.selectedProperty);
+                        this.statementTenants = propertyTenants.map(tenant => {
+                            const paidAmount = this.payments
+                                .filter(p => p.property === tenant.property && p.unit === tenant.unit && p.status === 'paid')
+                                .reduce((sum, p) => sum + p.amount, 0);
+                            
+                            const latestPayment = this.payments
+                                .filter(p => p.property === tenant.property && p.unit === tenant.unit)
+                                .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                            
+                            return {
+                                ...tenant,
+                                paid: paidAmount,
+                                balance: tenant.rent - paidAmount,
+                                paymentDate: latestPayment ? latestPayment.date : null,
+                                status: paidAmount >= tenant.rent ? 'Paid' : 'Pending'
+                            };
+                        });
+                    }
+                },
+                
+                generateStatement() {
+                    this.loadStatementData();
+                    this.showToastMessage('Landlord statement generated', 'success');
+                },
+                
+                addExpense() {
+                    const description = prompt("Expense Description:");
+                    const amount = prompt("Amount (Ksh):");
+                    if (description && amount && !isNaN(amount)) {
+                        this.expenses.push({
+                            description: description,
+                            amount: parseFloat(amount)
+                        });
+                        localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
+                        this.showToastMessage('Expense added', 'success');
+                    } else if (amount && isNaN(amount)) {
+                        this.showToastMessage('Please enter a valid amount', 'error');
+                    }
+                },
+                
+                printStatement() {
+                    window.print();
+                },
+                
+                saveStatement() {
+                    const statementData = {
+                        month: this.currentMonth,
+                        property: this.selectedProperty,
+                        tenants: this.statementTenants,
+                        expenses: this.expenses,
+                        summary: {
+                            totalCollected: this.totalCollected,
+                            totalExpenses: this.totalExpenses,
+                            commission: this.commission,
+                            netToLandlord: this.netToLandlord
+                        },
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    const dataStr = JSON.stringify(statementData, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `landlord-statement-${this.currentMonth}-${this.selectedProperty || 'all'}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    this.showToastMessage('Statement saved', 'success');
+                },
+                
                 // Report Functions
                 generateReport() {
                     // Generate report based on selected filters
@@ -1729,14 +2069,29 @@
                 
                 saveSettings() {
                     localStorage.setItem('eagle_settings', JSON.stringify(this.settings));
+                    localStorage.setItem('commissionRate', this.commissionRate.toString());
                     this.showToastMessage('Settings saved successfully', 'success');
+                },
+                
+                updateSecretaryPassword() {
+                    const newPassword = document.getElementById('sec_pass').value;
+                    if (!newPassword) {
+                        this.showToastMessage('Please enter a password', 'error');
+                        return;
+                    }
+                    
+                    localStorage.setItem('sec_password', newPassword);
+                    document.getElementById('sec_pass').value = '';
+                    this.showToastMessage('Secretary password updated!', 'success');
                 },
                 
                 backupData() {
                     const backup = {
                         properties: this.properties,
                         payments: this.payments,
+                        expenses: this.expenses,
                         settings: this.settings,
+                        commissionRate: this.commissionRate,
                         timestamp: new Date().toISOString()
                     };
                     
@@ -1768,9 +2123,13 @@
                                 const backup = JSON.parse(event.target.result);
                                 this.properties = backup.properties || {};
                                 this.payments = backup.payments || [];
+                                this.expenses = backup.expenses || [];
                                 this.settings = backup.settings || this.settings;
+                                this.commissionRate = backup.commissionRate || 0.10;
                                 
                                 this.saveData();
+                                localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
+                                localStorage.setItem('commissionRate', this.commissionRate.toString());
                                 this.showToastMessage('Data restored successfully', 'success');
                                 setTimeout(() => location.reload(), 1000);
                             } catch (error) {
@@ -1789,6 +2148,43 @@
                         localStorage.clear();
                         this.showToastMessage('All data cleared. Refreshing...', 'success');
                         setTimeout(() => location.reload(), 1000);
+                    }
+                },
+                
+                // Password Reset Functions
+                async sendResetRequest() {
+                    if (!this.resetEmail) {
+                        this.showToastMessage('Please enter your email', 'error');
+                        return;
+                    }
+                    
+                    this.isSending = true;
+
+                    // EmailJS Integration - You need to sign up at emailjs.com
+                    // and replace these with your actual credentials
+                    const templateParams = {
+                        to_email: 'eaglehomesagencies4@gmail.com',
+                        from_name: 'Eagle Homes System',
+                        user_requesting: this.resetEmail,
+                        message: `A password reset has been requested for account: ${this.resetEmail}. Please log in to the Master Admin panel to generate a temporary password.`
+                    };
+
+                    try {
+                        // Simulating API call
+                        console.log('Sending reset request to eaglehomesagencies4@gmail.com...');
+                        
+                        // For production, uncomment and configure EmailJS:
+                        // emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+                        
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                        alert('Reset request sent! The administrator at eaglehomesagencies4@gmail.com has been notified to reset your credentials.');
+                        this.showResetModal = false;
+                        this.resetEmail = '';
+                    } catch (error) {
+                        alert('System Error: Could not send request. Please contact administrator directly.');
+                    } finally {
+                        this.isSending = false;
                     }
                 },
                 
@@ -1890,6 +2286,8 @@
                 saveData() {
                     localStorage.setItem('eagle_properties', JSON.stringify(this.properties));
                     localStorage.setItem('eagle_payments', JSON.stringify(this.payments));
+                    localStorage.setItem('eagle_settings', JSON.stringify(this.settings));
+                    localStorage.setItem('userRole', this.userRole);
                 },
                 
                 exportData() {
@@ -1897,6 +2295,8 @@
                         properties: this.properties,
                         tenants: this.allTenants,
                         payments: this.payments,
+                        expenses: this.expenses,
+                        settings: this.settings,
                         timestamp: new Date().toISOString()
                     };
                     
@@ -1992,7 +2392,7 @@
                 logout() {
                     if (confirm('Are you sure you want to logout?')) {
                         localStorage.removeItem('userRole');
-                        window.location.href = 'index.html';
+                        window.location.href = 'index.html'; // This would be your login page
                     }
                 },
                 
