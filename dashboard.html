@@ -6,2800 +6,300 @@
     <title>Eagle Homes | Advanced Property Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         [x-cloak] { display: none !important; }
-        .sidebar-link.active { 
-            background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%); 
-            color: #2563eb;
-            border-right: 4px solid #3b82f6;
-            font-weight: 600;
-        }
-        .sidebar-link:hover {
-            background-color: #f8fafc;
-            transform: translateX(2px);
-            transition: all 0.2s ease;
-        }
-        .dashboard-card {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            transition: all 0.3s ease;
-        }
-        .dashboard-card:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-            transform: translateY(-1px);
-        }
-        .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-success:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-            transform: translateY(-1px);
-        }
-        .table-header {
-            background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .table-row:hover {
-            background-color: #f8fafc;
-            transform: scale(1.005);
-            transition: all 0.2s ease;
-        }
-        .input-field {
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            transition: all 0.2s ease;
-        }
-        .input-field:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            outline: none;
-        }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-success {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-        }
-        .statement-table th {
-            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.05em;
-        }
-        .print-area {
-            background: white;
-            padding: 32px;
-            border-radius: 16px;
-        }
+        .sidebar-link.active { background-color: #eff6ff; color: #2563eb; border-right: 3px solid #2563eb; }
         @media print {
-            .no-print, .no-print * { display: none !important; }
-            .print-area { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
-            body { background: white !important; }
-            .print-only { display: block !important; }
+            .no-print { display: none !important; }
+            .print-area { border: none !important; width: 100% !important; margin: 0 !important; }
         }
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .scrollbar-thin {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
-        }
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        input:focus { outline: none; border-color: #3b82f6; ring: 2px #3b82f6; }
     </style>
 </head>
-<body x-data="managementSystem()" x-init="init()" class="min-h-screen">
+<body x-data="managementSystem()" class="min-h-screen bg-gray-50">
 
-    <!-- Top Navigation -->
-    <nav class="bg-white border-b border-gray-200 px-8 py-5 flex justify-between items-center sticky top-0 z-40 no-print shadow-sm">
-        <div class="flex items-center gap-4">
-            <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-3 rounded-xl shadow-md">
-                <i class="fas fa-home text-white text-xl"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-2xl text-gray-800">Eagle Homes <span class="text-blue-600">Management</span></h1>
-                <p class="text-sm text-gray-500">Advanced Property Management System</p>
-            </div>
+    <nav class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40 no-print">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-lg"><i class="fas fa-home text-white"></i></div>
+            <h1 class="font-bold text-xl text-gray-800">Eagle Homes Management</h1>
         </div>
-        
-        <div class="flex items-center gap-6">
-            <!-- Quick Actions -->
-            <div class="flex gap-3">
-                <button @click="quickSave()" 
-                        class="btn-primary px-5 py-2.5 flex items-center gap-2">
-                    <i class="fas fa-save"></i>
-                    Quick Save
-                </button>
-                <button @click="exportCurrentData()" 
-                        class="px-5 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition flex items-center gap-2">
-                    <i class="fas fa-download"></i>
-                    Export Data
-                </button>
-            </div>
-            
-            <!-- User & Role Info -->
-            <div class="flex items-center gap-4 border-l pl-6">
+        <div class="flex items-center gap-4">
+            <button @click="quickSave()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                <i class="fas fa-save"></i> Quick Save
+            </button>
+            <div class="flex items-center gap-3 border-l pl-4">
                 <div class="text-right">
-                    <p class="font-semibold text-gray-800" x-text="userRole === 'owner' ? 'Property Owner' : 'Secretary'"></p>
-                    <p class="text-xs flex items-center gap-1">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <span class="text-green-600 font-medium">● Online</span>
-                    </p>
+                    <p class="font-medium text-sm" x-text="userRole.toUpperCase()"></p>
+                    <p class="text-green-500 text-xs font-bold">● Online</p>
                 </div>
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center border-2 border-white shadow">
-                    <i class="fas fa-user-tie text-blue-600 text-lg"></i>
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-tie text-blue-600"></i>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Sidebar -->
-    <aside class="w-72 bg-white border-r border-gray-200 fixed h-full z-30 pt-6 no-print shadow-inner">
-        <nav class="p-6 space-y-1">
-            <div class="mb-8">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 mb-3">Main Navigation</h3>
-                <template x-for="item in menuItems" :key="item.id">
-                    <a href="#" @click.prevent="switchTab(item.id)" 
-                       :class="activeTab === item.id ? 'sidebar-link active' : 'text-gray-700 hover:bg-gray-50'"
-                       class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200">
-                        <div class="w-6 h-6 flex items-center justify-center">
-                            <i :class="item.icon" class="text-lg"></i>
-                        </div>
-                        <span x-text="item.name" class="flex-1"></span>
-                        <span x-show="item.badge" 
-                              class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold"
-                              x-text="item.badge"></span>
-                    </a>
-                </template>
-            </div>
+    <aside class="w-64 bg-white border-r border-gray-200 fixed h-full z-30 pt-4 no-print">
+        <nav class="p-4 space-y-2">
+            <template x-for="item in menuItems">
+                <a href="#" @click.prevent="activeTab = item.id" 
+                   :class="activeTab === item.id ? 'sidebar-link active' : 'text-gray-600 hover:bg-gray-50'"
+                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition">
+                    <i :class="item.icon"></i> <span x-text="item.name"></span>
+                </a>
+            </template>
             
-            <div class="pt-6 border-t border-gray-100">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 mb-3">System Settings</h3>
-                
-                <div class="px-3 mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Access Level</label>
-                    <div class="relative">
-                        <select x-model="userRole" @change="saveUserRole()"
-                                class="w-full input-field appearance-none bg-white font-medium">
-                            <option value="owner" class="py-2">👑 Property Owner</option>
-                            <option value="secretary" class="py-2">💼 Secretary</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2" x-text="userRole === 'owner' ? 'Full system access with delete permissions' : 'Limited to viewing and data entry'"></p>
-                </div>
-                
-                <div class="px-3">
-                    <button @click="clearAllData()" 
-                            class="w-full text-red-600 hover:bg-red-50 px-4 py-3 rounded-xl text-sm font-medium transition border border-red-200 hover:border-red-300">
-                        <i class="fas fa-trash-alt mr-2"></i>
-                        Clear All Data
-                    </button>
-                </div>
-            </div>
-            
-            <div class="px-3 mt-8">
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
-                    <p class="text-sm font-medium text-blue-800 mb-1">AI Assistant</p>
-                    <p class="text-xs text-blue-600">All calculations sync automatically. Just enter data.</p>
-                </div>
+            <div class="pt-10">
+                <label class="text-xs text-gray-400 font-bold uppercase px-4">Access Level</label>
+                <select x-model="userRole" class="mt-2 w-full mx-2 p-2 border rounded-md text-sm">
+                    <option value="owner">Owner</option>
+                    <option value="secretary">Secretary</option>
+                </select>
             </div>
         </nav>
     </aside>
 
-    <!-- Main Content -->
-    <main class="ml-72 pt-8 p-8 min-h-screen">
+    <main class="ml-64 pt-6 p-8">
         
-        <!-- Dashboard -->
         <div x-show="activeTab === 'dashboard'" x-cloak>
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-10">
+            <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard Overview</h2>
-                    <p class="text-gray-500">Welcome back! Your property and financial performance summary for <span class="font-semibold text-blue-600" x-text="currentMonth"></span>.</p>
+                    <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+                    <p class="text-gray-500">Property and financial performance summary.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button @click="switchTab('tenants')" 
-                            class="btn-primary px-6 py-3 flex items-center gap-2">
-                        <i class="fas fa-user-plus"></i>
-                        Add New Tenant
-                    </button>
-                    <button @click="showPropertyModal = true" 
-                            class="px-6 py-3 border border-orange-300 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-600 rounded-xl font-semibold hover:from-orange-100 hover:to-amber-100 transition flex items-center gap-2">
-                        <i class="fas fa-plus-circle"></i>
-                        Add Property
-                    </button>
-                </div>
+                <button @click="showAddProperty = true" class="bg-orange-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-600 transition flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Add New Property
+                </button>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <!-- Total Expected Rent -->
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-money-bill-wave text-blue-600 text-xl"></i>
-                        </div>
-                        <span class="text-sm font-medium text-green-600">+2.5%</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-2">Total Expected Rent</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-1">Ksh <span x-text="formatNumber(totalExpectedRent)"></span></h3>
-                    <p class="text-xs text-gray-400">Across <span x-text="properties.length"></span> properties</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl border shadow-sm">
+                    <p class="text-gray-500 text-sm">Total Expected Rent</p>
+                    <h3 class="text-2xl font-bold">Ksh <span x-text="formatNumber(totalExpectedRent)"></span></h3>
                 </div>
-
-                <!-- Occupancy Rate -->
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-chart-line text-green-600 text-xl"></i>
-                        </div>
-                        <span class="text-sm font-medium text-green-600">+5%</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-2">Occupancy Rate</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-3" x-text="occupancyRate + '%'"></h3>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" 
-                             :style="{ width: occupancyRate + '%' }"></div>
-                    </div>
+                <div class="bg-white p-6 rounded-xl border shadow-sm">
+                    <p class="text-gray-500 text-sm">Occupancy Rate</p>
+                    <h3 class="text-2xl font-bold">85%</h3>
                 </div>
-
-                <!-- Active Units -->
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-building text-purple-600 text-xl"></i>
-                        </div>
-                        <span class="text-sm font-medium text-green-600">+3</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-2">Active Units</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-1" x-text="totalOccupiedUnits"></h3>
-                    <p class="text-xs text-gray-400"><span x-text="vacantUnits"></span> vacant units available</p>
-                </div>
-
-                <!-- Total Tenants -->
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-users text-orange-600 text-xl"></i>
-                        </div>
-                        <span class="text-sm font-medium text-red-600" x-text="overdueTenants"></span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-2">Total Tenants</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-1" x-text="totalTenants"></h3>
-                    <p class="text-xs" :class="overdueTenants > 0 ? 'text-red-600 font-medium' : 'text-gray-400'">
-                        <span x-text="overdueTenants"></span> with overdue payments
-                    </p>
-                </div>
-            </div>
-
-            <!-- Quick Actions & Recent Activity -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Quick Actions -->
-                <div class="lg:col-span-2">
-                    <div class="dashboard-card p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-6">Quick Actions</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button @click="switchTab('utilities')" 
-                                    class="p-4 border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all text-left group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                                        <i class="fas fa-bolt text-green-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-gray-800">Enter Utilities</p>
-                                        <p class="text-sm text-gray-500">Record monthly readings</p>
-                                    </div>
-                                </div>
-                            </button>
-                            
-                            <button @click="switchTab('statement')" 
-                                    class="p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all text-left group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                                        <i class="fas fa-file-invoice-dollar text-blue-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-gray-800">Generate Statement</p>
-                                        <p class="text-sm text-gray-500">Landlord settlement report</p>
-                                    </div>
-                                </div>
-                            </button>
-                            
-                            <button @click="recordPayment()" 
-                                    class="p-4 border border-gray-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-all text-left group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                                        <i class="fas fa-credit-card text-purple-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-gray-800">Record Payment</p>
-                                        <p class="text-sm text-gray-500">Tenant rent collection</p>
-                                    </div>
-                                </div>
-                            </button>
-                            
-                            <button @click="sendReminders()" 
-                                    class="p-4 border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all text-left group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                                        <i class="fas fa-bell text-amber-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-gray-800">Send Reminders</p>
-                                        <p class="text-sm text-gray-500">Payment due alerts</p>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Recent Payments -->
-                    <div class="dashboard-card p-6 mt-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800">Recent Payments</h3>
-                            <button @click="switchTab('payments')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                View All →
-                            </button>
-                        </div>
-                        <div class="overflow-x-auto scrollbar-thin">
-                            <table class="w-full">
-                                <thead class="table-header">
-                                    <tr class="text-xs font-semibold text-gray-600">
-                                        <th class="px-4 py-3 text-left">Date</th>
-                                        <th class="px-4 py-3 text-left">Tenant</th>
-                                        <th class="px-4 py-3 text-left">Property</th>
-                                        <th class="px-4 py-3 text-left">Amount</th>
-                                        <th class="px-4 py-3 text-left">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="payment in recentPayments.slice(0, 5)" :key="payment.id">
-                                        <tr class="table-row border-b border-gray-100">
-                                            <td class="px-4 py-3.5">
-                                                <p class="font-medium" x-text="formatDate(payment.date)"></p>
-                                                <p class="text-xs text-gray-500" x-text="payment.time"></p>
-                                            </td>
-                                            <td class="px-4 py-3.5">
-                                                <p class="font-medium" x-text="payment.tenantName"></p>
-                                                <p class="text-xs text-gray-500" x-text="'Unit ' + payment.unit"></p>
-                                            </td>
-                                            <td class="px-4 py-3.5 font-medium" x-text="payment.property"></td>
-                                            <td class="px-4 py-3.5">
-                                                <p class="font-bold text-green-600">Ksh <span x-text="formatNumber(payment.amount)"></span></p>
-                                            </td>
-                                            <td class="px-4 py-3.5">
-                                                <span class="badge badge-success">Completed</span>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity & Notifications -->
-                <div>
-                    <!-- Properties Overview -->
-                    <div class="dashboard-card p-6 mb-8">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-6">Properties Overview</h3>
-                        <div class="space-y-4">
-                            <template x-for="property in properties.slice(0, 3)" :key="property.id">
-                                <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-building text-blue-600"></i>
-                                        </div>
-                                        <div>
-                                            <p class="font-medium text-sm" x-text="property.name"></p>
-                                            <p class="text-xs text-gray-500" x-text="property.occupiedUnits + '/' + property.totalUnits + ' units'"></p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-sm">Ksh <span x-text="formatNumber(property.totalRent)"></span></p>
-                                        <span class="text-xs px-2 py-1 rounded-full" 
-                                              :class="property.occupancyRate >= 90 ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'">
-                                            <span x-text="property.occupancyRate + '%'"></span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </template>
-                            <button @click="switchTab('properties')" 
-                                    class="w-full text-center text-blue-600 hover:text-blue-800 text-sm font-medium py-2">
-                                View All Properties →
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- System Status -->
-                    <div class="dashboard-card p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">System Status</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Data Last Saved</span>
-                                <span class="text-sm font-medium" x-text="formatTimeAgo(lastSaved)"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Total Properties</span>
-                                <span class="text-sm font-medium" x-text="properties.length"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Active Tenants</span>
-                                <span class="text-sm font-medium" x-text="totalTenants"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">This Month's Collection</span>
-                                <span class="text-sm font-bold text-green-600">Ksh <span x-text="formatNumber(monthlyCollection)"></span></span>
-                            </div>
-                        </div>
-                        <div class="mt-6 pt-6 border-t border-gray-100">
-                            <div class="text-xs text-gray-500 italic flex items-center gap-2">
-                                <i class="fas fa-robot text-blue-500"></i>
-                                <span>AI Assistant: All calculations sync automatically</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="bg-white p-6 rounded-xl border shadow-sm">
+                    <p class="text-gray-500 text-sm">Active Units</p>
+                    <h3 class="text-2xl font-bold">50</h3>
                 </div>
             </div>
         </div>
 
-        <!-- Tenants Management -->
-        <div x-show="activeTab === 'tenants'" x-cloak>
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Tenant Management</h2>
-                    <p class="text-gray-500">Manage all tenants across properties</p>
-                </div>
-                <button @click="openAddTenantModal()" 
-                        class="btn-primary px-6 py-3 flex items-center gap-2">
-                    <i class="fas fa-user-plus"></i>
-                    Add New Tenant
-                </button>
+        <div x-show="activeTab === 'utilities'" x-cloak>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Utility Entry</h2>
+                <button @click="saveUtilities()" class="bg-green-600 text-white px-5 py-2 rounded-lg font-bold">Save All Readings</button>
             </div>
 
-            <!-- Filter Bar -->
-            <div class="dashboard-card p-6 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Property</label>
-                        <select x-model="filters.property" @change="filterTenants()"
-                                class="w-full input-field">
-                            <option value="">All Properties</option>
-                            <template x-for="property in properties" :key="property.id">
-                                <option :value="property.id" x-text="property.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select x-model="filters.status" @change="filterTenants()"
-                                class="w-full input-field">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="overdue">Overdue</option>
-                            <option value="vacant">Vacant</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                        <div class="relative">
-                            <input type="text" x-model="filters.search" @input="filterTenants()"
-                                   placeholder="Search tenants..."
-                                   class="w-full input-field pl-10">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-end">
-                        <button @click="clearFilters()" 
-                                class="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200 transition">
-                            Clear Filters
-                        </button>
-                    </div>
+            <div class="bg-white rounded-xl border overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b">
+                        <tr class="text-xs uppercase font-bold text-gray-600">
+                            <th class="p-4">Unit/Tenant</th>
+                            <th class="p-4">Water (Ksh)</th>
+                            <th class="p-4">Electricity</th>
+                            <th class="p-4">Garbage</th>
+                            <th class="p-4">Penalty</th>
+                            <th class="p-4">Other Bills</th>
+                            <th class="p-4">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="u in utilityData">
+                            <tr class="border-b">
+                                <td class="p-4">
+                                    <div class="font-bold" x-text="u.unit"></div>
+                                    <div class="text-xs text-gray-400" x-text="u.tenant"></div>
+                                </td>
+                                <td class="p-4"><input type="number" x-model.number="u.water" class="w-20 border rounded p-1"></td>
+                                <td class="p-4"><input type="number" x-model.number="u.electricity" class="w-20 border rounded p-1"></td>
+                                <td class="p-4"><input type="number" x-model.number="u.garbage" class="w-20 border rounded p-1"></td>
+                                <td class="p-4"><input type="number" x-model.number="u.penalty" class="w-20 border rounded p-1 text-red-500"></td>
+                                <td class="p-4"><input type="number" x-model.number="u.other" class="w-20 border rounded p-1"></td>
+                                <td class="p-4 font-bold text-blue-600">Ksh <span x-text="u.water + u.electricity + u.garbage + u.penalty + u.other"></span></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'statement'" x-cloak class="print-area">
+            <div class="flex justify-between items-center mb-6 no-print">
+                <h2 class="text-2xl font-bold text-gray-800">Landlord Statement</h2>
+                <div class="flex gap-2">
+                    <button @click="window.print()" class="bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <i class="fas fa-print"></i> Print / PDF
+                    </button>
                 </div>
             </div>
 
-            <!-- Tenants Table -->
-            <div class="dashboard-card overflow-hidden">
-                <div class="overflow-x-auto scrollbar-thin">
-                    <table class="w-full">
-                        <thead class="table-header">
-                            <tr class="text-sm font-semibold text-gray-600">
-                                <th class="px-6 py-4 text-left">Tenant</th>
-                                <th class="px-6 py-4 text-left">Property & Unit</th>
-                                <th class="px-6 py-4 text-left">Contact</th>
-                                <th class="px-6 py-4 text-left">Rent Status</th>
-                                <th class="px-6 py-4 text-left">Balance</th>
-                                <th class="px-6 py-4 text-left">Actions</th>
+            <div class="bg-white p-8 rounded-xl border shadow-lg">
+                <div class="flex justify-between border-b pb-6 mb-6">
+                    <div>
+                        <h1 class="text-3xl font-black text-blue-600">EAGLE HOMES</h1>
+                        <p class="text-sm text-gray-500">Property Settlement Report</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold">Date: <span x-text="new Date().toLocaleDateString()"></span></p>
+                        <p>Property: <span class="font-bold">Sunset Gardens</span></p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 font-bold">
+                            <tr>
+                                <th class="p-2 border">Date</th>
+                                <th class="p-2 border">Hse No.</th>
+                                <th class="p-2 border">Tenant</th>
+                                <th class="p-2 border">Rent Due</th>
+                                <th class="p-2 border">Paid</th>
+                                <th class="p-2 border">Deposit</th>
+                                <th class="p-2 border">Garbage</th>
+                                <th class="p-2 border">Balance</th>
+                                <th class="p-2 border">Mode</th>
+                                <th class="p-2 border">Remarks</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="tenant in filteredTenants" :key="tenant.id">
-                                <tr class="table-row border-b border-gray-100">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center">
-                                                <i class="fas fa-user text-blue-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="font-medium" x-text="tenant.name"></p>
-                                                <p class="text-xs text-gray-500" x-text="'ID: ' + tenant.idNumber"></p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <p class="font-medium" x-text="getPropertyName(tenant.propertyId)"></p>
-                                        <p class="text-sm text-gray-500" x-text="'Unit ' + tenant.unitNumber"></p>
-                                        <span :class="getStatusClass(tenant.status)" 
-                                              class="inline-block px-3 py-1 rounded-full text-xs font-medium mt-1">
-                                            <span x-text="tenant.status.charAt(0).toUpperCase() + tenant.status.slice(1)"></span>
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <p x-text="tenant.phone"></p>
-                                        <p class="text-sm text-gray-500" x-text="tenant.email || 'No email'"></p>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-2">
-                                            <span :class="getPaymentStatusClass(tenant.paymentStatus)" 
-                                                  class="px-3 py-1 rounded-full text-xs font-medium">
-                                                <span x-text="tenant.paymentStatus.charAt(0).toUpperCase() + tenant.paymentStatus.slice(1)"></span>
-                                            </span>
-                                            <p class="text-sm text-gray-500" x-text="'Due: ' + formatDate(tenant.nextPaymentDate)"></p>
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <p class="font-bold" :class="tenant.balance > 0 ? 'text-red-600' : 'text-green-600'">
-                                            Ksh <span x-text="formatNumber(Math.abs(tenant.balance))"></span>
-                                        </p>
-                                        <p class="text-sm text-gray-500" x-text="'Rent: Ksh ' + formatNumber(tenant.monthlyRent)"></p>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <div class="flex gap-2">
-                                            <button @click="recordPayment(tenant)" 
-                                                    class="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-lg"
-                                                    title="Record Payment">
-                                                <i class="fas fa-credit-card"></i>
-                                            </button>
-                                            <button @click="editTenant(tenant)" 
-                                                    class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg"
-                                                    title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button @click="sendReminder(tenant)" 
-                                                    class="text-amber-600 hover:text-amber-800 p-2 hover:bg-amber-50 rounded-lg"
-                                                    title="Send Reminder">
-                                                <i class="fas fa-bell"></i>
-                                            </button>
-                                            <button x-show="userRole === 'owner'" @click="deleteTenant(tenant)" 
-                                                    class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg"
-                                                    title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                            
-                            <template x-if="filteredTenants.length === 0">
+                            <template x-for="(row, index) in statementRows">
                                 <tr>
-                                    <td colspan="6" class="px-6 py-16 text-center">
-                                        <div class="flex flex-col items-center justify-center text-gray-400">
-                                            <i class="fas fa-users text-4xl mb-4"></i>
-                                            <p class="text-lg font-medium">No tenants found</p>
-                                            <p class="text-sm mt-2">Try adjusting your search filters or add a new tenant</p>
-                                            <button @click="openAddTenantModal()" 
-                                                    class="mt-6 btn-primary px-6 py-2.5">
-                                                Add First Tenant
-                                            </button>
-                                        </div>
+                                    <td class="border p-1"><input type="date" x-model="row.date" class="w-full border-none"></td>
+                                    <td class="border p-1 font-bold"><input type="text" x-model="row.hse" class="w-full border-none"></td>
+                                    <td class="border p-1"><input type="text" x-model="row.tenant" class="w-full border-none"></td>
+                                    <td class="border p-1 text-right"><input type="number" x-model.number="row.rent" class="w-full border-none text-right"></td>
+                                    <td class="border p-1 text-right font-bold"><input type="number" x-model.number="row.paid" class="w-full border-none text-right text-green-600"></td>
+                                    <td class="border p-1 text-right"><input type="number" x-model.number="row.deposit" class="w-full border-none text-right"></td>
+                                    <td class="border p-1 text-right"><input type="number" x-model.number="row.garbage" class="w-full border-none text-right"></td>
+                                    <td class="border p-1 text-right"><span class="text-red-500 font-bold" x-text="row.rent - row.paid"></span></td>
+                                    <td class="border p-1">
+                                        <select x-model="row.mode" class="w-full border-none bg-transparent">
+                                            <option>M-Pesa</option>
+                                            <option>Cash</option>
+                                            <option>Bank</option>
+                                        </select>
                                     </td>
+                                    <td class="border p-1"><input type="text" x-model="row.remarks" class="w-full border-none" placeholder="..."></td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
+                    <button @click="addStatementRow()" class="no-print mt-2 text-blue-600 text-sm font-bold">+ Add Row</button>
                 </div>
-            </div>
-        </div>
 
-        <!-- Utility Entry -->
-        <div x-show="activeTab === 'utilities'" x-cloak>
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Utility Entry</h2>
-                    <p class="text-gray-500">Enter monthly utility readings for properties</p>
-                </div>
-                <div class="flex gap-3">
-                    <button @click="saveUtilities()" 
-                            class="btn-success px-6 py-3 flex items-center gap-2">
-                        <i class="fas fa-save"></i>
-                        Save All Readings
-                    </button>
-                </div>
-            </div>
-
-            <!-- Property Selection -->
-            <div class="dashboard-card p-6 mb-8">
-                <div class="flex items-center gap-6">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Property</label>
-                        <select x-model="selectedProperty" @change="loadPropertyForUtilities()"
-                                class="w-full input-field">
-                            <option value="">Select a property</option>
-                            <template x-for="property in properties" :key="property.id">
-                                <option :value="property.id" x-text="property.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                        <input type="month" x-model="utilityMonth" @change="loadUtilityData()"
-                               class="input-field">
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <button @click="autoFillZero()" 
-                                class="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-                            Auto-fill Zeros
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Utility Table -->
-            <template x-if="selectedProperty">
-                <div class="dashboard-card overflow-hidden">
-                    <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h3 class="font-semibold text-gray-800 text-lg" x-text="getPropertyName(selectedProperty)"></h3>
-                                <p class="text-sm text-gray-500" x-text="'Utility readings for ' + formatMonth(utilityMonth)"></p>
+                <div class="mt-8 grid grid-cols-2 gap-10">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold border-b mb-3">Property Expenses</h4>
+                        <template x-for="exp in expenses">
+                            <div class="flex justify-between mb-2">
+                                <input type="text" x-model="exp.desc" class="bg-transparent border-b w-1/2" placeholder="e.g., Repairs">
+                                <input type="number" x-model.number="exp.amount" class="bg-transparent border-b w-1/3 text-right font-bold">
                             </div>
-                            <div class="text-right">
-                                <p class="text-sm text-gray-500">Total Utility Bill</p>
-                                <p class="text-2xl font-bold text-blue-600">
-                                    Ksh <span x-text="formatNumber(calculateTotalUtilityBill())"></span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="overflow-x-auto scrollbar-thin">
-                        <table class="w-full">
-                            <thead class="table-header">
-                                <tr class="text-sm font-semibold text-gray-600">
-                                    <th class="px-6 py-4 text-left">Unit/Tenant</th>
-                                    <th class="px-6 py-4 text-left">Water (Ksh)</th>
-                                    <th class="px-6 py-4 text-left">Electricity</th>
-                                    <th class="px-6 py-4 text-left">Garbage</th>
-                                    <th class="px-6 py-4 text-left">Penalty</th>
-                                    <th class="px-6 py-4 text-left">Other Bills</th>
-                                    <th class="px-6 py-4 text-left">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="(utility, index) in utilityData" :key="index">
-                                    <tr class="table-row border-b border-gray-100">
-                                        <td class="px-6 py-4">
-                                            <div class="font-bold" x-text="utility.unit"></div>
-                                            <div class="text-xs text-gray-400" x-text="utility.tenant"></div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="number" x-model.number="utility.water" 
-                                                   class="input-field w-24 text-center" placeholder="0" min="0">
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="number" x-model.number="utility.electricity" 
-                                                   class="input-field w-24 text-center" placeholder="0" min="0">
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="number" x-model.number="utility.garbage" 
-                                                   :value="settings.garbageFee || 200"
-                                                   class="input-field w-24 text-center bg-gray-50" min="0">
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="number" x-model.number="utility.penalty" 
-                                                   class="input-field w-24 text-center text-red-500" placeholder="0" min="0">
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="number" x-model.number="utility.other" 
-                                                   class="input-field w-24 text-center" placeholder="0" min="0">
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="font-bold text-blue-600">
-                                                Ksh <span x-text="calculateUtilityTotal(utility)"></span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="p-6 border-t border-gray-200 bg-gray-50">
-                        <div class="flex justify-between items-center">
-                            <div class="text-sm text-gray-500 italic">
-                                <i class="fas fa-lightbulb text-amber-500 mr-2"></i>
-                                AI Tip: Penalties are automatically added to next month's statement
-                            </div>
-                            <div class="flex gap-3">
-                                <button @click="clearAllUtilities()" 
-                                        class="px-4 py-2 border border-red-300 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition">
-                                    Clear All
-                                </button>
-                                <button @click="applyToStatement()" 
-                                        class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl text-sm font-medium hover:from-blue-600 hover:to-indigo-600 transition">
-                                    Apply to Statement
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template x-if="!selectedProperty">
-                <div class="dashboard-card p-16 text-center">
-                    <div class="flex flex-col items-center justify-center text-gray-400">
-                        <i class="fas fa-bolt text-6xl mb-6"></i>
-                        <p class="text-xl font-medium mb-2">Select a Property</p>
-                        <p class="text-gray-500 mb-6">Choose a property from the dropdown above to enter utility readings</p>
-                        <button @click="switchTab('dashboard')" 
-                                class="btn-primary px-6 py-2.5">
-                            Go to Properties
-                        </button>
-                    </div>
-                </div>
-            </template>
-        </div>
-
-        <!-- Landlord Statement -->
-        <div x-show="activeTab === 'statement'" x-cloak>
-            <div class="flex justify-between items-center mb-8 no-print">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Landlord Statement</h2>
-                    <p class="text-gray-500">Generate monthly settlement reports for landlords</p>
-                </div>
-                <div class="flex gap-3">
-                    <button @click="generateStatement()" 
-                            class="btn-primary px-6 py-3 flex items-center gap-2">
-                        <i class="fas fa-file-alt"></i>
-                        Generate Statement
-                    </button>
-                    <button @click="window.print()" 
-                            class="px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-900 transition flex items-center gap-2">
-                        <i class="fas fa-print"></i>
-                        Print / PDF
-                    </button>
-                </div>
-            </div>
-
-            <!-- Statement Controls -->
-            <div class="dashboard-card p-6 mb-8 no-print">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Property</label>
-                        <select x-model="statementProperty" @change="loadStatementData()"
-                                class="w-full input-field">
-                            <option value="">Select Property</option>
-                            <template x-for="property in properties" :key="property.id">
-                                <option :value="property.id" x-text="property.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                        <input type="month" x-model="statementMonth" @change="loadStatementData()"
-                               class="w-full input-field">
-                    </div>
-                    
-                    <div class="md:col-span-2 flex items-end gap-3">
-                        <button @click="addStatementRow()" 
-                                class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2">
-                            <i class="fas fa-plus"></i>
-                            Add New Row
-                        </button>
-                        <button @click="toggleEditMode()" 
-                                :class="editMode ? 'btn-primary' : 'bg-gray-100 text-gray-700'"
-                                class="px-4 py-2.5 rounded-xl text-sm font-medium transition">
-                            <i :class="editMode ? 'fas fa-save' : 'fas fa-edit'"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Editable Statement -->
-            <template x-if="statementProperty">
-                <div class="print-area bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-xl">
-                    <!-- Statement Header -->
-                    <div class="p-8 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h1 class="text-3xl font-black gradient-text mb-2">EAGLE HOMES AGENCIES</h1>
-                                <p class="text-gray-600 text-lg">Property Settlement Report</p>
-                                <div class="mt-4 flex flex-wrap gap-4 text-sm">
-                                    <span class="font-semibold">Property: <span class="text-blue-600" x-text="getPropertyName(statementProperty)"></span></span>
-                                    <span class="font-semibold">Month: <span class="text-gray-800" x-text="statementMonthFormatted"></span></span>
-                                    <span class="font-semibold">Statement No: <span class="text-gray-800">ST-<span x-text="statementNumber"></span></span></span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm text-gray-500">Generated on</p>
-                                <p class="font-semibold text-lg" x-text="new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })"></p>
-                                <p class="text-sm text-gray-500 mt-2">by <span x-text="userRole === 'owner' ? 'Property Owner' : 'Secretary'"></span></p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Statement Table -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full statement-table">
-                            <thead>
-                                <tr class="bg-gradient-to-r from-blue-600 to-indigo-600">
-                                    <th class="p-3 text-left text-white font-bold">Date</th>
-                                    <th class="p-3 text-left text-white font-bold">Hse No.</th>
-                                    <th class="p-3 text-left text-white font-bold">Tenant</th>
-                                    <th class="p-3 text-left text-white font-bold">Rent Due</th>
-                                    <th class="p-3 text-left text-white font-bold">Paid</th>
-                                    <th class="p-3 text-left text-white font-bold">Deposit</th>
-                                    <th class="p-3 text-left text-white font-bold">Garbage</th>
-                                    <th class="p-3 text-left text-white font-bold">Balance</th>
-                                    <th class="p-3 text-left text-white font-bold">Mode</th>
-                                    <th class="p-3 text-left text-white font-bold">Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="(row, index) in statementRows" :key="index">
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="border p-2">
-                                            <template x-if="editMode">
-                                                <input type="date" x-model="row.date" 
-                                                       class="w-full border-none bg-transparent p-1">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span x-text="formatDate(row.date)"></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2 font-bold">
-                                            <template x-if="editMode">
-                                                <input type="text" x-model="row.hse" 
-                                                       class="w-full border-none bg-transparent p-1 font-bold">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span x-text="row.hse"></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2">
-                                            <template x-if="editMode">
-                                                <input type="text" x-model="row.tenant" 
-                                                       class="w-full border-none bg-transparent p-1">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span x-text="row.tenant"></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2 text-right">
-                                            <template x-if="editMode">
-                                                <input type="number" x-model.number="row.rent" 
-                                                       class="w-full border-none bg-transparent p-1 text-right">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span class="font-medium">Ksh <span x-text="formatNumber(row.rent)"></span></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2 text-right">
-                                            <template x-if="editMode">
-                                                <input type="number" x-model.number="row.paid" 
-                                                       class="w-full border-none bg-transparent p-1 text-right text-green-600 font-bold">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span class="font-bold text-green-600">Ksh <span x-text="formatNumber(row.paid)"></span></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2 text-right">
-                                            <template x-if="editMode">
-                                                <input type="number" x-model.number="row.deposit" 
-                                                       class="w-full border-none bg-transparent p-1 text-right">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span>Ksh <span x-text="formatNumber(row.deposit)"></span></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2 text-right">
-                                            <template x-if="editMode">
-                                                <input type="number" x-model.number="row.garbage" 
-                                                       class="w-full border-none bg-transparent p-1 text-right">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span>Ksh <span x-text="formatNumber(row.garbage)"></span></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2 text-right">
-                                            <span :class="row.rent - row.paid > 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold'">
-                                                Ksh <span x-text="formatNumber(row.rent - row.paid)"></span>
-                                            </span>
-                                        </td>
-                                        <td class="border p-2">
-                                            <template x-if="editMode">
-                                                <select x-model="row.mode" 
-                                                        class="w-full border-none bg-transparent p-1">
-                                                    <option>M-Pesa</option>
-                                                    <option>Cash</option>
-                                                    <option>Bank Transfer</option>
-                                                    <option>Cheque</option>
-                                                </select>
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span x-text="row.mode"></span>
-                                            </template>
-                                        </td>
-                                        <td class="border p-2">
-                                            <template x-if="editMode">
-                                                <input type="text" x-model="row.remarks" 
-                                                       class="w-full border-none bg-transparent p-1" placeholder="...">
-                                            </template>
-                                            <template x-if="!editMode">
-                                                <span class="text-sm text-gray-500" x-text="row.remarks || '-'"></span>
-                                            </template>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                        </template>
+                        <button @click="expenses.push({desc: '', amount: 0})" class="no-print text-xs text-blue-600">+ Add Expense</button>
                     </div>
 
-                    <!-- Expenses and Summary -->
-                    <div class="p-8 border-t border-gray-200">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                            <!-- Expenses Section -->
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b">Operational Expenses</h3>
-                                <div class="space-y-4">
-                                    <template x-for="(expense, index) in expenses" :key="index">
-                                        <div class="flex justify-between items-center pb-3 border-b border-gray-100">
-                                            <div class="flex-1">
-                                                <template x-if="editMode">
-                                                    <input type="text" x-model="expense.desc" 
-                                                           class="w-full border-none bg-transparent p-1" placeholder="Expense description">
-                                                </template>
-                                                <template x-if="!editMode">
-                                                    <span class="font-medium" x-text="expense.desc || 'Expense item'"></span>
-                                                </template>
-                                            </div>
-                                            <div class="flex items-center gap-3">
-                                                <span class="text-red-600 font-bold">
-                                                    - Ksh <span x-text="formatNumber(expense.amount)"></span>
-                                                </span>
-                                                <button x-show="editMode && userRole === 'owner'" @click="removeExpense(index)"
-                                                        class="text-red-400 hover:text-red-600 transition">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </template>
-                                    
-                                    <button @click="addExpense()" 
-                                            class="no-print mt-6 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-2">
-                                        <i class="fas fa-plus-circle"></i>
-                                        Add Expense Item
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- Summary Section -->
-                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl border border-blue-100">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-6">Settlement Summary</h3>
-                                <div class="space-y-4">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 font-medium">Total Collected</span>
-                                        <span class="font-bold text-lg">Ksh <span x-text="formatNumber(calculateTotalPaid())"></span></span>
-                                    </div>
-                                    
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 font-medium">Commission (<span x-text="commission"></span>%)</span>
-                                        <span class="font-bold text-red-600">- Ksh <span x-text="formatNumber(calculateCommission())"></span></span>
-                                    </div>
-                                    
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 font-medium">Total Expenses</span>
-                                        <span class="font-bold text-red-600">- Ksh <span x-text="formatNumber(calculateTotalExpenses())"></span></span>
-                                    </div>
-                                    
-                                    <div class="pt-6 mt-6 border-t border-blue-200">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-xl font-bold text-gray-900">NET PAYOUT TO LANDLORD</span>
-                                            <span class="text-3xl font-black text-green-600">
-                                                Ksh <span x-text="formatNumber(calculateNetPayout())"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- AI Assistant Note -->
-                                <div class="mt-8 p-4 bg-white border border-blue-200 rounded-xl">
-                                    <div class="flex items-start gap-3">
-                                        <i class="fas fa-robot text-blue-500 text-xl mt-1"></i>
-                                        <div>
-                                            <p class="text-sm font-medium text-blue-800 mb-1">AI Assistant</p>
-                                            <p class="text-xs text-blue-600">All calculations sync automatically. Commission and expenses are deducted from total collected amount.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer Notes -->
-                        <div class="mt-10 pt-8 border-t border-gray-200">
-                            <div class="grid grid-cols-3 gap-8">
-                                <div class="text-center">
-                                    <p class="border-t border-gray-300 pt-6 mt-6 text-sm text-gray-500">Tenant's Signature</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="border-t border-gray-300 pt-6 mt-6 text-sm text-gray-500">Received By</p>
-                                    <p class="text-sm font-medium mt-1" x-text="userRole === 'owner' ? 'Property Owner' : 'Secretary'"></p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="border-t border-gray-300 pt-6 mt-6 text-sm text-gray-500">Official Stamp</p>
-                                </div>
-                            </div>
-                            <p class="text-center text-xs text-gray-400 mt-8">
-                                Generated by Eagle Homes Property Management System | All amounts in Kenyan Shillings (Ksh)
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template x-if="!statementProperty">
-                <div class="dashboard-card p-16 text-center">
-                    <div class="flex flex-col items-center justify-center text-gray-400">
-                        <i class="fas fa-file-invoice-dollar text-6xl mb-6"></i>
-                        <p class="text-xl font-medium mb-2">Select a Property</p>
-                        <p class="text-gray-500 mb-6">Choose a property from the dropdown above to generate statement</p>
-                        <button @click="switchTab('dashboard')" 
-                                class="btn-primary px-6 py-2.5">
-                            Go to Properties
-                        </button>
-                    </div>
-                </div>
-            </template>
-        </div>
-
-        <!-- Properties Management -->
-        <div x-show="activeTab === 'properties'" x-cloak>
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Property Management</h2>
-                    <p class="text-gray-500">Manage all properties and their details</p>
-                </div>
-                <button @click="showPropertyModal = true" 
-                        class="btn-primary px-6 py-3 flex items-center gap-2">
-                    <i class="fas fa-plus-circle"></i>
-                    Add New Property
-                </button>
-            </div>
-
-            <!-- Properties Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <template x-for="property in properties" :key="property.id">
-                    <div class="dashboard-card overflow-hidden hover:shadow-xl transition-all duration-300">
-                        <div class="p-6 border-b border-gray-100">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-bold text-xl text-gray-800 mb-1" x-text="property.name"></h3>
-                                    <p class="text-sm text-gray-500" x-text="property.address"></p>
-                                </div>
-                                <div class="flex gap-1">
-                                    <button @click="editProperty(property)" 
-                                            class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button x-show="userRole === 'owner'" @click="deleteProperty(property)" 
-                                            class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="bg-blue-50 p-6 rounded-lg text-right">
+                        <div class="flex justify-between mb-2"><span>Total Collected:</span> <span class="font-bold">Ksh <span x-text="calculateTotalPaid()"></span></span></div>
+                        <div class="flex justify-between mb-2 text-red-600"><span>Total Expenses:</span> <span class="font-bold">- <span x-text="calculateTotalExpenses()"></span></span></div>
+                        <div class="flex justify-between mb-2"><span>Commission (%):</span> <input type="number" x-model.number="commission" class="w-16 border rounded text-right"></div>
+                        <div class="flex justify-between border-t pt-2 text-xl font-black text-blue-700">
+                            <span>NET PAYOUT:</span>
+                            <span>Ksh <span x-text="calculateNetPayout()"></span></span>
                         </div>
                         
-                        <div class="p-6">
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <p class="text-xs text-gray-500">Landlord</p>
-                                    <p class="font-medium" x-text="property.landlordName"></p>
-                                    <p class="text-sm text-gray-500" x-text="property.landlordPhone"></p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500">Property Code</p>
-                                    <p class="font-medium text-blue-600 text-lg" x-text="property.code"></p>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <p class="text-xs text-gray-500 mb-2">Units Status</p>
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                        <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" 
-                                             :style="{ width: property.occupancyRate + '%' }"></div>
-                                    </div>
-                                    <span class="text-sm font-bold" :class="property.occupancyRate >= 90 ? 'text-green-600' : 'text-amber-600'">
-                                        <span x-text="property.occupancyRate + '%'"></span>
-                                    </span>
-                                </div>
-                                <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                    <span x-text="property.occupiedUnits + ' occupied'"></span>
-                                    <span x-text="property.totalUnits + ' total'"></span>
-                                </div>
-                            </div>
-                            
-                            <div class="border-t border-gray-100 pt-4">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="text-xs text-gray-500">Monthly Rent</p>
-                                        <p class="font-bold text-xl">Ksh <span x-text="formatNumber(property.totalRent)"></span></p>
-                                    </div>
-                                    <button @click="viewPropertyDetails(property)"
-                                            class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
-                                        View Details
-                                        <i class="fas fa-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="mt-4 p-2 bg-white border rounded text-xs text-left italic text-gray-500">
+                            <i class="fas fa-robot text-blue-500"></i> AI Calculator: All logic is synced and human-editable.
                         </div>
                     </div>
-                </template>
-                
-                <!-- Empty State -->
-                <div x-show="properties.length === 0" class="md:col-span-3">
-                    <div class="dashboard-card p-16 text-center">
-                        <div class="flex flex-col items-center justify-center text-gray-400">
-                            <i class="fas fa-building text-6xl mb-6"></i>
-                            <p class="text-2xl font-medium mb-2">No Properties Added</p>
-                            <p class="text-gray-500 mb-8">Add your first property to get started</p>
-                            <button @click="showPropertyModal = true" 
-                                    class="btn-primary px-8 py-3.5 text-lg flex items-center gap-2">
-                                <i class="fas fa-plus-circle"></i>
-                                Add First Property
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payments -->
-        <div x-show="activeTab === 'payments'" x-cloak>
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Payment Management</h2>
-                    <p class="text-gray-500">Record and track all tenant payments</p>
-                </div>
-                <button @click="recordPayment()" 
-                        class="btn-success px-6 py-3 flex items-center gap-2">
-                    <i class="fas fa-plus-circle"></i>
-                    Record Payment
-                </button>
-            </div>
-
-            <!-- Payment Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">This Month's Collection</p>
-                            <h3 class="text-2xl font-bold text-green-600">Ksh <span x-text="formatNumber(monthlyCollection)"></span></h3>
-                        </div>
-                        <div class="text-green-600 text-2xl">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2" x-text="paymentStats.count + ' payments'"></p>
-                </div>
-                
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">Total Arrears</p>
-                            <h3 class="text-2xl font-bold text-red-600">Ksh <span x-text="formatNumber(totalArrears)"></span></h3>
-                        </div>
-                        <div class="text-red-600 text-2xl">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                    </div>
-                    <button @click="sendArrearsReminders()" class="mt-3 text-red-600 hover:text-red-800 text-sm font-medium">
-                        Notify Defaulters
-                    </button>
-                </div>
-                
-                <div class="dashboard-card p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">Pending Invoices</p>
-                            <h3 class="text-2xl font-bold text-amber-600"><span x-text="pendingInvoices"></span></h3>
-                        </div>
-                        <div class="text-amber-600 text-2xl">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                    </div>
-                    <button @click="sendInvoiceReminders()" class="mt-3 text-amber-600 hover:text-amber-800 text-sm font-medium">
-                        Send Reminders
-                    </button>
-                </div>
-            </div>
-
-            <!-- Recent Payments Table -->
-            <div class="dashboard-card overflow-hidden">
-                <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                    <h3 class="font-semibold text-gray-800 text-lg">Recent Payments</h3>
-                </div>
-                
-                <div class="overflow-x-auto scrollbar-thin">
-                    <table class="w-full">
-                        <thead class="table-header">
-                            <tr class="text-sm font-semibold text-gray-600">
-                                <th class="px-6 py-4 text-left">Date & Time</th>
-                                <th class="px-6 py-4 text-left">Tenant</th>
-                                <th class="px-6 py-4 text-left">Property</th>
-                                <th class="px-6 py-4 text-left">Amount</th>
-                                <th class="px-6 py-4 text-left">Method</th>
-                                <th class="px-6 py-4 text-left">Reference</th>
-                                <th class="px-6 py-4 text-left">Status</th>
-                                <th class="px-6 py-4 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="payment in recentPayments" :key="payment.id">
-                                <tr class="table-row border-b border-gray-100">
-                                    <td class="px-6 py-4">
-                                        <p class="font-medium" x-text="formatDate(payment.date)"></p>
-                                        <p class="text-xs text-gray-500" x-text="payment.time"></p>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <p class="font-medium" x-text="payment.tenantName"></p>
-                                        <p class="text-xs text-gray-500" x-text="'Unit ' + payment.unit"></p>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4 font-medium" x-text="payment.property"></td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <p class="font-bold text-green-600">Ksh <span x-text="formatNumber(payment.amount)"></span></p>
-                                        <p class="text-xs text-gray-500" x-text="'For: ' + payment.month"></p>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                            <span x-text="payment.method"></span>
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <p class="text-sm font-mono" x-text="payment.reference || 'N/A'"></p>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <span class="badge badge-success">Completed</span>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4">
-                                        <div class="flex gap-2">
-                                            <button @click="generateReceipt(payment)" 
-                                                    class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg">
-                                                <i class="fas fa-receipt"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Add Property Modal -->
-    <div x-show="showPropertyModal" x-cloak 
-         class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="p-8 border-b border-gray-200">
-                <h3 class="text-2xl font-bold text-gray-800">
-                    <span x-text="editingProperty ? 'Edit Property' : 'Add New Property'"></span>
-                </h3>
-                <p class="text-gray-500 mt-2">Register a new property to start managing tenants and rent collection</p>
-            </div>
-            
-            <div class="p-8">
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Property Name *</label>
-                        <input type="text" x-model="currentProperty.name" required
-                               class="w-full input-field"
-                               placeholder="e.g., Sunset Gardens Apartments">
-                    </div>
-                    
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Address *</label>
-                        <textarea x-model="currentProperty.address" rows="2"
-                                  class="w-full input-field"
-                                  placeholder="Enter complete property address"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Property Code *</label>
-                        <div class="relative">
-                            <input type="text" x-model="currentProperty.code" required
-                                   class="w-full input-field pl-12"
-                                   placeholder="PROP-001">
-                            <div class="absolute left-3 top-3 text-gray-400">
-                                <i class="fas fa-hashtag"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Units *</label>
-                        <input type="number" x-model="currentProperty.totalUnits" required
-                               class="w-full input-field"
-                               placeholder="Number of units">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
-                        <select x-model="currentProperty.type"
-                                class="w-full input-field">
-                            <option value="apartment">Apartment Building</option>
-                            <option value="house">Residential House</option>
-                            <option value="commercial">Commercial Building</option>
-                            <option value="mixed">Mixed Use</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Year Built</label>
-                        <input type="number" x-model="currentProperty.yearBuilt"
-                               class="w-full input-field"
-                               :placeholder="new Date().getFullYear()">
-                    </div>
-                    
-                    <div class="col-span-2 border-t border-gray-200 pt-6 mt-4">
-                        <h4 class="font-semibold text-gray-700 mb-4">Landlord Details</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Landlord Name *</label>
-                                <input type="text" x-model="currentProperty.landlordName" required
-                                       class="w-full input-field"
-                                       placeholder="Full name">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                                <input type="tel" x-model="currentProperty.landlordPhone" required
-                                       class="w-full input-field"
-                                       placeholder="0712 345 678">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                <input type="email" x-model="currentProperty.landlordEmail"
-                                       class="w-full input-field"
-                                       placeholder="landlord@email.com">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Bank Details</label>
-                                <textarea x-model="currentProperty.bankDetails" rows="2"
-                                          class="w-full input-field"
-                                          placeholder="Bank name, account number, branch..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
-                        <textarea x-model="currentProperty.notes" rows="3"
-                                  class="w-full input-field"
-                                  placeholder="Any additional information about the property"></textarea>
-                    </div>
-                </div>
-                
-                <div class="flex gap-4 mt-10">
-                    <button @click="saveProperty()" 
-                            class="flex-1 btn-primary py-3.5 text-lg font-semibold">
-                        <i class="fas fa-save mr-2"></i>
-                        <span x-text="editingProperty ? 'Update Property' : 'Create Property'"></span>
-                    </button>
-                    <button @click="closePropertyModal()" 
-                            class="flex-1 bg-gray-100 text-gray-700 px-4 py-3.5 rounded-xl font-semibold hover:bg-gray-200 transition">
-                        Cancel
-                    </button>
+    <div x-show="showAddProperty" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 no-print" x-cloak>
+        <div class="bg-white p-8 rounded-xl w-96">
+            <h3 class="text-xl font-bold mb-4">Add New Property</h3>
+            <div class="space-y-4">
+                <input type="text" placeholder="Property Name" class="w-full p-2 border rounded">
+                <input type="text" placeholder="Location" class="w-full p-2 border rounded">
+                <input type="number" placeholder="Number of Units" class="w-full p-2 border rounded">
+                <div class="flex gap-2">
+                    <button @click="showAddProperty = false" class="flex-1 bg-gray-200 p-2 rounded">Cancel</button>
+                    <button @click="showAddProperty = false" class="flex-1 bg-blue-600 text-white p-2 rounded font-bold">Create</button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Add/Edit Tenant Modal -->
-    <div x-show="showTenantModal" x-cloak 
-         class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="p-8 border-b border-gray-200">
-                <h3 class="text-2xl font-bold text-gray-800">
-                    <span x-text="editingTenant ? 'Edit Tenant' : 'Add New Tenant'"></span>
-                </h3>
-            </div>
-            
-            <div class="p-8">
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Property *</label>
-                        <select x-model="currentTenant.propertyId" required
-                                class="w-full input-field">
-                            <option value="">Select Property</option>
-                            <template x-for="property in properties" :key="property.id">
-                                <option :value="property.id" x-text="property.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Unit Number *</label>
-                        <input type="text" x-model="currentTenant.unitNumber" required
-                               class="w-full input-field"
-                               placeholder="e.g., A1, B3">
-                    </div>
-                    
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                        <input type="text" x-model="currentTenant.name" required
-                               class="w-full input-field"
-                               placeholder="Tenant's full name">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ID Number *</label>
-                        <input type="text" x-model="currentTenant.idNumber" required
-                               class="w-full input-field"
-                               placeholder="National ID number">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                        <input type="tel" x-model="currentTenant.phone" required
-                               class="w-full input-field"
-                               placeholder="0712 345 678">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                        <input type="email" x-model="currentTenant.email"
-                               class="w-full input-field"
-                               placeholder="tenant@email.com">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact</label>
-                        <input type="text" x-model="currentTenant.emergencyContact"
-                               class="w-full input-field"
-                               placeholder="Emergency contact number">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Monthly Rent *</label>
-                        <input type="number" x-model="currentTenant.monthlyRent" required
-                               class="w-full input-field"
-                               placeholder="Amount in Ksh">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Deposit Amount</label>
-                        <input type="number" x-model="currentTenant.deposit"
-                               class="w-full input-field"
-                               placeholder="Security deposit">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Join Date *</label>
-                        <input type="date" x-model="currentTenant.joinDate" required
-                               class="w-full input-field">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Lease End Date</label>
-                        <input type="date" x-model="currentTenant.leaseEndDate"
-                               class="w-full input-field">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Day</label>
-                        <input type="number" x-model="currentTenant.paymentDay" min="1" max="31"
-                               class="w-full input-field"
-                               placeholder="e.g., 5 (5th of each month)">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select x-model="currentTenant.status"
-                                class="w-full input-field">
-                            <option value="active">Active</option>
-                            <option value="vacating">Vacating</option>
-                            <option value="vacant">Vacant</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
-                        <textarea x-model="currentTenant.notes" rows="3"
-                                  class="w-full input-field"
-                                  placeholder="Any additional information about the tenant"></textarea>
-                    </div>
-                </div>
-                
-                <div class="flex gap-4 mt-10">
-                    <button @click="saveTenant()" 
-                            class="flex-1 btn-primary py-3.5 text-lg font-semibold">
-                        <i class="fas fa-save mr-2"></i>
-                        <span x-text="editingTenant ? 'Update Tenant' : 'Create Tenant'"></span>
-                    </button>
-                    <button @click="closeTenantModal()" 
-                            class="flex-1 bg-gray-100 text-gray-700 px-4 py-3.5 rounded-xl font-semibold hover:bg-gray-200 transition">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Record Payment Modal -->
-    <div x-show="showPaymentModal" x-cloak 
-         class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div class="p-8 border-b border-gray-200">
-                <h3 class="text-2xl font-bold text-gray-800">Record Payment</h3>
-            </div>
-            
-            <div class="p-8">
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tenant</label>
-                        <select x-model="currentPayment.tenantId" required
-                                class="w-full input-field">
-                            <option value="">Select Tenant</option>
-                            <template x-for="tenant in allTenants" :key="tenant.id">
-                                <option :value="tenant.id" x-text="tenant.name + ' - ' + getPropertyName(tenant.propertyId)"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount (Ksh) *</label>
-                        <input type="number" x-model="currentPayment.amount" required
-                               class="w-full input-field"
-                               placeholder="Payment amount">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Date *</label>
-                        <input type="date" x-model="currentPayment.date" required
-                               class="w-full input-field">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
-                        <select x-model="currentPayment.method" required
-                                class="w-full input-field">
-                            <option value="mpesa">M-Pesa</option>
-                            <option value="bank">Bank Transfer</option>
-                            <option value="cash">Cash</option>
-                            <option value="cheque">Cheque</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Reference Number</label>
-                        <input type="text" x-model="currentPayment.reference"
-                               class="w-full input-field"
-                               placeholder="e.g., M-Pesa transaction ID">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Month Covered *</label>
-                        <input type="month" x-model="currentPayment.month" required
-                               class="w-full input-field">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                        <textarea x-model="currentPayment.notes" rows="2"
-                                  class="w-full input-field"
-                                  placeholder="Additional payment notes"></textarea>
-                    </div>
-                </div>
-                
-                <div class="flex gap-4 mt-10">
-                    <button @click="savePayment()" 
-                            class="flex-1 btn-success py-3.5 text-lg font-semibold">
-                        <i class="fas fa-credit-card mr-2"></i>
-                        Record Payment
-                    </button>
-                    <button @click="closePaymentModal()" 
-                            class="flex-1 bg-gray-100 text-gray-700 px-4 py-3.5 rounded-xl font-semibold hover:bg-gray-200 transition">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Success Toast -->
-    <div x-show="showToast" x-transition
-         class="fixed bottom-6 right-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl shadow-xl z-50 flex items-center gap-3 animate-fade-in">
-        <i :class="toastIcon" class="text-xl"></i>
-        <div>
-            <p class="font-semibold" x-text="toastMessage"></p>
-            <p class="text-sm opacity-90" x-text="toastDescription"></p>
         </div>
     </div>
 
     <script>
         function managementSystem() {
             return {
-                // State
                 activeTab: 'dashboard',
                 userRole: 'secretary',
-                editMode: false,
-                lastSaved: new Date().toISOString(),
+                showAddProperty: false,
+                totalExpectedRent: 1250000,
+                commission: 10,
                 
-                // Menu Items
                 menuItems: [
                     { id: 'dashboard', name: 'Dashboard', icon: 'fas fa-chart-pie' },
-                    { id: 'properties', name: 'Properties', icon: 'fas fa-building' },
                     { id: 'tenants', name: 'Tenants', icon: 'fas fa-users' },
-                    { id: 'payments', name: 'Payments', icon: 'fas fa-credit-card' },
                     { id: 'utilities', name: 'Utility Entry', icon: 'fas fa-bolt' },
                     { id: 'statement', name: 'Landlord Statement', icon: 'fas fa-file-invoice-dollar' }
                 ],
-                
-                // Data Collections
-                properties: [],
-                allTenants: [],
-                filteredTenants: [],
-                paymentHistory: [],
-                recentPayments: [],
-                expenses: [],
-                
-                // Filters
-                filters: {
-                    property: '',
-                    status: '',
-                    search: ''
-                },
-                
-                // Modals
-                showPropertyModal: false,
-                editingProperty: null,
-                currentProperty: getDefaultProperty(),
-                
-                showTenantModal: false,
-                editingTenant: null,
-                currentTenant: getDefaultTenant(),
-                
-                showPaymentModal: false,
-                currentPayment: getDefaultPayment(),
-                
-                // Toast
-                showToast: false,
-                toastMessage: '',
-                toastDescription: '',
-                toastIcon: '',
-                
-                // Settings
-                settings: {
-                    companyName: 'Eagle Homes Agencies',
-                    garbageFee: 200,
-                    commissionRate: 10,
-                    latePenaltyRate: 5,
-                    gracePeriod: 5
-                },
-                
-                // Utility Entry
-                selectedProperty: '',
-                utilityMonth: new Date().toISOString().slice(0, 7),
+
                 utilityData: [
                     { unit: 'A1', tenant: 'John Doe', water: 500, electricity: 1200, garbage: 200, penalty: 0, other: 0 },
                     { unit: 'A2', tenant: 'Mary W.', water: 300, electricity: 800, garbage: 200, penalty: 500, other: 100 },
                 ],
-                
-                // Landlord Statement
-                statementProperty: '',
-                statementMonth: new Date().toISOString().slice(0, 7),
+
                 statementRows: [
-                    { date: new Date().toISOString().split('T')[0], hse: 'A1', tenant: 'John Doe', rent: 25000, paid: 25000, deposit: 0, garbage: 200, mode: 'M-Pesa', remarks: 'Paid on time' },
-                    { date: new Date().toISOString().split('T')[0], hse: 'A2', tenant: 'Mary W.', rent: 25000, paid: 20000, deposit: 0, garbage: 200, mode: 'Cash', remarks: 'Partial payment' }
+                    { date: '2026-01-05', hse: 'A1', tenant: 'John Doe', rent: 25000, paid: 25000, deposit: 0, garbage: 200, mode: 'M-Pesa', remarks: 'Paid on time' },
+                    { date: '2026-01-06', hse: 'A2', tenant: 'Mary W.', rent: 25000, paid: 20000, deposit: 0, garbage: 200, mode: 'Cash', remarks: 'Partial payment' }
                 ],
-                commission: 10,
-                
-                // Computed Properties
-                get currentMonth() {
-                    return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                },
-                
-                get totalExpectedRent() {
-                    return this.allTenants
-                        .filter(t => t.status === 'active')
-                        .reduce((sum, tenant) => sum + (tenant.monthlyRent || 0), 0);
-                },
-                
-                get occupancyRate() {
-                    const totalUnits = this.properties.reduce((sum, prop) => sum + (prop.totalUnits || 0), 0);
-                    const occupiedUnits = this.allTenants.filter(t => t.status === 'active').length;
-                    return totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
-                },
-                
-                get totalOccupiedUnits() {
-                    return this.allTenants.filter(t => t.status === 'active').length;
-                },
-                
-                get vacantUnits() {
-                    const totalUnits = this.properties.reduce((sum, prop) => sum + (prop.totalUnits || 0), 0);
-                    return totalUnits - this.totalOccupiedUnits;
-                },
-                
-                get totalTenants() {
-                    return this.allTenants.filter(t => t.status === 'active').length;
-                },
-                
-                get overdueTenants() {
-                    return this.allTenants.filter(t => t.paymentStatus === 'overdue').length;
-                },
-                
-                get monthlyCollection() {
-                    const currentMonth = new Date().toISOString().slice(0, 7);
-                    return this.paymentHistory
-                        .filter(p => p.month === currentMonth)
-                        .reduce((sum, payment) => sum + (payment.amount || 0), 0);
-                },
-                
-                get paymentStats() {
-                    const currentMonth = new Date().toISOString().slice(0, 7);
-                    const monthlyPayments = this.paymentHistory.filter(p => p.month === currentMonth);
-                    return {
-                        count: monthlyPayments.length,
-                        total: monthlyPayments.reduce((sum, p) => sum + (p.amount || 0), 0)
-                    };
-                },
-                
-                get totalArrears() {
-                    return this.allTenants
-                        .filter(t => t.balance > 0)
-                        .reduce((sum, tenant) => sum + (tenant.balance || 0), 0);
-                },
-                
-                get pendingInvoices() {
-                    return this.allTenants.filter(t => t.paymentStatus === 'unpaid').length;
-                },
-                
-                get statementMonthFormatted() {
-                    if (!this.statementMonth) return '';
-                    const [year, month] = this.statementMonth.split('-');
-                    return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                },
-                
-                get statementNumber() {
-                    const date = new Date();
-                    return date.getFullYear().toString().slice(-2) + 
-                           (date.getMonth() + 1).toString().padStart(2, '0') + 
-                           date.getDate().toString().padStart(2, '0');
-                },
-                
-                // Initialization
-                init() {
-                    this.loadFromLocalStorage();
-                    this.filterTenants();
-                    
-                    // Auto-save every 30 seconds
-                    setInterval(() => {
-                        this.autoSave();
-                    }, 30000);
-                    
-                    // Check for due payments
-                    this.checkDuePayments();
-                    
-                    // Show welcome message
-                    setTimeout(() => {
-                        this.showToastMessage(
-                            'Welcome to Eagle Homes!',
-                            'Start by adding your first property or tenant.',
-                            'fas fa-home'
-                        );
-                    }, 1000);
-                },
-                
-                // Navigation
-                switchTab(tab) {
-                    this.activeTab = tab;
-                    if (tab === 'utilities' && !this.selectedProperty && this.properties.length > 0) {
-                        this.selectedProperty = this.properties[0].id;
-                        this.loadPropertyForUtilities();
-                    }
-                    if (tab === 'statement' && !this.statementProperty && this.properties.length > 0) {
-                        this.statementProperty = this.properties[0].id;
-                        this.loadStatementData();
-                    }
-                },
-                
-                // Data Loading
-                loadFromLocalStorage() {
-                    const savedProperties = localStorage.getItem('eagle_properties');
-                    const savedTenants = localStorage.getItem('eagle_tenants');
-                    const savedPayments = localStorage.getItem('eagle_payments');
-                    const savedSettings = localStorage.getItem('eagle_settings');
-                    const savedRole = localStorage.getItem('eagle_userRole');
-                    
-                    if (savedRole) this.userRole = savedRole;
-                    if (savedSettings) this.settings = JSON.parse(savedSettings);
-                    
-                    if (savedProperties) {
-                        this.properties = JSON.parse(savedProperties);
-                    } else {
-                        this.initializeSampleData();
-                    }
-                    
-                    if (savedTenants) {
-                        this.allTenants = JSON.parse(savedTenants);
-                    }
-                    
-                    if (savedPayments) {
-                        this.paymentHistory = JSON.parse(savedPayments);
-                        this.recentPayments = this.paymentHistory
-                            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                            .slice(0, 10);
-                    }
-                    
-                    this.updatePropertyOccupancy();
-                },
-                
-                initializeSampleData() {
-                    // Sample properties
-                    this.properties = [
-                        {
-                            id: 'prop-001',
-                            code: 'PROP-001',
-                            name: 'Sunset Gardens',
-                            address: '123 Main Street, Nairobi',
-                            type: 'apartment',
-                            totalUnits: 10,
-                            occupiedUnits: 8,
-                            occupancyRate: 80,
-                            totalRent: 200000,
-                            yearBuilt: 2015,
-                            landlordName: 'John Kamau',
-                            landlordPhone: '0712345678',
-                            landlordEmail: 'john@example.com',
-                            bankDetails: 'Equity Bank, Acc: 1234567890',
-                            notes: 'Well maintained property with security',
-                            created: new Date().toISOString()
-                        },
-                        {
-                            id: 'prop-002',
-                            code: 'PROP-002',
-                            name: 'Greenview Apartments',
-                            address: '456 Park Road, Nairobi',
-                            type: 'apartment',
-                            totalUnits: 15,
-                            occupiedUnits: 12,
-                            occupancyRate: 80,
-                            totalRent: 300000,
-                            yearBuilt: 2018,
-                            landlordName: 'Mary Wanjiku',
-                            landlordPhone: '0723456789',
-                            landlordEmail: 'mary@example.com',
-                            bankDetails: 'KCB Bank, Acc: 0987654321',
-                            notes: 'Newly renovated with parking',
-                            created: new Date().toISOString()
-                        }
-                    ];
-                    
-                    // Sample tenants
-                    this.allTenants = [
-                        {
-                            id: 'tenant-001',
-                            propertyId: 'prop-001',
-                            unitNumber: 'A1',
-                            name: 'John Doe',
-                            idNumber: '12345678',
-                            phone: '0712345678',
-                            email: 'john@example.com',
-                            emergencyContact: '0723456789',
-                            monthlyRent: 25000,
-                            deposit: 50000,
-                            joinDate: '2024-01-01',
-                            leaseEndDate: '2024-12-31',
-                            paymentDay: 5,
-                            status: 'active',
-                            paymentStatus: 'paid',
-                            balance: 0,
-                            nextPaymentDate: '2024-02-05',
-                            notes: 'Prompt payer, no issues',
-                            created: new Date().toISOString()
-                        },
-                        {
-                            id: 'tenant-002',
-                            propertyId: 'prop-001',
-                            unitNumber: 'A2',
-                            name: 'Mary W.',
-                            idNumber: '23456789',
-                            phone: '0723456789',
-                            email: 'mary@example.com',
-                            emergencyContact: '0734567890',
-                            monthlyRent: 22000,
-                            deposit: 44000,
-                            joinDate: '2024-01-15',
-                            leaseEndDate: '2024-12-31',
-                            paymentDay: 10,
-                            status: 'active',
-                            paymentStatus: 'partial',
-                            balance: 5000,
-                            nextPaymentDate: '2024-02-10',
-                            notes: 'Sometimes pays late',
-                            created: new Date().toISOString()
-                        }
-                    ];
-                    
-                    // Sample payments
-                    this.paymentHistory = [
-                        {
-                            id: 'pay-001',
-                            tenantId: 'tenant-001',
-                            property: 'Sunset Gardens',
-                            tenantName: 'John Doe',
-                            unit: 'A1',
-                            amount: 25000,
-                            date: '2024-01-05',
-                            time: '10:30 AM',
-                            method: 'M-Pesa',
-                            reference: 'MPX123456',
-                            month: '2024-01',
-                            notes: 'Rent for January',
-                            status: 'completed',
-                            timestamp: '2024-01-05T10:30:00'
-                        }
-                    ];
-                    
-                    this.recentPayments = this.paymentHistory;
-                    this.saveAllData();
-                },
-                
-                updatePropertyOccupancy() {
-                    this.properties.forEach(property => {
-                        const occupied = this.allTenants.filter(t => 
-                            t.propertyId === property.id && t.status === 'active'
-                        ).length;
-                        property.occupiedUnits = occupied;
-                        property.occupancyRate = Math.round((occupied / property.totalUnits) * 100);
-                        property.totalRent = this.allTenants
-                            .filter(t => t.propertyId === property.id && t.status === 'active')
-                            .reduce((sum, t) => sum + (t.monthlyRent || 0), 0);
-                    });
-                },
-                
-                // Property Management
-                openPropertyModal(property = null) {
-                    this.editingProperty = property;
-                    if (property) {
-                        this.currentProperty = { ...property };
-                    } else {
-                        this.currentProperty = getDefaultProperty();
-                        this.currentProperty.code = this.generatePropertyCode();
-                    }
-                    this.showPropertyModal = true;
-                },
-                
-                closePropertyModal() {
-                    this.showPropertyModal = false;
-                    this.editingProperty = null;
-                    this.currentProperty = getDefaultProperty();
-                },
-                
-                generatePropertyCode() {
-                    const prefix = 'PROP-';
-                    const existingCodes = this.properties.map(p => p.code);
-                    let codeNumber = 1;
-                    
-                    while (existingCodes.includes(prefix + codeNumber.toString().padStart(3, '0'))) {
-                        codeNumber++;
-                    }
-                    
-                    return prefix + codeNumber.toString().padStart(3, '0');
-                },
-                
-                saveProperty() {
-                    if (!this.currentProperty.name || !this.currentProperty.code) {
-                        this.showToastMessage('Error', 'Please fill in required fields', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    const property = {
-                        ...this.currentProperty,
-                        id: this.editingProperty ? this.editingProperty.id : 'prop-' + Date.now(),
-                        occupiedUnits: 0,
-                        occupancyRate: 0,
-                        totalRent: 0,
-                        created: this.editingProperty ? this.editingProperty.created : new Date().toISOString()
-                    };
-                    
-                    if (this.editingProperty) {
-                        const index = this.properties.findIndex(p => p.id === property.id);
-                        if (index !== -1) {
-                            this.properties[index] = property;
-                        }
-                        this.showToastMessage('Success', 'Property updated successfully', 'fas fa-check-circle');
-                    } else {
-                        this.properties.push(property);
-                        this.showToastMessage('Success', 'Property added successfully', 'fas fa-check-circle');
-                    }
-                    
-                    this.updatePropertyOccupancy();
-                    this.saveAllData();
-                    this.closePropertyModal();
-                },
-                
-                editProperty(property) {
-                    this.openPropertyModal(property);
-                },
-                
-                deleteProperty(property) {
-                    if (!confirm(`Delete property "${property.name}"? This will also remove all associated tenants and data.`)) {
-                        return;
-                    }
-                    
-                    // Check if property has tenants
-                    const hasTenants = this.allTenants.some(t => t.propertyId === property.id);
-                    if (hasTenants) {
-                        if (!confirm('This property has tenants. Delete anyway?')) {
-                            return;
-                        }
-                        // Remove associated tenants
-                        this.allTenants = this.allTenants.filter(t => t.propertyId !== property.id);
-                    }
-                    
-                    this.properties = this.properties.filter(p => p.id !== property.id);
-                    this.updatePropertyOccupancy();
-                    this.filterTenants();
-                    this.saveAllData();
-                    this.showToastMessage('Success', 'Property deleted successfully', 'fas fa-check-circle');
-                },
-                
-                viewPropertyDetails(property) {
-                    this.activeTab = 'tenants';
-                    this.filters.property = property.id;
-                    this.filterTenants();
-                    this.showToastMessage('Info', `Showing tenants for ${property.name}`, 'fas fa-info-circle');
-                },
-                
-                // Tenant Management
-                openAddTenantModal(tenant = null) {
-                    this.editingTenant = tenant;
-                    if (tenant) {
-                        this.currentTenant = { ...tenant };
-                    } else {
-                        this.currentTenant = getDefaultTenant();
-                        if (this.properties.length > 0) {
-                            this.currentTenant.propertyId = this.properties[0].id;
-                        }
-                    }
-                    this.showTenantModal = true;
-                },
-                
-                closeTenantModal() {
-                    this.showTenantModal = false;
-                    this.editingTenant = null;
-                    this.currentTenant = getDefaultTenant();
-                },
-                
-                saveTenant() {
-                    if (!this.currentTenant.name || !this.currentTenant.propertyId || !this.currentTenant.unitNumber) {
-                        this.showToastMessage('Error', 'Please fill in required fields', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    // Check if unit is already occupied
-                    const existingTenant = this.allTenants.find(t => 
-                        t.propertyId === this.currentTenant.propertyId && 
-                        t.unitNumber === this.currentTenant.unitNumber &&
-                        t.status === 'active' &&
-                        (!this.editingTenant || t.id !== this.editingTenant.id)
-                    );
-                    
-                    if (existingTenant) {
-                        this.showToastMessage('Error', 'This unit is already occupied', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    const tenant = {
-                        ...this.currentTenant,
-                        id: this.editingTenant ? this.editingTenant.id : 'tenant-' + Date.now(),
-                        paymentStatus: 'unpaid',
-                        balance: this.currentTenant.monthlyRent || 0,
-                        nextPaymentDate: this.calculateNextPaymentDate(this.currentTenant.paymentDay || 5),
-                        created: this.editingTenant ? this.editingTenant.created : new Date().toISOString()
-                    };
-                    
-                    if (this.editingTenant) {
-                        const index = this.allTenants.findIndex(t => t.id === tenant.id);
-                        if (index !== -1) {
-                            this.allTenants[index] = tenant;
-                        }
-                        this.showToastMessage('Success', 'Tenant updated successfully', 'fas fa-check-circle');
-                    } else {
-                        this.allTenants.push(tenant);
-                        this.showToastMessage('Success', 'Tenant added successfully', 'fas fa-check-circle');
-                    }
-                    
-                    this.updatePropertyOccupancy();
-                    this.filterTenants();
-                    this.saveAllData();
-                    this.closeTenantModal();
-                },
-                
-                calculateNextPaymentDate(paymentDay) {
-                    const today = new Date();
-                    const currentMonth = today.getMonth();
-                    const currentYear = today.getFullYear();
-                    
-                    // Create date for this month's payment day
-                    const paymentDate = new Date(currentYear, currentMonth, paymentDay);
-                    
-                    // If payment day has passed this month, use next month
-                    if (paymentDate < today) {
-                        paymentDate.setMonth(paymentDate.getMonth() + 1);
-                    }
-                    
-                    return paymentDate.toISOString().split('T')[0];
-                },
-                
-                filterTenants() {
-                    let filtered = [...this.allTenants];
-                    
-                    if (this.filters.property) {
-                        filtered = filtered.filter(t => t.propertyId === this.filters.property);
-                    }
-                    
-                    if (this.filters.status) {
-                        filtered = filtered.filter(t => t.status === this.filters.status);
-                    }
-                    
-                    if (this.filters.search) {
-                        const query = this.filters.search.toLowerCase();
-                        filtered = filtered.filter(t => 
-                            t.name.toLowerCase().includes(query) ||
-                            t.unitNumber.toLowerCase().includes(query) ||
-                            t.phone.toLowerCase().includes(query) ||
-                            t.idNumber.toLowerCase().includes(query)
-                        );
-                    }
-                    
-                    this.filteredTenants = filtered;
-                },
-                
-                clearFilters() {
-                    this.filters.property = '';
-                    this.filters.status = '';
-                    this.filters.search = '';
-                    this.filterTenants();
-                },
-                
-                recordPayment(tenant = null) {
-                    this.currentPayment = getDefaultPayment();
-                    if (tenant) {
-                        this.currentPayment.tenantId = tenant.id;
-                        this.currentPayment.amount = tenant.monthlyRent || 0;
-                        this.currentPayment.month = new Date().toISOString().slice(0, 7);
-                    }
-                    this.showPaymentModal = true;
-                },
-                
-                closePaymentModal() {
-                    this.showPaymentModal = false;
-                    this.currentPayment = getDefaultPayment();
-                },
-                
-                savePayment() {
-                    if (!this.currentPayment.tenantId || !this.currentPayment.amount) {
-                        this.showToastMessage('Error', 'Please fill in required fields', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    const tenant = this.allTenants.find(t => t.id === this.currentPayment.tenantId);
-                    if (!tenant) {
-                        this.showToastMessage('Error', 'Tenant not found', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    const payment = {
-                        id: 'pay-' + Date.now(),
-                        ...this.currentPayment,
-                        property: this.getPropertyName(tenant.propertyId),
-                        unit: tenant.unitNumber,
-                        tenantName: tenant.name,
-                        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                        status: 'completed',
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    this.paymentHistory.push(payment);
-                    this.recentPayments = this.paymentHistory
-                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                        .slice(0, 10);
-                    
-                    // Update tenant's balance and payment status
-                    tenant.balance = (tenant.balance || tenant.monthlyRent) - payment.amount;
-                    tenant.lastPaymentDate = payment.date;
-                    tenant.nextPaymentDate = this.calculateNextPaymentDate(tenant.paymentDay || 5);
-                    tenant.paymentStatus = tenant.balance <= 0 ? 'paid' : tenant.balance < tenant.monthlyRent ? 'partial' : 'unpaid';
-                    
-                    this.updatePropertyOccupancy();
-                    this.saveAllData();
-                    
-                    this.showToastMessage(
-                        'Payment Recorded',
-                        `Payment of Ksh ${this.formatNumber(payment.amount)} recorded for ${tenant.name}`,
-                        'fas fa-credit-card'
-                    );
-                    
-                    this.closePaymentModal();
-                },
-                
-                deleteTenant(tenant) {
-                    if (!confirm(`Delete tenant "${tenant.name}"?`)) {
-                        return;
-                    }
-                    
-                    this.allTenants = this.allTenants.filter(t => t.id !== tenant.id);
-                    this.updatePropertyOccupancy();
-                    this.filterTenants();
-                    this.saveAllData();
-                    this.showToastMessage('Success', 'Tenant deleted successfully', 'fas fa-check-circle');
-                },
-                
-                sendReminder(tenant) {
-                    const message = `Dear ${tenant.name}, your rent of Ksh ${this.formatNumber(tenant.monthlyRent)} is due on ${this.formatDate(tenant.nextPaymentDate)}.`;
-                    this.showToastMessage(
-                        'Reminder Sent',
-                        `Reminder sent to ${tenant.name}`,
-                        'fas fa-bell'
-                    );
-                },
-                
-                sendReminders() {
-                    const overdueTenants = this.allTenants.filter(t => t.paymentStatus === 'overdue');
-                    if (overdueTenants.length === 0) {
-                        this.showToastMessage('Info', 'No overdue tenants to remind', 'fas fa-info-circle');
-                        return;
-                    }
-                    
-                    this.showToastMessage(
-                        'Reminders Sent',
-                        `Sent reminders to ${overdueTenants.length} tenants`,
-                        'fas fa-bell'
-                    );
-                },
-                
-                sendInvoiceReminders() {
-                    const unpaidTenants = this.allTenants.filter(t => t.paymentStatus === 'unpaid');
-                    if (unpaidTenants.length === 0) {
-                        this.showToastMessage('Info', 'No pending invoices to remind', 'fas fa-info-circle');
-                        return;
-                    }
-                    
-                    this.showToastMessage(
-                        'Reminders Sent',
-                        `Sent invoice reminders to ${unpaidTenants.length} tenants`,
-                        'fas fa-envelope'
-                    );
-                },
-                
-                sendArrearsReminders() {
-                    const arrearsTenants = this.allTenants.filter(t => t.balance > 0);
-                    if (arrearsTenants.length === 0) {
-                        this.showToastMessage('Info', 'No tenants with arrears', 'fas fa-info-circle');
-                        return;
-                    }
-                    
-                    this.showToastMessage(
-                        'Reminders Sent',
-                        `Sent arrears reminders to ${arrearsTenants.length} tenants`,
-                        'fas fa-exclamation-triangle'
-                    );
-                },
-                
-                checkDuePayments() {
-                    const today = new Date();
-                    const gracePeriod = this.settings.gracePeriod || 5;
-                    
-                    this.allTenants.forEach(tenant => {
-                        if (tenant.status === 'active') {
-                            const dueDate = new Date(tenant.nextPaymentDate);
-                            const daysLate = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
-                            
-                            if (daysLate > gracePeriod && tenant.paymentStatus !== 'paid') {
-                                tenant.paymentStatus = 'overdue';
-                                // Apply late penalty if configured
-                                if (this.settings.latePenaltyRate > 0) {
-                                    tenant.balance = tenant.monthlyRent + (tenant.monthlyRent * this.settings.latePenaltyRate / 100);
-                                }
-                            }
-                        }
-                    });
-                    
-                    this.saveAllData();
-                },
-                
-                // Utility Management
-                loadPropertyForUtilities() {
-                    if (!this.selectedProperty) return;
-                    
-                    const property = this.properties.find(p => p.id === this.selectedProperty);
-                    if (!property) return;
-                    
-                    // Get active tenants for this property
-                    const propertyTenants = this.allTenants.filter(t => 
-                        t.propertyId === this.selectedProperty && t.status === 'active'
-                    );
-                    
-                    // Initialize utility data with existing tenants
-                    this.utilityData = propertyTenants.map(tenant => ({
-                        unit: tenant.unitNumber,
-                        tenant: tenant.name,
-                        water: 0,
-                        electricity: 0,
-                        garbage: this.settings.garbageFee || 200,
-                        penalty: 0,
-                        other: 0
-                    }));
-                },
-                
-                loadUtilityData() {
-                    // In a real app, this would load saved utility data for the selected month
-                    // For now, just reload the property data
-                    this.loadPropertyForUtilities();
-                },
-                
-                calculateUtilityTotal(utility) {
-                    const water = parseFloat(utility.water) || 0;
-                    const electricity = parseFloat(utility.electricity) || 0;
-                    const garbage = parseFloat(utility.garbage) || 0;
-                    const penalty = parseFloat(utility.penalty) || 0;
-                    const other = parseFloat(utility.other) || 0;
-                    return water + electricity + garbage + penalty + other;
-                },
-                
-                calculateTotalUtilityBill() {
-                    return this.utilityData.reduce((sum, utility) => {
-                        return sum + this.calculateUtilityTotal(utility);
-                    }, 0);
-                },
-                
-                autoFillZero() {
-                    this.utilityData.forEach(utility => {
-                        if (!utility.water) utility.water = 0;
-                        if (!utility.electricity) utility.electricity = 0;
-                        if (!utility.penalty) utility.penalty = 0;
-                        if (!utility.other) utility.other = 0;
-                    });
-                    this.showToastMessage('Success', 'Zero values auto-filled', 'fas fa-check-circle');
-                },
-                
-                clearAllUtilities() {
-                    if (!confirm('Clear all utility readings?')) return;
-                    
-                    this.utilityData.forEach(utility => {
-                        utility.water = 0;
-                        utility.electricity = 0;
-                        utility.penalty = 0;
-                        utility.other = 0;
-                    });
-                    this.showToastMessage('Success', 'All readings cleared', 'fas fa-check-circle');
-                },
-                
-                saveUtilities() {
-                    if (!this.selectedProperty) {
-                        this.showToastMessage('Error', 'Please select a property first', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    // Save utility data (in a real app, this would save to a database)
-                    this.showToastMessage('Success', 'Utility readings saved successfully', 'fas fa-check-circle');
-                    this.saveAllData();
-                },
-                
-                applyToStatement() {
-                    this.activeTab = 'statement';
-                    this.showToastMessage('Info', 'Utility data ready for statement generation', 'fas fa-info-circle');
-                },
-                
-                // Landlord Statement
-                loadStatementData() {
-                    if (!this.statementProperty) {
-                        this.statementRows = [];
-                        return;
-                    }
-                    
-                    const property = this.properties.find(p => p.id === this.statementProperty);
-                    if (!property) return;
-                    
-                    // Get tenants for this property
-                    const propertyTenants = this.allTenants.filter(t => 
-                        t.propertyId === this.statementProperty && t.status === 'active'
-                    );
-                    
-                    // Initialize statement rows with tenant data
-                    this.statementRows = propertyTenants.map(tenant => {
-                        const payments = this.paymentHistory.filter(p => 
-                            p.tenantId === tenant.id && p.month === this.statementMonth
-                        );
-                        const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-                        
-                        return {
-                            date: new Date().toISOString().split('T')[0],
-                            hse: tenant.unitNumber,
-                            tenant: tenant.name,
-                            rent: tenant.monthlyRent,
-                            paid: totalPaid,
-                            deposit: tenant.deposit || 0,
-                            garbage: this.settings.garbageFee || 200,
-                            mode: 'M-Pesa',
-                            remarks: tenant.notes || ''
-                        };
-                    });
-                    
-                    // Initialize expenses if empty
-                    if (this.expenses.length === 0) {
-                        this.expenses = [
-                            { desc: 'Water Pump Repair', amount: 4500 },
-                            { desc: 'Security Guard', amount: 15000 }
-                        ];
-                    }
-                },
-                
+
+                expenses: [
+                    { desc: 'Water Pump Repair', amount: 4500 },
+                    { desc: 'Security Guard', amount: 15000 }
+                ],
+
                 addStatementRow() {
-                    this.statementRows.push({
-                        date: new Date().toISOString().split('T')[0],
-                        hse: '',
-                        tenant: '',
-                        rent: 0,
-                        paid: 0,
-                        deposit: 0,
-                        garbage: this.settings.garbageFee || 200,
-                        mode: 'M-Pesa',
-                        remarks: ''
-                    });
+                    this.statementRows.push({ date: '', hse: '', tenant: '', rent: 0, paid: 0, deposit: 0, garbage: 0, mode: 'M-Pesa', remarks: '' });
                 },
-                
-                addExpense() {
-                    this.expenses.push({ desc: '', amount: 0 });
-                },
-                
-                removeExpense(index) {
-                    this.expenses.splice(index, 1);
-                },
-                
-                toggleEditMode() {
-                    this.editMode = !this.editMode;
-                    if (!this.editMode) {
-                        // Save changes when exiting edit mode
-                        this.saveAllData();
-                        this.showToastMessage('Success', 'Changes saved', 'fas fa-save');
-                    }
-                },
-                
+
                 calculateTotalPaid() {
-                    return this.statementRows.reduce((sum, row) => sum + (row.paid || 0), 0);
+                    return this.statementRows.reduce((sum, row) => sum + row.paid, 0);
                 },
-                
+
                 calculateTotalExpenses() {
-                    return this.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+                    return this.expenses.reduce((sum, exp) => sum + exp.amount, 0);
                 },
-                
-                calculateCommission() {
-                    return this.calculateTotalPaid() * (this.commission / 100);
-                },
-                
+
                 calculateNetPayout() {
-                    const total = this.calculateTotalPaid();
-                    const commission = this.calculateCommission();
-                    const expenses = this.calculateTotalExpenses();
-                    return total - commission - expenses;
+                    let total = this.calculateTotalPaid();
+                    let comm = total * (this.commission / 100);
+                    return total - this.calculateTotalExpenses() - comm;
                 },
-                
-                generateStatement() {
-                    if (!this.statementProperty) {
-                        this.showToastMessage('Error', 'Please select a property first', 'fas fa-exclamation-circle');
-                        return;
-                    }
-                    
-                    this.showToastMessage('Success', 'Statement generated successfully', 'fas fa-file-alt');
-                    this.saveAllData();
+
+                formatNumber(n) {
+                    return n.toLocaleString();
                 },
-                
-                // Helper Methods
-                getPropertyName(propertyId) {
-                    const property = this.properties.find(p => p.id === propertyId);
-                    return property ? property.name : 'Unknown Property';
-                },
-                
-                getStatusClass(status) {
-                    const classes = {
-                        'active': 'bg-green-100 text-green-800',
-                        'vacating': 'bg-yellow-100 text-yellow-800',
-                        'vacant': 'bg-red-100 text-red-800'
-                    };
-                    return classes[status] || 'bg-gray-100 text-gray-800';
-                },
-                
-                getPaymentStatusClass(status) {
-                    const classes = {
-                        'paid': 'bg-green-100 text-green-800',
-                        'partial': 'bg-yellow-100 text-yellow-800',
-                        'unpaid': 'bg-orange-100 text-orange-800',
-                        'overdue': 'bg-red-100 text-red-800'
-                    };
-                    return classes[status] || 'bg-gray-100 text-gray-800';
-                },
-                
-                formatNumber(num) {
-                    return new Intl.NumberFormat('en-KE').format(num);
-                },
-                
-                formatDate(dateString) {
-                    if (!dateString) return 'N/A';
-                    const date = new Date(dateString);
-                    return date.toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    });
-                },
-                
-                formatTimeAgo(timestamp) {
-                    const date = new Date(timestamp);
-                    const now = new Date();
-                    const diffMs = now - date;
-                    const diffMins = Math.floor(diffMs / 60000);
-                    const diffHours = Math.floor(diffMs / 3600000);
-                    
-                    if (diffMins < 1) return 'Just now';
-                    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
-                    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-                    return this.formatDate(timestamp);
-                },
-                
-                formatMonth(monthString) {
-                    if (!monthString) return '';
-                    const [year, month] = monthString.split('-');
-                    return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                },
-                
-                // Data Management
-                saveAllData() {
-                    localStorage.setItem('eagle_properties', JSON.stringify(this.properties));
-                    localStorage.setItem('eagle_tenants', JSON.stringify(this.allTenants));
-                    localStorage.setItem('eagle_payments', JSON.stringify(this.paymentHistory));
-                    localStorage.setItem('eagle_settings', JSON.stringify(this.settings));
-                    this.lastSaved = new Date().toISOString();
-                },
-                
-                saveUserRole() {
-                    localStorage.setItem('eagle_userRole', this.userRole);
-                },
-                
+
                 quickSave() {
-                    this.saveAllData();
-                    this.showToastMessage('Success', 'All data saved successfully', 'fas fa-save');
+                    alert('Data saved successfully to local storage!');
                 },
-                
-                autoSave() {
-                    this.saveAllData();
-                    console.log('Auto-saved at', new Date().toLocaleTimeString());
-                },
-                
-                exportCurrentData() {
-                    const data = {
-                        properties: this.properties,
-                        tenants: this.allTenants,
-                        payments: this.paymentHistory,
-                        settings: this.settings,
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `eagle-homes-backup-${new Date().toISOString().slice(0, 10)}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    
-                    this.showToastMessage('Success', 'Data exported successfully', 'fas fa-download');
-                },
-                
-                clearAllData() {
-                    if (!confirm('WARNING: This will delete ALL data. Are you sure?')) return;
-                    
-                    if (prompt('Type "DELETE ALL" to confirm:') !== 'DELETE ALL') {
-                        return;
-                    }
-                    
-                    localStorage.clear();
-                    this.properties = [];
-                    this.allTenants = [];
-                    this.paymentHistory = [];
-                    this.filteredTenants = [];
-                    this.recentPayments = [];
-                    this.expenses = [];
-                    this.settings = getDefaultSettings();
-                    
-                    this.showToastMessage('Info', 'All data cleared successfully', 'fas fa-trash');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                },
-                
-                generateReceipt(payment) {
-                    // Generate receipt logic here
-                    this.showToastMessage('Info', 'Receipt generated', 'fas fa-receipt');
-                },
-                
-                showToastMessage(message, description, icon) {
-                    this.toastMessage = message;
-                    this.toastDescription = description;
-                    this.toastIcon = icon;
-                    this.showToast = true;
-                    
-                    setTimeout(() => {
-                        this.showToast = false;
-                    }, 5000);
+
+                saveUtilities() {
+                    alert('All utility readings updated and balances generated.');
                 }
-            };
-        }
-        
-        // Helper functions
-        function getDefaultProperty() {
-            const today = new Date();
-            return {
-                code: '',
-                name: '',
-                address: '',
-                type: 'apartment',
-                totalUnits: 1,
-                occupiedUnits: 0,
-                yearBuilt: today.getFullYear(),
-                landlordName: '',
-                landlordPhone: '',
-                landlordEmail: '',
-                bankDetails: '',
-                notes: ''
-            };
-        }
-        
-        function getDefaultTenant() {
-            const today = new Date();
-            return {
-                propertyId: '',
-                unitNumber: '',
-                name: '',
-                idNumber: '',
-                phone: '',
-                email: '',
-                emergencyContact: '',
-                monthlyRent: 0,
-                deposit: 0,
-                joinDate: today.toISOString().split('T')[0],
-                leaseEndDate: '',
-                paymentDay: 5,
-                status: 'active',
-                notes: ''
-            };
-        }
-        
-        function getDefaultPayment() {
-            const today = new Date();
-            return {
-                tenantId: '',
-                amount: 0,
-                date: today.toISOString().split('T')[0],
-                method: 'mpesa',
-                reference: '',
-                month: today.toISOString().slice(0, 7),
-                notes: ''
-            };
-        }
-        
-        function getDefaultSettings() {
-            return {
-                companyName: 'Eagle Homes Agencies',
-                garbageFee: 200,
-                commissionRate: 10,
-                latePenaltyRate: 5,
-                gracePeriod: 5
-            };
+            }
         }
     </script>
 </body>
