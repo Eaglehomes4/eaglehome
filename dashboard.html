@@ -8,14 +8,6 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- EmailJS for password reset functionality -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>
-        // Initialize EmailJS (replace with your actual public key)
-        (function(){
-            emailjs.init("YOUR_PUBLIC_KEY_HERE");
-        })();
-    </script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
@@ -94,29 +86,33 @@
                 pointer-events: none !important; 
             }
         }
-        .auth-code-input {
-            letter-spacing: 0.3em;
-            text-align: center;
-            font-size: 1.875rem;
-            font-weight: 800;
-        }
-        .dashboard-card {
-            background: white;
-            border-radius: 1rem;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .input-field {
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
+        .editable-input {
             width: 100%;
-            transition: all 0.2s;
+            padding: 4px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
         }
-        .input-field:focus {
+        .editable-input:focus {
+            outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        .editable-textarea {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 11px;
+            background: white;
+            min-height: 60px;
+            resize: vertical;
+        }
+        .editable-textarea:focus {
             outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
         }
     </style>
 </head>
@@ -195,23 +191,6 @@
                 </select>
                 <p class="text-xs text-gray-500 mt-1" x-text="userRole === 'owner' ? 'Full edit permissions' : 'Read-only mode'"></p>
             </div>
-            
-            <!-- Owner Only: Credential Manager -->
-            <template x-if="userRole === 'owner' && activeTab === 'settings'">
-                <div class="bg-white p-4 rounded-xl border border-gray-200">
-                    <h4 class="font-bold text-slate-800 mb-3 text-sm">System Credential Manager</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Secretary New Password</p>
-                            <input type="password" id="sec_pass" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                        </div>
-                        <button @click="updateSecretaryPassword()" 
-                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">
-                            Update Secretary Password
-                        </button>
-                    </div>
-                </div>
-            </template>
             
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -589,7 +568,7 @@
             </div>
         </div>
 
-        <!-- Utility Entry Tab - UPDATED -->
+        <!-- Utility Entry Tab -->
         <div x-show="activeTab === 'utilities'" x-cloak>
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
@@ -601,12 +580,12 @@
                 </div>
                 
                 <!-- Property Selection -->
-                <div class="dashboard-card p-6 mb-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
                     <div class="flex items-center gap-4">
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Select Property</label>
                             <select x-model="selectedProperty" @change="loadPropertyForUtilities()"
-                                    class="w-full input-field">
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                                 <option value="">Select a property</option>
                                 <template x-for="(property, name) in properties" :key="name">
                                     <option :value="name" x-text="name"></option>
@@ -616,13 +595,13 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
                             <input type="month" x-model="utilityMonth" @change="loadUtilityData()"
-                                   class="input-field">
+                                   class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
                 </div>
 
                 <!-- Utility Table -->
-                <div class="dashboard-card overflow-hidden">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50 border-b">
                             <tr class="text-xs uppercase font-bold text-gray-600">
@@ -642,11 +621,11 @@
                                         <div class="font-bold" x-text="u.unit"></div>
                                         <div class="text-xs text-gray-400" x-text="u.tenant"></div>
                                     </td>
-                                    <td class="p-4"><input type="number" x-model.number="u.water" class="input-field w-20 text-center"></td>
-                                    <td class="p-4"><input type="number" x-model.number="u.electricity" class="input-field w-20 text-center"></td>
-                                    <td class="p-4"><input type="number" x-model.number="u.garbage" class="input-field w-20 text-center"></td>
-                                    <td class="p-4"><input type="number" x-model.number="u.penalty" class="input-field w-20 text-center text-red-500"></td>
-                                    <td class="p-4"><input type="number" x-model.number="u.other" class="input-field w-20 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.water" class="w-24 border border-gray-300 rounded px-2 py-1 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.electricity" class="w-24 border border-gray-300 rounded px-2 py-1 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.garbage" class="w-24 border border-gray-300 rounded px-2 py-1 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.penalty" class="w-24 border border-gray-300 rounded px-2 py-1 text-center text-red-500"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.other" class="w-24 border border-gray-300 rounded px-2 py-1 text-center"></td>
                                     <td class="p-4 font-bold text-blue-600">Ksh <span x-text="calculateUtilityTotal(u)"></span></td>
                                 </tr>
                             </template>
@@ -870,7 +849,7 @@
             </div>
         </div>
 
-        <!-- Landlord Statement Tab - UPDATED -->
+        <!-- Landlord Statement Tab - COMPLETELY EDITABLE -->
         <div x-show="activeTab === 'statement'" x-cloak>
             <div class="sticky-header p-8 pb-6 no-print">
                 <div class="flex justify-between items-start">
@@ -905,108 +884,186 @@
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
-                        <button @click="window.print()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                            <i class="fas fa-print"></i>
-                            Export to PDF
-                        </button>
+                        <div class="flex gap-2">
+                            <button @click="addNewRow()" 
+                                    class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 no-print">
+                                <i class="fas fa-plus"></i>
+                                Add Row
+                            </button>
+                            <button @click="window.print()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                                <i class="fas fa-print"></i>
+                                Export to PDF
+                            </button>
+                        </div>
                     </div>
 
                     <div class="text-center mb-10 border-b-2 border-slate-100 pb-8">
                         <h1 class="text-3xl font-black text-slate-900 tracking-tighter uppercase">Eagle Homes Agencies</h1>
                         <p class="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">Landlord Remittance Statement</p>
                         <div class="mt-4 inline-flex gap-8 text-sm font-bold text-slate-700">
-                            <span>Property: <span class="text-blue-600" x-text="selectedBuilding"></span></span>
-                            <span>Month: January 2026</span>
+                            <div>
+                                <span>Property: </span>
+                                <select x-model="selectedBuilding" class="border border-slate-300 rounded px-2 py-1 ml-2">
+                                    <option value="">Select Property</option>
+                                    <template x-for="(property, name) in properties" :key="name">
+                                        <option :value="name" x-text="name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <span>Month: </span>
+                                <input type="month" x-model="statementMonth" class="border border-slate-300 rounded px-2 py-1 ml-2">
+                            </div>
                         </div>
                     </div>
 
-                    <table class="w-full text-[11px] mb-8 border-collapse border border-slate-300">
+                    <!-- COMPLETELY EDITABLE TABLE -->
+                    <table class="w-full text-sm mb-8 border-collapse border border-slate-300">
                         <thead>
                             <tr class="bg-slate-100 text-slate-700 uppercase">
-                                <th class="p-2 border border-slate-300">Unit</th>
-                                <th class="p-2 border border-slate-300">Tenant Name</th>
-                                <th class="p-2 border border-slate-300 text-right">Rent</th>
-                                <th class="p-2 border border-slate-300 text-right">Amount Paid</th>
-                                <th class="p-2 border border-slate-300 text-right">Deposit</th>
-                                <th class="p-2 border border-slate-300 text-right">Garbage</th>
-                                <th class="p-2 border border-slate-300 text-right">Balance</th>
-                                <th class="p-2 border border-slate-300">Remarks</th>
+                                <th class="p-3 border border-slate-300">Unit</th>
+                                <th class="p-3 border border-slate-300">Tenant Name</th>
+                                <th class="p-3 border border-slate-300 text-right">Rent</th>
+                                <th class="p-3 border border-slate-300 text-right">Amount Paid</th>
+                                <th class="p-3 border border-slate-300 text-right">Deposit</th>
+                                <th class="p-3 border border-slate-300 text-right">Garbage</th>
+                                <th class="p-3 border border-slate-300 text-right">Balance</th>
+                                <th class="p-3 border border-slate-300">Remarks</th>
+                                <th class="p-3 border border-slate-300 no-print">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-if="selectedBuilding && properties[selectedBuilding]">
-                                <template x-for="tenant in properties[selectedBuilding]">
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="p-2 border border-slate-300 font-bold" x-text="tenant.unit"></td>
-                                        <td class="p-2 border border-slate-300">
-                                            <input x-show="editMode" type="text" x-model="tenant.name" class="w-full bg-transparent outline-none">
-                                            <span x-show="!editMode" x-text="tenant.name"></span>
-                                        </td>
-                                        <td class="p-2 border border-slate-300 text-right font-mono">
-                                            <input x-show="editMode" type="number" x-model="tenant.rent" class="w-full text-right bg-transparent outline-none">
-                                            <span x-show="!editMode" x-text="formatNumber(tenant.rent)"></span>
-                                        </td>
-                                        <td class="p-2 border border-slate-300 text-right font-mono bg-blue-50/30">
-                                            <input x-show="editMode" type="number" x-model="tenant.amountPaid" class="w-full text-right bg-transparent outline-none font-bold text-blue-700">
-                                            <span x-show="!editMode" class="font-bold text-blue-700" x-text="formatNumber(tenant.amountPaid || 0)"></span>
-                                        </td>
-                                        <td class="p-2 border border-slate-300 text-right font-mono">
-                                            <input x-show="editMode" type="number" x-model="tenant.deposit" class="w-full text-right bg-transparent outline-none">
-                                            <span x-show="!editMode" x-text="formatNumber(tenant.deposit || 0)"></span>
-                                        </td>
-                                        <td class="p-2 border border-slate-300 text-right font-mono">
-                                            <input x-show="editMode" type="number" x-model="tenant.garbage" class="w-full text-right bg-transparent outline-none">
-                                            <span x-show="!editMode" x-text="formatNumber(tenant.garbage || 200)"></span>
-                                        </td>
-                                        <td class="p-2 border border-slate-300 text-right font-mono font-bold" 
-                                            :class="(tenant.rent - tenant.amountPaid) > 0 ? 'text-red-500' : 'text-emerald-600'">
-                                            <span x-text="formatNumber(tenant.rent - (tenant.amountPaid || 0))"></span>
-                                        </td>
-                                        <td class="p-2 border border-slate-300 italic text-[10px]">
-                                            <input x-show="editMode" type="text" x-model="tenant.remarks" class="w-full bg-transparent outline-none" placeholder="...">
-                                            <span x-show="!editMode" x-text="tenant.remarks || '-'"></span>
-                                        </td>
-                                    </tr>
-                                </template>
+                            <template x-for="(tenant, index) in statementData" :key="index">
+                                <tr class="hover:bg-slate-50">
+                                    <!-- Unit -->
+                                    <td class="p-3 border border-slate-300">
+                                        <input type="text" x-model="tenant.unit" 
+                                               class="editable-input" 
+                                               placeholder="Unit No.">
+                                    </td>
+                                    
+                                    <!-- Tenant Name -->
+                                    <td class="p-3 border border-slate-300">
+                                        <input type="text" x-model="tenant.name" 
+                                               class="editable-input" 
+                                               placeholder="Enter tenant name">
+                                    </td>
+                                    
+                                    <!-- Rent -->
+                                    <td class="p-3 border border-slate-300">
+                                        <input type="number" x-model.number="tenant.rent" 
+                                               class="editable-input text-right" 
+                                               placeholder="0">
+                                    </td>
+                                    
+                                    <!-- Amount Paid -->
+                                    <td class="p-3 border border-slate-300 bg-blue-50/30">
+                                        <input type="number" x-model.number="tenant.amountPaid" 
+                                               class="editable-input text-right font-bold text-blue-700" 
+                                               placeholder="0">
+                                    </td>
+                                    
+                                    <!-- Deposit -->
+                                    <td class="p-3 border border-slate-300">
+                                        <input type="number" x-model.number="tenant.deposit" 
+                                               class="editable-input text-right" 
+                                               placeholder="0">
+                                    </td>
+                                    
+                                    <!-- Garbage -->
+                                    <td class="p-3 border border-slate-300">
+                                        <input type="number" x-model.number="tenant.garbage" 
+                                               class="editable-input text-right" 
+                                               placeholder="200">
+                                    </td>
+                                    
+                                    <!-- Balance (Auto-calculated) -->
+                                    <td class="p-3 border border-slate-300 text-right font-mono font-bold" 
+                                        :class="(tenant.rent - tenant.amountPaid) > 0 ? 'text-red-500' : 'text-emerald-600'">
+                                        <span x-text="formatNumber((tenant.rent || 0) - (tenant.amountPaid || 0))"></span>
+                                    </td>
+                                    
+                                    <!-- Remarks -->
+                                    <td class="p-3 border border-slate-300">
+                                        <textarea x-model="tenant.remarks" 
+                                                  class="editable-textarea" 
+                                                  placeholder="Enter remarks..."></textarea>
+                                    </td>
+                                    
+                                    <!-- Actions -->
+                                    <td class="p-3 border border-slate-300 text-center no-print">
+                                        <button @click="removeRow(index)" 
+                                                class="text-red-500 hover:text-red-700 p-1">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
                             </template>
                         </tbody>
                     </table>
 
+                    <!-- Summary Section -->
                     <div class="grid grid-cols-2 gap-10 mt-10 border-t-2 border-slate-900 pt-8">
+                        <!-- Expenses Section -->
                         <div>
-                            <h3 class="font-black text-xs uppercase mb-4">Operational Expenses</h3>
-                            <div class="space-y-2">
+                            <h3 class="font-black text-sm uppercase mb-4">Operational Expenses</h3>
+                            <div class="space-y-3 mb-4">
                                 <template x-for="(exp, index) in expenses" :key="index">
-                                    <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-1">
-                                        <span x-text="exp.desc"></span>
-                                        <div class="flex items-center gap-4">
-                                            <span class="font-mono text-red-600" x-text="'-' + formatNumber(exp.amount)"></span>
-                                            <button @click="expenses.splice(index, 1)" class="no-print text-slate-300 hover:text-red-500">×</button>
-                                        </div>
+                                    <div class="flex items-center gap-3">
+                                        <input type="text" x-model="exp.description" 
+                                               class="editable-input flex-1" 
+                                               placeholder="Expense description">
+                                        <input type="number" x-model.number="exp.amount" 
+                                               class="editable-input w-32 text-right" 
+                                               placeholder="Amount">
+                                        <button @click="removeExpense(index)" 
+                                                class="text-red-500 hover:text-red-700 p-1 no-print">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                 </template>
-                                <button @click="addExpense()" class="no-print mt-4 text-[10px] font-bold text-blue-600 hover:underline">+ ADD EXPENSE ITEM</button>
                             </div>
+                            <button @click="addExpense()" 
+                                    class="no-print text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1">
+                                <i class="fas fa-plus"></i>
+                                Add Expense
+                            </button>
                         </div>
 
+                        <!-- Summary Calculations -->
                         <div class="bg-slate-50 p-6 rounded-sm border border-slate-200">
+                            <h3 class="font-black text-sm uppercase mb-4">Statement Summary</h3>
                             <div class="space-y-3 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500 font-bold uppercase text-[10px]">Total Rent Collected</span>
-                                    <span class="font-bold" x-text="'Ksh ' + formatNumber(grossFromStatement)"></span>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-600 font-medium">Total Rent Collected</span>
+                                    <span class="font-bold" x-text="'Ksh ' + formatNumber(totalRentCollected)"></span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500 font-bold uppercase text-[10px]">Management Commission (10%)</span>
-                                    <span class="font-bold text-red-500" x-text="'- ' + formatNumber(grossFromStatement * 0.1)"></span>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-600 font-medium">Management Commission</span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" x-model.number="commissionRate" 
+                                               class="w-16 border border-slate-300 rounded px-2 py-1 text-right" 
+                                               step="0.01" min="0" max="100">
+                                        <span class="font-medium">%</span>
+                                        <span class="font-bold text-red-500" 
+                                              x-text="'- Ksh ' + formatNumber(commissionAmount)"></span>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between border-b border-slate-200 pb-2">
-                                    <span class="text-slate-500 font-bold uppercase text-[10px]">Total Expenses</span>
-                                    <span class="font-bold text-red-500" x-text="'- ' + formatNumber(totalExpenses)"></span>
+                                <div class="flex justify-between items-center border-b border-slate-300 pb-2">
+                                    <span class="text-slate-600 font-medium">Total Expenses</span>
+                                    <span class="font-bold text-red-500" x-text="'- Ksh ' + formatNumber(totalExpenses)"></span>
                                 </div>
-                                <div class="flex justify-between pt-2">
-                                    <span class="font-black text-slate-900 uppercase">Net Pay to Landlord</span>
-                                    <span class="font-black text-2xl text-emerald-700" x-text="'Ksh ' + formatNumber(grossFromStatement - (grossFromStatement * 0.1) - totalExpenses)"></span>
+                                <div class="flex justify-between items-center pt-2">
+                                    <span class="font-black text-slate-900 text-lg">Net Pay to Landlord</span>
+                                    <span class="font-black text-2xl text-emerald-700" 
+                                          x-text="'Ksh ' + formatNumber(netToLandlord)"></span>
                                 </div>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-slate-200">
+                                <button @click="saveStatement()" 
+                                        class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700 transition no-print">
+                                    Save Statement
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1132,7 +1189,7 @@
                             
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-2">Commission Rate (%)</label>
-                                <input type="number" x-model="commissionRate" step="0.01"
+                                <input type="number" x-model="settings.commissionRate" step="0.01"
                                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                             </div>
                             
@@ -1172,55 +1229,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Security Audit Trail (Owner Only) -->
-                    <template x-if="userRole === 'owner'">
-                        <div class="lg:col-span-2 mt-12 bg-slate-900 rounded-3xl p-8 text-white shadow-2xl border border-slate-700">
-                            <div class="flex justify-between items-center mb-6">
-                                <div>
-                                    <h3 class="text-xl font-bold flex items-center gap-2">
-                                        <i class="fas fa-shield-alt text-red-500"></i>
-                                        Security Audit Trail
-                                    </h3>
-                                    <p class="text-slate-400 text-xs mt-1">Monitors authorization codes sent to eaglehomesagencies4@gmail.com</p>
-                                </div>
-                                <button @click="if(confirm('Clear logs?')) { securityLogs = []; localStorage.removeItem('eagle_security_logs'); }" 
-                                        class="text-[10px] font-bold bg-slate-800 px-3 py-1 rounded hover:bg-red-900 transition">
-                                    CLEAR LOGS
-                                </button>
-                            </div>
-
-                            <div class="overflow-hidden rounded-xl border border-slate-800">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                                        <tr>
-                                            <th class="p-4">Timestamp</th>
-                                            <th class="p-4">Account</th>
-                                            <th class="p-4">Event Description</th>
-                                            <th class="p-4">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-800">
-                                        <template x-for="log in securityLogs">
-                                            <tr class="hover:bg-slate-800/50 transition">
-                                                <td class="p-4 font-mono text-xs text-slate-400" x-text="log.timestamp"></td>
-                                                <td class="p-4 font-bold" x-text="log.user"></td>
-                                                <td class="p-4 text-slate-300" x-text="log.event"></td>
-                                                <td class="p-4">
-                                                    <span class="bg-blue-900/50 text-blue-400 text-[10px] px-2 py-1 rounded font-black uppercase" x-text="log.status"></span>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                        <template x-if="securityLogs.length === 0">
-                                            <tr>
-                                                <td colspan="4" class="p-8 text-center text-slate-500 italic text-xs">No recent security events recorded.</td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </template>
                 </div>
             </div>
         </div>
@@ -1375,69 +1383,6 @@
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
-    <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl" @click.away="showResetModal = false">
-            <h2 class="text-2xl font-black text-slate-900 mb-2">Reset Password</h2>
-            
-            <template x-if="!authCodeSent">
-                <div>
-                    <p class="text-slate-500 text-sm mb-6">Enter your registered email. We will notify <span class="text-blue-600 font-bold">eaglehomesagencies4@gmail.com</span> to authorize your reset.</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Your Email Address</label>
-                            <input type="email" x-model="resetEmail" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. secretary@eaglehomes.com">
-                        </div>
-                        
-                        <button @click="sendResetRequest()" 
-                                :disabled="isSending"
-                                class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition flex items-center justify-center gap-2">
-                            <span x-show="!isSending">Send Reset Request</span>
-                            <span x-show="isSending" class="animate-spin text-lg">◌</span>
-                        </button>
-                        
-                        <button @click="showResetModal = false" class="w-full text-slate-400 text-sm font-medium">Back to Login</button>
-                    </div>
-                </div>
-            </template>
-            
-            <template x-if="authCodeSent">
-                <div>
-                    <p class="text-slate-500 text-sm mb-6">An authorization code has been sent to <span class="text-blue-600 font-bold">eaglehomesagencies4@gmail.com</span>. Please contact the administrator for your 6-digit code.</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">Authorization Code</label>
-                            <div class="flex justify-center">
-                                <input type="text" 
-                                       x-model="inputCode" 
-                                       maxlength="6" 
-                                       placeholder="000000"
-                                       class="auth-code-input w-48 bg-slate-100 border-2 border-slate-200 rounded-2xl px-4 py-4 focus:border-blue-500 focus:ring-0 outline-none transition-all shadow-inner">
-                            </div>
-                            <p class="text-[10px] text-center text-slate-400 mt-4 italic">
-                                Call the Admin at Eagle Homes Agencies if you haven't received your code.
-                            </p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">New Password</label>
-                            <input type="password" x-model="newPassword" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter new password">
-                        </div>
-                        
-                        <button @click="verifyAndReset()" 
-                                class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition">
-                            Verify & Reset Password
-                        </button>
-                        
-                        <button @click="showResetModal = false" class="w-full text-slate-400 text-sm font-medium">Cancel</button>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </div>
-
     <!-- Success Toast -->
     <div x-show="showToast" x-transition
          :class="toastType === 'success' ? 'bg-green-500' : 'bg-red-500'"
@@ -1452,7 +1397,7 @@
                 // State Management
                 activeTab: 'dashboard',
                 userRole: 'owner',
-                editMode: false,
+                editMode: true, // Default to edit mode for landlord statement
                 
                 // Filter States
                 selectedBuilding: '',
@@ -1462,18 +1407,6 @@
                 tenantPage: 1,
                 tenantsPerPage: 20,
                 
-                // Password Reset States
-                showResetModal: false,
-                resetEmail: '',
-                isSending: false,
-                authCodeSent: false,
-                generatedCode: '',
-                inputCode: '',
-                newPassword: '',
-                
-                // Security Logs
-                securityLogs: JSON.parse(localStorage.getItem('eagle_security_logs') || '[]'),
-                
                 // Report States
                 reportType: 'monthly',
                 reportStartDate: new Date().toISOString().slice(0, 7),
@@ -1481,9 +1414,10 @@
                 reportData: {},
                 
                 // Landlord Statement States
-                expenses: JSON.parse(localStorage.getItem('eagle_expenses') || '[]'),
-                commissionRate: 0.10,
-                statementTenants: [],
+                statementData: [],
+                expenses: [],
+                statementMonth: new Date().toISOString().slice(0, 7),
+                commissionRate: 10,
                 
                 // Modal States
                 showAddPropertyModal: false,
@@ -1531,7 +1465,8 @@
                     companyName: 'Eagle Homes',
                     waterRate: 100,
                     electricityRate: 20,
-                    garbageFee: 200
+                    garbageFee: 200,
+                    commissionRate: 10
                 },
                 
                 // Computed Properties
@@ -1674,13 +1609,21 @@
                         .slice(0, 5);
                 },
                 
-                get totalExpenses() {
-                    return this.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+                // Landlord Statement Computed Properties
+                get totalRentCollected() {
+                    return this.statementData.reduce((sum, tenant) => sum + (Number(tenant.amountPaid) || 0), 0);
                 },
                 
-                get grossFromStatement() {
-                    if (!this.selectedBuilding || !this.properties[this.selectedBuilding]) return 0;
-                    return this.properties[this.selectedBuilding].reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0);
+                get commissionAmount() {
+                    return this.totalRentCollected * (this.commissionRate / 100);
+                },
+                
+                get totalExpenses() {
+                    return this.expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+                },
+                
+                get netToLandlord() {
+                    return this.totalRentCollected - this.commissionAmount - this.totalExpenses;
                 },
                 
                 // Initialization
@@ -1690,11 +1633,12 @@
                     const savedPayments = localStorage.getItem('eagle_payments');
                     const savedSettings = localStorage.getItem('eagle_settings');
                     const savedRole = localStorage.getItem('userRole');
-                    const savedCommissionRate = localStorage.getItem('commissionRate');
+                    const savedStatementData = localStorage.getItem('eagle_statement_data');
+                    const savedExpenses = localStorage.getItem('eagle_expenses');
                     
                     if (savedRole) this.userRole = savedRole;
                     if (savedSettings) this.settings = JSON.parse(savedSettings);
-                    if (savedCommissionRate) this.commissionRate = parseFloat(savedCommissionRate);
+                    if (this.settings.commissionRate) this.commissionRate = this.settings.commissionRate;
                     
                     if (savedProperties) {
                         this.properties = JSON.parse(savedProperties);
@@ -1706,8 +1650,17 @@
                         this.payments = JSON.parse(savedPayments);
                     }
                     
-                    // Initialize utility data
-                    this.loadUtilityData();
+                    // Load statement data
+                    if (savedStatementData) {
+                        this.statementData = JSON.parse(savedStatementData);
+                    } else {
+                        this.initializeStatementData();
+                    }
+                    
+                    // Load expenses
+                    if (savedExpenses) {
+                        this.expenses = JSON.parse(savedExpenses);
+                    }
                 },
                 
                 initializeSampleData() {
@@ -1730,6 +1683,17 @@
                     ];
                     
                     this.saveData();
+                },
+                
+                initializeStatementData() {
+                    // Initialize with 5 empty rows
+                    this.statementData = [
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" }
+                    ];
                 },
                 
                 // Property Management Functions
@@ -1940,24 +1904,38 @@
                     this.showToastMessage('Payment marked as paid', 'success');
                 },
                 
-                // Landlord Statement Functions
-                generateStatement() {
-                    this.showToastMessage('Landlord statement generated', 'success');
+                // Landlord Statement Functions - COMPLETELY EDITABLE
+                addNewRow() {
+                    this.statementData.push({
+                        unit: "",
+                        name: "",
+                        rent: 0,
+                        amountPaid: 0,
+                        deposit: 0,
+                        garbage: 200,
+                        remarks: ""
+                    });
+                },
+                
+                removeRow(index) {
+                    if (confirm("Are you sure you want to remove this row?")) {
+                        this.statementData.splice(index, 1);
+                    }
                 },
                 
                 addExpense() {
-                    const description = prompt("Expense Description:");
-                    const amount = prompt("Amount (Ksh):");
-                    if (description && amount && !isNaN(amount)) {
-                        this.expenses.push({
-                            desc: description,
-                            amount: parseFloat(amount)
-                        });
-                        localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
-                        this.showToastMessage('Expense added', 'success');
-                    } else if (amount && isNaN(amount)) {
-                        this.showToastMessage('Please enter a valid amount', 'error');
-                    }
+                    this.expenses.push({
+                        description: "",
+                        amount: 0
+                    });
+                },
+                
+                removeExpense(index) {
+                    this.expenses.splice(index, 1);
+                },
+                
+                generateStatement() {
+                    this.showToastMessage('Landlord statement generated', 'success');
                 },
                 
                 printStatement() {
@@ -1965,32 +1943,25 @@
                 },
                 
                 saveStatement() {
-                    const statementData = {
-                        month: this.currentMonth,
+                    // Save statement data
+                    localStorage.setItem('eagle_statement_data', JSON.stringify(this.statementData));
+                    localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
+                    
+                    // Create statement summary
+                    const statementSummary = {
+                        month: this.statementMonth,
                         property: this.selectedBuilding,
-                        tenants: this.properties[this.selectedBuilding] || [],
-                        expenses: this.expenses,
-                        summary: {
-                            totalCollected: this.grossFromStatement,
-                            totalExpenses: this.totalExpenses,
-                            commission: this.grossFromStatement * this.commissionRate,
-                            netToLandlord: this.grossFromStatement - this.totalExpenses - (this.grossFromStatement * this.commissionRate)
-                        },
+                        totalRentCollected: this.totalRentCollected,
+                        commissionRate: this.commissionRate,
+                        commissionAmount: this.commissionAmount,
+                        totalExpenses: this.totalExpenses,
+                        netToLandlord: this.netToLandlord,
                         timestamp: new Date().toISOString()
                     };
                     
-                    const dataStr = JSON.stringify(statementData, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `landlord-statement-${this.currentMonth}-${this.selectedBuilding || 'all'}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
+                    localStorage.setItem('eagle_statement_summary', JSON.stringify(statementSummary));
                     
-                    this.showToastMessage('Statement saved', 'success');
+                    this.showToastMessage('Landlord statement saved successfully', 'success');
                 },
                 
                 // Report Functions
@@ -2041,29 +2012,16 @@
                 
                 saveSettings() {
                     localStorage.setItem('eagle_settings', JSON.stringify(this.settings));
-                    localStorage.setItem('commissionRate', this.commissionRate.toString());
                     this.showToastMessage('Settings saved successfully', 'success');
-                },
-                
-                updateSecretaryPassword() {
-                    const newPassword = document.getElementById('sec_pass').value;
-                    if (!newPassword) {
-                        this.showToastMessage('Please enter a password', 'error');
-                        return;
-                    }
-                    
-                    localStorage.setItem('sec_password', newPassword);
-                    document.getElementById('sec_pass').value = '';
-                    this.showToastMessage('Secretary password updated!', 'success');
                 },
                 
                 backupData() {
                     const backup = {
                         properties: this.properties,
                         payments: this.payments,
+                        statementData: this.statementData,
                         expenses: this.expenses,
                         settings: this.settings,
-                        commissionRate: this.commissionRate,
                         timestamp: new Date().toISOString()
                     };
                     
@@ -2095,13 +2053,13 @@
                                 const backup = JSON.parse(event.target.result);
                                 this.properties = backup.properties || {};
                                 this.payments = backup.payments || [];
+                                this.statementData = backup.statementData || this.statementData;
                                 this.expenses = backup.expenses || [];
                                 this.settings = backup.settings || this.settings;
-                                this.commissionRate = backup.commissionRate || 0.10;
                                 
                                 this.saveData();
+                                localStorage.setItem('eagle_statement_data', JSON.stringify(this.statementData));
                                 localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
-                                localStorage.setItem('commissionRate', this.commissionRate.toString());
                                 this.showToastMessage('Data restored successfully', 'success');
                                 setTimeout(() => location.reload(), 1000);
                             } catch (error) {
@@ -2121,87 +2079,6 @@
                         this.showToastMessage('All data cleared. Refreshing...', 'success');
                         setTimeout(() => location.reload(), 1000);
                     }
-                },
-                
-                // Password Reset Functions
-                async sendResetRequest() {
-                    if (!this.resetEmail) {
-                        this.showToastMessage('Please enter your email', 'error');
-                        return;
-                    }
-                    
-                    this.isSending = true;
-                    this.generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    
-                    const templateParams = {
-                        admin_email: 'eaglehomesagencies4@gmail.com',
-                        requesting_user: this.resetEmail,
-                        auth_code: this.generatedCode,
-                        timestamp: new Date().toLocaleString()
-                    };
-
-                    try {
-                        // Log security event
-                        this.logSecurityEvent(this.resetEmail, 'Code Sent to Gmail');
-                        
-                        // Simulate API call (replace with actual EmailJS in production)
-                        console.log('Sending reset request to eaglehomesagencies4@gmail.com...');
-                        console.log('Generated Code:', this.generatedCode);
-                        
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        
-                        this.authCodeSent = true;
-                        alert('An authorization code has been sent to the administrator. Please contact them to get your 6-digit code.');
-                    } catch (error) {
-                        console.error('Email Failed:', error);
-                        alert('Connection Error: Could not reach the reset server.');
-                    } finally {
-                        this.isSending = false;
-                    }
-                },
-                
-                verifyAndReset() {
-                    if (this.inputCode !== this.generatedCode) {
-                        alert("Invalid Authorization Code. Please check with the Admin.");
-                        return;
-                    }
-
-                    if (this.newPassword.length < 4) {
-                        alert("Password must be at least 4 characters.");
-                        return;
-                    }
-
-                    // Identify which user to reset
-                    if (this.resetEmail.includes('owner')) {
-                        localStorage.setItem('eagle_owner_pass', this.newPassword);
-                    } else {
-                        localStorage.setItem('eagle_sec_pass', this.newPassword);
-                    }
-
-                    // Log successful reset
-                    this.logSecurityEvent(this.resetEmail, 'Password Reset Completed');
-                    
-                    alert("Success! Your password has been updated.");
-                    
-                    // Reset state
-                    this.showResetModal = false;
-                    this.authCodeSent = false;
-                    this.inputCode = '';
-                    this.newPassword = '';
-                    this.resetEmail = '';
-                },
-                
-                // Security Functions
-                logSecurityEvent(email, status) {
-                    const newLog = {
-                        timestamp: new Date().toLocaleString(),
-                        user: email,
-                        event: 'Password Reset Request',
-                        status: status,
-                        ip: 'Authorized via eaglehomesagencies4@gmail.com'
-                    };
-                    this.securityLogs.unshift(newLog);
-                    localStorage.setItem('eagle_security_logs', JSON.stringify(this.securityLogs));
                 },
                 
                 // Helper Functions
@@ -2291,6 +2168,7 @@
                         properties: this.properties,
                         tenants: this.allTenants,
                         payments: this.payments,
+                        statementData: this.statementData,
                         expenses: this.expenses,
                         settings: this.settings,
                         timestamp: new Date().toISOString()
