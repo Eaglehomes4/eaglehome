@@ -100,6 +100,24 @@
             font-size: 1.875rem;
             font-weight: 800;
         }
+        .dashboard-card {
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .input-field {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
     </style>
 </head>
 <body x-data="managementSystem()" x-init="init()" class="min-h-screen bg-gray-50">
@@ -571,75 +589,66 @@
             </div>
         </div>
 
-        <!-- Utility Entry Tab -->
-        <div x-show="activeTab === 'utilities'" x-cloak class="space-y-6">
-            <div class="sticky-header p-8 pb-6">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h2 class="text-3xl font-black text-slate-800">Monthly Utility Entry</h2>
-                        <p class="text-gray-500 font-medium">Manual entry for <span class="font-bold text-blue-600" x-text="selectedBuilding"></span></p>
-                    </div>
+        <!-- Utility Entry Tab - UPDATED -->
+        <div x-show="activeTab === 'utilities'" x-cloak>
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Utility Entry</h2>
+                    <button @click="saveUtilities()" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-green-700 transition flex items-center gap-2">
+                        <i class="fas fa-save"></i>
+                        Save All Readings
+                    </button>
+                </div>
+                
+                <!-- Property Selection -->
+                <div class="dashboard-card p-6 mb-6">
                     <div class="flex items-center gap-4">
-                        <button @click="saveUtilities()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 transition shadow-lg shadow-emerald-100">
-                            <i class="fas fa-save"></i>
-                            Save Readings
-                        </button>
-                        <button @click="exportUtilityPDF()" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-800 transition flex items-center gap-2">
-                            <i class="fas fa-file-pdf"></i>
-                            Export PDF
-                        </button>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Property</label>
+                            <select x-model="selectedProperty" @change="loadPropertyForUtilities()"
+                                    class="w-full input-field">
+                                <option value="">Select a property</option>
+                                <template x-for="(property, name) in properties" :key="name">
+                                    <option :value="name" x-text="name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                            <input type="month" x-model="utilityMonth" @change="loadUtilityData()"
+                                   class="input-field">
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="p-8 pt-6">
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden printable-content">
-                    <div class="hidden print:block p-8 border-b-2 border-slate-900 mb-6">
-                        <h1 class="text-3xl font-black uppercase">Utility Billing Statement</h1>
-                        <p class="text-slate-600 font-bold">Property: <span x-text="selectedBuilding"></span> | Date: Jan 2026</p>
-                    </div>
-
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b">
-                            <tr>
-                                <th class="p-5 border-b">Unit No.</th>
-                                <th class="p-5 border-b">Tenant Name</th>
-                                <th class="p-5 border-b text-blue-600">Water (Ksh)</th>
-                                <th class="p-5 border-b text-amber-600">Electricity (Ksh)</th>
-                                <th class="p-5 border-b text-slate-900">Garbage (Ksh)</th>
-                                <th class="p-5 border-b font-black text-right">Sub-Total</th>
+                <!-- Utility Table -->
+                <div class="dashboard-card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b">
+                            <tr class="text-xs uppercase font-bold text-gray-600">
+                                <th class="p-4">Unit/Tenant</th>
+                                <th class="p-4">Water (Ksh)</th>
+                                <th class="p-4">Electricity</th>
+                                <th class="p-4">Garbage</th>
+                                <th class="p-4">Penalty</th>
+                                <th class="p-4">Other Bills</th>
+                                <th class="p-4">Total</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <template x-if="selectedBuilding && properties[selectedBuilding]">
-                                <template x-for="(tenant, index) in properties[selectedBuilding]" :key="index">
-                                    <tr class="hover:bg-slate-50/50">
-                                        <td class="p-5 font-mono font-bold text-slate-700" x-text="tenant.unit"></td>
-                                        <td class="p-5 font-bold text-slate-800" x-text="tenant.name"></td>
-                                        
-                                        <td class="p-5">
-                                            <input type="number" x-model="tenant.water" placeholder="0" 
-                                                   class="w-24 bg-blue-50/50 border border-blue-100 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-400 outline-none no-print">
-                                            <span class="hidden print:inline font-mono" x-text="Number(tenant.water || 0).toLocaleString()"></span>
-                                        </td>
-
-                                        <td class="p-5">
-                                            <input type="number" x-model="tenant.electricity" placeholder="0" 
-                                                   class="w-24 bg-amber-50/50 border border-amber-100 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-amber-400 outline-none no-print">
-                                            <span class="hidden print:inline font-mono" x-text="Number(tenant.electricity || 0).toLocaleString()"></span>
-                                        </td>
-
-                                        <td class="p-5">
-                                            <input type="number" x-model="tenant.garbage" placeholder="200" 
-                                                   class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-slate-400 outline-none no-print">
-                                            <span class="hidden print:inline font-mono" x-text="Number(tenant.garbage || 200).toLocaleString()"></span>
-                                        </td>
-
-                                        <td class="p-5 text-right font-black text-slate-900">
-                                            Ksh <span x-text="formatNumber(calculateTenantTotal(tenant))"></span>
-                                        </td>
-                                    </tr>
-                                </template>
+                        <tbody>
+                            <template x-for="u in utilityData">
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="p-4">
+                                        <div class="font-bold" x-text="u.unit"></div>
+                                        <div class="text-xs text-gray-400" x-text="u.tenant"></div>
+                                    </td>
+                                    <td class="p-4"><input type="number" x-model.number="u.water" class="input-field w-20 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.electricity" class="input-field w-20 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.garbage" class="input-field w-20 text-center"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.penalty" class="input-field w-20 text-center text-red-500"></td>
+                                    <td class="p-4"><input type="number" x-model.number="u.other" class="input-field w-20 text-center"></td>
+                                    <td class="p-4 font-bold text-blue-600">Ksh <span x-text="calculateUtilityTotal(u)"></span></td>
+                                </tr>
                             </template>
                         </tbody>
                     </table>
@@ -861,7 +870,7 @@
             </div>
         </div>
 
-        <!-- Landlord Statement Tab -->
+        <!-- Landlord Statement Tab - UPDATED -->
         <div x-show="activeTab === 'statement'" x-cloak>
             <div class="sticky-header p-8 pb-6 no-print">
                 <div class="flex justify-between items-start">
@@ -1483,6 +1492,11 @@
                 editingProperty: null,
                 editingTenant: null,
                 
+                // Utility Entry States
+                selectedProperty: '',
+                utilityMonth: new Date().toISOString().slice(0, 7),
+                utilityData: [],
+                
                 // New Item States
                 newProperty: {
                     name: '',
@@ -1691,6 +1705,9 @@
                     if (savedPayments) {
                         this.payments = JSON.parse(savedPayments);
                     }
+                    
+                    // Initialize utility data
+                    this.loadUtilityData();
                 },
                 
                 initializeSampleData() {
@@ -1873,21 +1890,47 @@
                     this.showToastMessage('Tenant saved successfully', 'success');
                 },
                 
-                // Utility Functions
-                calculateTenantTotal(tenant) {
-                    return (Number(tenant.rent) || 0) + 
-                           (Number(tenant.water) || 0) + 
-                           (Number(tenant.electricity) || 0) + 
-                           (Number(tenant.garbage) || 0);
+                // Utility Entry Functions
+                loadPropertyForUtilities() {
+                    if (!this.selectedProperty) return;
+                    
+                    const property = this.properties[this.selectedProperty];
+                    if (!property) return;
+                    
+                    // Get tenants for this property
+                    this.utilityData = property.map(tenant => ({
+                        unit: tenant.unit,
+                        tenant: tenant.name,
+                        water: 0,
+                        electricity: 0,
+                        garbage: 200,
+                        penalty: 0,
+                        other: 0
+                    }));
+                },
+                
+                loadUtilityData() {
+                    // In a real app, this would load saved utility data for the selected month
+                    if (this.selectedProperty) {
+                        this.loadPropertyForUtilities();
+                    }
+                },
+                
+                calculateUtilityTotal(utility) {
+                    const water = parseFloat(utility.water) || 0;
+                    const electricity = parseFloat(utility.electricity) || 0;
+                    const garbage = parseFloat(utility.garbage) || 0;
+                    const penalty = parseFloat(utility.penalty) || 0;
+                    const other = parseFloat(utility.other) || 0;
+                    return water + electricity + garbage + penalty + other;
                 },
                 
                 saveUtilities() {
-                    localStorage.setItem('eagle_properties', JSON.stringify(this.properties));
-                    this.showToastMessage('Utility readings saved successfully!', 'success');
-                },
-                
-                exportUtilityPDF() {
-                    window.print();
+                    // Save utility data to localStorage
+                    const utilityKey = `eagle_utilities_${this.selectedProperty}_${this.utilityMonth}`;
+                    localStorage.setItem(utilityKey, JSON.stringify(this.utilityData));
+                    
+                    this.showToastMessage('Utility readings saved successfully', 'success');
                 },
                 
                 // Payment Functions
