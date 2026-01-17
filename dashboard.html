@@ -928,6 +928,7 @@
                                 <th class="p-3 border border-slate-300 text-right">Deposit</th>
                                 <th class="p-3 border border-slate-300 text-right">Garbage</th>
                                 <th class="p-3 border border-slate-300 text-right">Balance</th>
+                                <th class="p-3 border border-slate-300 text-right">Other Bills</th>
                                 <th class="p-3 border border-slate-300">Remarks</th>
                                 <th class="p-3 border border-slate-300 no-print">Actions</th>
                             </tr>
@@ -981,6 +982,13 @@
                                     <td class="p-3 border border-slate-300 text-right font-mono font-bold" 
                                         :class="(tenant.rent - tenant.amountPaid) > 0 ? 'text-red-500' : 'text-emerald-600'">
                                         <span x-text="formatNumber((tenant.rent || 0) - (tenant.amountPaid || 0))"></span>
+                                    </td>
+
+                                    <!-- Other Bills -->
+                                    <td class="p-3 border border-slate-300">
+                                        <input type="number" x-model.number="tenant.other bills" 
+                                               class="editable-input text-right" 
+                                               placeholder="0">
                                     </td>
                                     
                                     <!-- Remarks -->
