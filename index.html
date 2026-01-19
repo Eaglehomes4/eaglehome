@@ -516,17 +516,14 @@
                     console.log('Owner: username="owner_admin", password="Eagles2026!"');
                     console.log('Secretary: username="secretary_entry", password="Secret2026!"');
                     
-                    // Initialize EmailJS (uncomment for production)
-                    /*
-                    if (this.emailjsConfig.publicKey && this.emailjsConfig.publicKey !== 'YOUR_PUBLIC_KEY_HERE') {
-                        emailjs.init(this.emailjsConfig.publicKey);
-                        this.isDemoMode = false;
-                        console.log('EmailJS initialized successfully');
-                    } else {
-                        console.log('EmailJS running in demo mode');
-                    }
-                    */
-                },
+                // Initialize EmailJS (uncomment for production)
+                if (this.emailjsConfig.publicKey && this.emailjsConfig.publicKey !== 'YOUR_PUBLIC_KEY_HERE') {
+                    emailjs.init(this.emailjsConfig.publicKey);
+                    this.isDemoMode = false;
+                    console.log('EmailJS initialized successfully');
+                } else {
+                    console.log('EmailJS running in demo mode');
+                }
                 
                 // Validate password strength
                 isPasswordValid(password) {
