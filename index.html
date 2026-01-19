@@ -150,6 +150,7 @@
             <!-- Role Selection -->
             <div class="flex bg-slate-100 p-1 rounded-xl mb-8 shadow-inner">
                 <button 
+                    type="button"
                     @click="role = 'owner'" 
                     :class="role === 'owner' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'" 
                     class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
@@ -157,6 +158,7 @@
                     Owner
                 </button>
                 <button 
+                    type="button"
                     @click="role = 'secretary'" 
                     :class="role === 'secretary' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'" 
                     class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
@@ -208,6 +210,7 @@
             <!-- Forgot Password Link -->
             <div class="mt-6 text-center">
                 <button 
+                    type="button"
                     @click="showResetModal = true" 
                     class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1 mx-auto"
                 >
@@ -268,6 +271,7 @@
                         </div>
                         
                         <button 
+                            type="button"
                             @click="sendResetRequest()" 
                             :disabled="isSending || !resetEmail.includes('@')"
                             :class="!resetEmail.includes('@') ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800'"
@@ -347,6 +351,7 @@
                         </div>
 
                         <button 
+                            type="button"
                             @click="verifyAndReset()" 
                             :disabled="isResetting || inputCode.length !== 6 || newPassword.length < 8 || !isPasswordValid(newPassword)"
                             :class="(inputCode.length !== 6 || newPassword.length < 8 || !isPasswordValid(newPassword)) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
@@ -374,6 +379,7 @@
             </template>
 
             <button 
+                type="button"
                 @click="closeResetModal" 
                 class="w-full mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors duration-200"
             >
@@ -516,14 +522,15 @@
                     console.log('Owner: username="owner_admin", password="Eagles2026!"');
                     console.log('Secretary: username="secretary_entry", password="Secret2026!"');
                     
-                // Initialize EmailJS (uncomment for production)
-                if (this.emailjsConfig.publicKey && this.emailjsConfig.publicKey !== 'qoKpksa3NAbcJeLkk') {
-                    emailjs.init(this.emailjsConfig.publicKey);
-                    this.isDemoMode = false;
-                    console.log('EmailJS initialized successfully');
-                } else {
-                    console.log('EmailJS running in demo mode');
-                }
+                    // Initialize EmailJS (uncomment for production)
+                    if (this.emailjsConfig.publicKey && this.emailjsConfig.publicKey !== 'qoKpksa3NAbcJeLkk') {
+                        emailjs.init(this.emailjsConfig.publicKey);
+                        this.isDemoMode = false;
+                        console.log('EmailJS initialized successfully');
+                    } else {
+                        console.log('EmailJS running in demo mode');
+                    }
+                },
                 
                 // Validate password strength
                 isPasswordValid(password) {
