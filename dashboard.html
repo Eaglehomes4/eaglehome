@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eagle Homes | Property Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Include jsPDF and html2canvas for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-     <!-- Favicon Section - Make sure these files exist in the same folder -->
+     <!-- Favicon Section -->
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
@@ -34,29 +37,6 @@
             z-index: 50;
             border-bottom: 1px solid #e5e7eb;
         }
-        input:focus, select:focus, button:focus {
-            outline: none;
-            ring: 2px solid #3b82f6;
-        }
-        .status-vacant { color: #ef4444; }
-        .status-occupied { color: #10b981; }
-        .status-landlord { color: #8b5cf6; }
-        .status-staff { color: #f59e0b; }
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: #a1a1a1;
-        }
         .tab-active {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
@@ -83,64 +63,65 @@
                 padding: 0 !important; 
                 margin: 0 !important;
             }
-            .printable-content { 
-                border: none !important; 
-                shadow: none !important; 
-                width: 100% !important; 
-            }
-            input { 
-                border: none !important; 
-                background: transparent !important; 
-                pointer-events: none !important; 
-            }
         }
-        .editable-input {
-            width: 100%;
-            padding: 4px 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 12px;
-            background: white;
-        }
-        .editable-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-        }
-        .editable-textarea {
-            width: 100%;
-            padding: 4px 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 11px;
-            background: white;
-            min-height: 60px;
-            resize: vertical;
-        }
-        .editable-textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none; /* We hide the sidebar on mobile and use a toggle menu instead */
-            }
-            .main-content {
-                padding: 1rem; /* Less padding on mobile to save space */
-            }
-            input[type="number"] {
-                width: 80px; /* Slimmer inputs for small screens */
-            }
-        }
-
-        /* Ensure tables are scrollable on mobile so no columns are hidden */
         .table-container {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+        }
+        
+        /* PDF Export Styles */
+        .pdf-template {
+            background: white;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 20px;
+        }
+        .pdf-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        .pdf-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .pdf-table th {
+            background-color: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #d1d5db;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .pdf-table td {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            font-size: 12px;
+        }
+        .pdf-total {
+            background-color: #f9fafb;
+            font-weight: bold;
+            padding: 15px;
+            border-top: 2px solid #374151;
+        }
+        .pdf-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #d1d5db;
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
         }
     </style>
 </head>
@@ -270,56 +251,56 @@
                 <button @click="activeTab = 'dashboard'; isMobileMenuOpen = false" 
                         :class="activeTab === 'dashboard' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <i class="fas fa-tachometer-alt"></i>
                     Dashboard
                 </button>
 
                 <button @click="activeTab = 'tenants'; isMobileMenuOpen = false" 
                         :class="activeTab === 'tenants' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-6.75V7.5m0 0V6m0 1.5h-15m0 0V6m0 1.5H3"/></svg>
+                    <i class="fas fa-users"></i>
                     Tenants
                 </button>
 
                 <button @click="activeTab = 'utilities'; isMobileMenuOpen = false" 
                         :class="activeTab === 'utilities' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <i class="fas fa-bolt"></i>
                     Utility Entry
                 </button>
 
                 <button @click="activeTab = 'payments'; isMobileMenuOpen = false" 
                         :class="activeTab === 'payments' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <i class="fas fa-university"></i>
                     Payments
                 </button>
 
                 <button @click="activeTab = 'reports'; isMobileMenuOpen = false" 
                         :class="activeTab === 'reports' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <i class="fas fa-chart-bar"></i>
                     Reports
                 </button>
 
                 <button @click="activeTab = 'statement'; isMobileMenuOpen = false" 
                         :class="activeTab === 'statement' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <i class="fas fa-file-invoice-dollar"></i>
                     Landlord Statement
                 </button>
 
                 <button @click="activeTab = 'properties'; isMobileMenuOpen = false" 
                         :class="activeTab === 'properties' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <i class="fas fa-building"></i>
                     Properties
                 </button>
 
                 <button @click="activeTab = 'settings'; isMobileMenuOpen = false" 
                         :class="activeTab === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <i class="fas fa-cog"></i>
                     Settings
                 </button>
             </nav>
@@ -364,9 +345,9 @@
                             <span x-text="editMode ? 'Save All Changes' : 'Edit Mode'"></span>
                         </button>
                         
-                        <button @click="exportData()" class="bg-gray-100 text-gray-700 px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition flex items-center gap-2">
-                            <i class="fas fa-download"></i>
-                            <span class="hidden md:inline">Export Data</span>
+                        <button @click="exportToPDF('dashboard')" class="bg-gray-100 text-gray-700 px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="hidden md:inline">Export PDF</span>
                         </button>
                         
                         <button @click="rolloverMonth()" class="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition flex items-center gap-2">
@@ -445,7 +426,7 @@
                                 <p class="text-amber-600 text-sm">There are <span x-text="unidentifiedPayments.length"></span> payments with missing or wrong house numbers.</p>
                             </div>
                         </div>
-                        <button @click="activeTab = 'suspense'" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-700 transition">
+                        <button @click="activeTab = 'payments'" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-700 transition">
                             Fix Issues Now
                         </button>
                     </div>
@@ -527,7 +508,7 @@
                 <!-- Recent Activity -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
                     <h3 class="text-xl font-bold text-slate-800 mb-6">Recent Activity</h3>
-                    <div class="overflow-x-auto scrollbar-thin">
+                    <div class="overflow-x-auto">
                         <table class="w-full min-w-[800px]">
                             <thead>
                                 <tr class="text-xs text-gray-400 uppercase tracking-widest border-b border-gray-100">
@@ -573,9 +554,9 @@
                             <i class="fas fa-plus"></i>
                             <span class="hidden md:inline">Add New Tenant</span>
                         </button>
-                        <button @click="printReport()" class="bg-gray-100 text-gray-700 px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition flex items-center gap-2">
-                            <i class="fas fa-print"></i>
-                            <span class="hidden md:inline">Print Report</span>
+                        <button @click="exportToPDF('tenants')" class="bg-red-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="hidden md:inline">Export PDF</span>
                         </button>
                     </div>
                 </div>
@@ -728,14 +709,20 @@
                     <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">Digital Utility Ledger</h1>
                     <p class="text-slate-500 font-medium text-sm">Portfolio • <span x-text="currentMonth"></span></p>
                 </div>
-                <template x-if="userRole === 'owner'">
-                    <button class="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">
-                        Lock Month Data
+                <div class="flex gap-2">
+                    <button @click="exportToPDF('utilities')" class="bg-red-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-red-700 transition flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Export PDF</span>
                     </button>
-                </template>
+                    <template x-if="userRole === 'owner'">
+                        <button class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">
+                            Lock Month Data
+                        </button>
+                    </template>
+                </div>
             </header>
 
-            <div x-show="activeTab === 'utilities'" x-cloak class="w-full">
+            <div class="w-full">
                 <div class="bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-6 md:p-8 bg-blue-600 text-white">
                         <h3 class="text-lg md:text-xl font-bold">Input Charges</h3>
@@ -774,116 +761,126 @@
             </div>
         </div>
 
-<div x-data="paymentManager" x-show="activeTab === 'payments'" x-cloak>
-    <div class="p-6 md:p-8 pb-0 mt-12 lg:mt-0">
-        
-        <template x-if="payments.filter(p => p.status === 'Unidentified').length > 0">
-            <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex justify-between items-center animate-pulse shadow-md">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+        <!-- Payments Tab -->
+        <div x-data="paymentManager" x-show="activeTab === 'payments'" x-cloak>
+            <div class="p-6 md:p-8 pb-0 mt-12 lg:mt-0">
+                
+                <!-- Unidentified Payments Alert -->
+                <template x-if="payments.filter(p => p.status === 'Unidentified').length > 0">
+                    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex justify-between items-center animate-pulse shadow-md">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                            <div>
+                                <p class="text-red-800 font-black text-sm uppercase tracking-wide">Action Required: New Suspense Payment</p>
+                                <p class="text-red-600 text-xs font-medium">A payment is waiting to be assigned to a house.</p>
+                            </div>
+                        </div>
+                        <button @click="pathFilter = 'all'; paymentSearch = ''" 
+                                class="bg-red-600 text-white px-5 py-2 rounded-lg text-xs font-black hover:bg-red-700">
+                            Resolve Now
+                        </button>
+                    </div>
+                </template>
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div>
-                        <p class="text-red-800 font-black text-sm uppercase tracking-wide">Action Required: New Suspense Payment</p>
-                        <p class="text-red-600 text-xs font-medium">A payment is waiting to be assigned to a house.</p>
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight">Financial Ledger</h2>
+                        <div class="flex items-center gap-4 mt-2">
+                            <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl text-[10px] font-black uppercase tracking-tighter">
+                                <button @click="pathFilter = 'all'" :class="pathFilter === 'all' ? 'bg-white shadow text-blue-600' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">All</button>
+                                <button @click="pathFilter = 'Family Bank'" :class="pathFilter === 'Family Bank' ? 'bg-orange-500 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">Family Bank</button>
+                                <button @click="pathFilter = 'Co-op Bank'" :class="pathFilter === 'Co-op Bank' ? 'bg-green-600 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">Co-op Bank</button>
+                                <button @click="pathFilter = 'Payslip'" :class="pathFilter === 'Payslip' ? 'bg-purple-600 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">Payslips</button>
+                                <button @click="pathFilter = 'M-Pesa'" :class="pathFilter === 'M-Pesa' ? 'bg-emerald-500 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">M-Pesa</button>
+                            </nav>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button @click="fetchPayments()" 
+                                class="bg-white border-2 border-slate-100 p-3 rounded-xl hover:bg-slate-50 shadow-sm text-slate-500 group">
+                            <i class="fas fa-sync-alt group-active:rotate-180 transition duration-500"></i>
+                        </button>
+                        <button @click="exportToPDF('payments')" class="bg-red-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Export PDF</span>
+                        </button>
                     </div>
                 </div>
-                <button @click="activeTab = 'suspense'" class="bg-red-600 text-white px-5 py-2 rounded-lg text-xs font-black hover:bg-red-700">
-                    Resolve Now
-                </button>
-            </div>
-        </template>
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Financial Ledger</h2>
-                <div class="flex items-center gap-4 mt-2">
-                    <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl text-[10px] font-black uppercase tracking-tighter">
-                        <button @click="pathFilter = 'all'" :class="pathFilter === 'all' ? 'bg-white shadow text-blue-600' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">All</button>
-                        <button @click="pathFilter = 'Family Bank'" :class="pathFilter === 'Family Bank' ? 'bg-orange-500 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">Family Bank</button>
-                        <button @click="pathFilter = 'Co-op Bank'" :class="pathFilter === 'Co-op Bank' ? 'bg-green-600 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">Co-op Bank</button>
-                        <button @click="pathFilter = 'Payslip'" :class="pathFilter === 'Payslip' ? 'bg-purple-600 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">Payslips</button>
-                        <button @click="pathFilter = 'M-Pesa'" :class="pathFilter === 'M-Pesa' ? 'bg-emerald-500 text-white' : 'text-slate-500'" class="px-3 py-1.5 rounded-lg transition">M-Pesa</button>
-                    </nav>
+                <div class="relative mb-6">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" x-model="paymentSearch" placeholder="Search Transaction ID, Phone, or House..." 
+                           class="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[1100px]">
+                        <thead class="bg-slate-50/50">
+                            <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
+                                <th class="px-6 py-5">Date/Time</th>
+                                <th class="px-6 py-5">Path</th>
+                                <th class="px-6 py-5">House / Ref</th>
+                                <th class="px-6 py-5 text-emerald-600">Amount</th>
+                                <th class="px-6 py-5">Waterfall Deductions</th>
+                                <th class="px-6 py-5">Status</th>
+                                <th class="px-6 py-5 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <template x-for="p in filteredPayments" :key="p.id">
+                                <tr class="hover:bg-slate-50/50 transition-colors" :class="p.status === 'Unidentified' ? 'bg-red-50/40 border-l-4 border-l-red-500' : ''">
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-700 text-xs" x-text="p.date"></div>
+                                        <div class="text-[10px] text-slate-400 uppercase" x-text="p.time"></div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2 py-1 rounded text-[9px] font-black uppercase border tracking-tighter"
+                                              :class="getPathClass(p.method)" x-text="p.method"></span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-black text-blue-600 text-sm" x-text="p.house_id || 'PENDING'"></div>
+                                        <div class="text-[10px] font-mono text-slate-400" x-text="p.reference"></div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-base font-black text-slate-900" x-text="formatNumber(p.amount)"></div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 min-w-[160px]">
+                                            <template x-if="!p.deductions_json || p.deductions_json === '{}'">
+                                                <span class="text-[10px] text-slate-400 italic">No deductions applied</span>
+                                            </template>
+                                            <div class="space-y-1">
+                                                <template x-for="(amt, type) in JSON.parse(p.deductions_json || '{}')" :key="type">
+                                                    <div class="flex justify-between text-[10px]">
+                                                        <span class="text-slate-500 capitalize" x-text="type"></span>
+                                                        <span class="font-bold text-slate-700" x-text="'-' + formatNumber(amt)"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span :class="p.status === 'Processed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700 animate-pulse'" 
+                                              class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest block text-center" x-text="p.status"></span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <button x-show="p.status === 'Unidentified'" @click="openResolveModal(p)" 
+                                                class="text-red-500 hover:text-red-700 p-2 transition" title="Resolve Payment">
+                                            <i class="fas fa-fingerprint text-lg"></i>
+                                        </button>
+                                        <button @click="viewStatement(p.tenantId)" class="text-slate-400 hover:text-blue-600 p-2 transition">
+                                            <i class="fas fa-file-invoice text-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            
-            <div class="flex flex-wrap items-center gap-2">
-                <button @click="fetchPayments()" class="bg-white border-2 border-slate-100 p-3 rounded-xl hover:bg-slate-50 shadow-sm text-slate-500">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button @click="showBillModal = true" class="bg-blue-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 flex items-center gap-2 text-sm">
-                    <i class="fas fa-plus-circle"></i> <span>Add Utility</span>
-                </button>
-            </div>
         </div>
 
-        <div class="relative mb-6">
-            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" x-model="paymentSearch" placeholder="Search Transaction ID, Phone, or House..." 
-                   class="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition">
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[1100px]">
-                <thead class="bg-slate-50/50">
-                    <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
-                        <th class="px-6 py-5">Date/Time</th>
-                        <th class="px-6 py-5">Path</th>
-                        <th class="px-6 py-5">House / Ref</th>
-                        <th class="px-6 py-5 text-emerald-600">Amount</th>
-                        <th class="px-6 py-5">Waterfall Deductions</th>
-                        <th class="px-6 py-5">Status</th>
-                        <th class="px-6 py-5 text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    <template x-for="p in filteredPayments" :key="p.id">
-                        <tr class="hover:bg-slate-50/50 transition-colors" :class="p.status === 'Unidentified' ? 'bg-red-50/40 border-l-4 border-l-red-500' : ''">
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-700 text-xs" x-text="p.date"></div>
-                                <div class="text-[10px] text-slate-400 uppercase" x-text="p.time"></div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 rounded text-[9px] font-black uppercase border tracking-tighter"
-                                      :class="getPathClass(p.method)" x-text="p.method"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="font-black text-blue-600 text-sm" x-text="p.house_id || 'PENDING'"></div>
-                                <div class="text-[10px] font-mono text-slate-400" x-text="p.reference"></div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-base font-black text-slate-900" x-text="formatNumber(p.amount)"></div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 min-w-[160px]">
-                                    <template x-if="!p.deductions_json || p.deductions_json === '{}'">
-                                        <span class="text-[10px] text-slate-400 italic">No deductions applied</span>
-                                    </template>
-                                    <div class="space-y-1">
-                                        <template x-for="(amt, type) in JSON.parse(p.deductions_json || '{}')" :key="type">
-                                            <div class="flex justify-between text-[10px]">
-                                                <span class="text-slate-500 capitalize" x-text="type"></span>
-                                                <span class="font-bold text-slate-700" x-text="'-' + formatNumber(amt)"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span :class="p.status === 'Processed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700 animate-pulse'" 
-                                      class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest block text-center" x-text="p.status"></span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <button @click="viewStatement(p.tenantId)" class="text-slate-400 hover:text-blue-600 p-2 transition">
-                                    <i class="fas fa-file-invoice text-lg"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
         <!-- Reports Tab -->
         <div x-show="activeTab === 'reports'" x-cloak>
             <div class="sticky-header p-6 md:p-8 pb-6 mt-12 lg:mt-0">
@@ -898,10 +895,10 @@
                             <i class="fas fa-file-alt"></i>
                             <span class="hidden md:inline">Generate Report</span>
                         </button>
-                        <button @click="printFinancialReport()" 
-                                class="bg-gray-100 text-gray-700 px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition flex items-center gap-2">
-                            <i class="fas fa-print"></i>
-                            <span class="hidden md:inline">Print Report</span>
+                        <button @click="exportToPDF('reports')" 
+                                class="bg-red-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="hidden md:inline">Export PDF</span>
                         </button>
                     </div>
                 </div>
@@ -995,7 +992,7 @@
             </div>
         </div>
 
-        <!-- Landlord Statement Tab - COMPLETELY EDITABLE -->
+        <!-- Landlord Statement Tab -->
         <div x-show="activeTab === 'statement'" x-cloak>
             <div class="sticky-header p-6 md:p-8 pb-6 mt-12 lg:mt-0 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1004,10 +1001,10 @@
                         <p class="text-gray-500 font-medium">Monthly settlement report for landlords</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 md:gap-4">
-                        <button @click="printStatement()" 
-                                class="bg-slate-900 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition flex items-center gap-2">
-                            <i class="fas fa-print"></i>
-                            <span class="hidden md:inline">Print Statement</span>
+                        <button @click="exportToPDF('statement')" 
+                                class="bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="hidden md:inline">Export PDF</span>
                         </button>
                         <button @click="generateStatement()" 
                                 class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
@@ -1036,8 +1033,8 @@
                                 <i class="fas fa-plus"></i>
                                 Add Row
                             </button>
-                            <button @click="window.print()" class="bg-slate-900 text-white px-4 md:px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                                <i class="fas fa-print"></i>
+                            <button @click="exportToPDF('statement')" class="bg-red-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                                <i class="fas fa-file-pdf"></i>
                                 Export to PDF
                             </button>
                         </div>
@@ -1086,42 +1083,42 @@
                                         <!-- Unit -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="text" x-model="tenant.unit" 
-                                                   class="editable-input" 
+                                                   class="w-full px-2 py-1 border rounded" 
                                                    placeholder="Unit No.">
                                         </td>
                                         
                                         <!-- Tenant Name -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="text" x-model="tenant.name" 
-                                                   class="editable-input" 
+                                                   class="w-full px-2 py-1 border rounded" 
                                                    placeholder="Enter tenant name">
                                         </td>
                                         
                                         <!-- Rent -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="number" x-model.number="tenant.rent" 
-                                                   class="editable-input text-right" 
+                                                   class="w-full px-2 py-1 border rounded text-right" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Amount Paid -->
                                         <td class="p-3 border border-slate-300 bg-blue-50/30">
                                             <input type="number" x-model.number="tenant.amountPaid" 
-                                                   class="editable-input text-right font-bold text-blue-700" 
+                                                   class="w-full px-2 py-1 border rounded text-right font-bold text-blue-700" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Deposit -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="number" x-model.number="tenant.deposit" 
-                                                   class="editable-input text-right" 
+                                                   class="w-full px-2 py-1 border rounded text-right" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Garbage -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="number" x-model.number="tenant.garbage" 
-                                                   class="editable-input text-right" 
+                                                   class="w-full px-2 py-1 border rounded text-right" 
                                                    placeholder="200">
                                         </td>
                                         
@@ -1133,16 +1130,16 @@
 
                                         <!-- Other Bills -->
                                         <td class="p-3 border border-slate-300">
-                                            <input type="number" x-model.number="tenant.other bills" 
-                                                   class="editable-input text-right" 
+                                            <input type="number" x-model.number="tenant.other_bills" 
+                                                   class="w-full px-2 py-1 border rounded text-right" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Remarks -->
                                         <td class="p-3 border border-slate-300">
                                             <textarea x-model="tenant.remarks" 
-                                                      class="editable-textarea" 
-                                                      placeholder="Enter remarks..."></textarea>
+                                                      class="w-full px-2 py-1 border rounded" 
+                                                      placeholder="Enter remarks..." rows="2"></textarea>
                                         </td>
                                         
                                         <!-- Actions -->
@@ -1167,10 +1164,10 @@
                                 <template x-for="(exp, index) in expenses" :key="index">
                                     <div class="flex items-center gap-3">
                                         <input type="text" x-model="exp.description" 
-                                               class="editable-input flex-1" 
+                                               class="flex-1 px-2 py-1 border rounded" 
                                                placeholder="Expense description">
                                         <input type="number" x-model.number="exp.amount" 
-                                               class="editable-input w-24 md:w-32 text-right" 
+                                               class="w-24 md:w-32 px-2 py-1 border rounded text-right" 
                                                placeholder="Amount">
                                         <button @click="removeExpense(index)" 
                                                 class="text-red-500 hover:text-red-700 p-1 no-print">
@@ -1241,10 +1238,10 @@
                             <i class="fas fa-plus"></i>
                             <span class="hidden md:inline">Add New Property</span>
                         </button>
-                        <button @click="exportPropertiesData()" 
-                                class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
-                            <i class="fas fa-download"></i>
-                            <span class="hidden md:inline">Export Data</span>
+                        <button @click="exportToPDF('properties')" 
+                                class="bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="hidden md:inline">Export PDF</span>
                         </button>
                     </div>
                 </div>
@@ -1390,6 +1387,40 @@
         </div>
     </main>
 
+    <!-- Resolve Payment Modal -->
+    <div x-show="showResolveModal" 
+         class="fixed inset-0 z-[60] overflow-y-auto flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+         x-cloak>
+        
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-slate-800 uppercase italic">Assign to House</h3>
+                <button @click="showResolveModal = false" class="text-slate-400 hover:text-red-500 transition">
+                    <i class="fas fa-times-circle text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="mb-6 p-4 bg-red-50 rounded-2xl border border-red-100">
+                <p class="text-[10px] font-black text-red-400 uppercase">Suspense Reference</p>
+                <p class="font-mono font-bold text-red-700" x-text="selectedPayment.reference"></p>
+                <p class="text-lg font-black text-red-800 mt-1" x-text="formatNumber(selectedPayment.amount)"></p>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Enter Correct House ID</label>
+                    <input type="text" x-model="resolveHouseId" placeholder="e.g. EH05" 
+                           class="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none uppercase font-bold text-lg">
+                </div>
+
+                <button @click="submitResolution()" 
+                        class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition shadow-xl active:scale-95">
+                    Confirm & Apply Waterfall
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modals -->
     <!-- Add/Edit Property Modal -->
     <div x-show="showAddPropertyModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1420,7 +1451,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Landlord Name / Bank Account</label>
-                        <input type="text" x-model="Landlord Name / Bank Account" 
+                        <input type="text" x-model="newProperty.landlord" 
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                     </div>
                     
@@ -1485,7 +1516,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Phone Number 2</label>
-                        <input type="Phone Number 2" x-model="newTenant.Phone Number 2" 
+                        <input type="tel" x-model="newTenant.phone2" 
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                     </div>
                     
@@ -1547,14 +1578,17 @@
         <span x-text="toastMessage"></span>
     </div>
 
+    <!-- Hidden PDF Template Container -->
+    <div id="pdf-template-container" style="display: none;"></div>
+
     <script>
         function managementSystem() {
             return {
                 // State Management
                 activeTab: 'dashboard',
                 userRole: 'owner',
-                editMode: true, // Default to edit mode for landlord statement
-                isMobileMenuOpen: false, // Mobile sidebar state
+                editMode: true,
+                isMobileMenuOpen: false,
                 
                 // Filter States
                 selectedBuilding: '',
@@ -1579,7 +1613,6 @@
                 // Modal States
                 showAddPropertyModal: false,
                 showAddTenantModal: false,
-                showAddPaymentModal: false,
                 editingProperty: null,
                 editingTenant: null,
                 
@@ -1593,7 +1626,7 @@
                     name: '',
                     address: '',
                     units: 0,
-                    manager: '',
+                    landlord: '',
                     notes: ''
                 },
                 
@@ -1602,7 +1635,7 @@
                     unit: '',
                     name: '',
                     phone: '',
-                    email: '',
+                    phone2: '',
                     rent: 0,
                     deposit: 0,
                     entryDate: new Date().toISOString().slice(0, 10),
@@ -1660,17 +1693,14 @@
                 get filteredTenants() {
                     let filtered = this.allTenants;
                     
-                    // Filter by property
                     if (this.selectedBuilding) {
                         filtered = filtered.filter(t => t.property === this.selectedBuilding);
                     }
                     
-                    // Filter by status
                     if (this.tenantStatusFilter) {
                         filtered = filtered.filter(t => t.status === this.tenantStatusFilter);
                     }
                     
-                    // Filter by search query
                     if (this.tenantSearchQuery) {
                         const query = this.tenantSearchQuery.toLowerCase();
                         filtered = filtered.filter(t => 
@@ -1681,7 +1711,6 @@
                         );
                     }
                     
-                    // Pagination
                     const start = (this.tenantPage - 1) * this.tenantsPerPage;
                     const end = start + this.tenantsPerPage;
                     return filtered.slice(start, end);
@@ -1726,7 +1755,6 @@
                 get recentActivity() {
                     const activities = [];
                     
-                    // Add tenant activities
                     this.allTenants.slice(0, 5).forEach(tenant => {
                         activities.push({
                             id: `tenant-${tenant.id}`,
@@ -1735,18 +1763,6 @@
                             tenant: tenant.name,
                             type: tenant.status === 'occupied' ? 'Occupied' : 'Vacant',
                             date: tenant.entryDate || 'Recent'
-                        });
-                    });
-                    
-                    // Add payment activities
-                    this.payments.slice(0, 5).forEach(payment => {
-                        activities.push({
-                            id: `payment-${payment.id}`,
-                            property: payment.property,
-                            unit: payment.unit,
-                            tenant: payment.tenant,
-                            type: `Payment: ${payment.status}`,
-                            date: payment.date
                         });
                     });
                     
@@ -1793,7 +1809,6 @@
                 
                 // Initialization
                 init() {
-                    // Load saved data from localStorage
                     const savedProperties = localStorage.getItem('eagle_properties');
                     const savedPayments = localStorage.getItem('eagle_payments');
                     const savedSettings = localStorage.getItem('eagle_settings');
@@ -1815,14 +1830,12 @@
                         this.payments = JSON.parse(savedPayments);
                     }
                     
-                    // Load statement data
                     if (savedStatementData) {
                         this.statementData = JSON.parse(savedStatementData);
                     } else {
                         this.initializeStatementData();
                     }
                     
-                    // Load expenses
                     if (savedExpenses) {
                         this.expenses = JSON.parse(savedExpenses);
                     }
@@ -1851,14 +1864,560 @@
                 },
                 
                 initializeStatementData() {
-                    // Initialize with 5 empty rows
                     this.statementData = [
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" },
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, remarks: "" }
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" }
                     ];
+                },
+                
+                // PDF Export Function
+                async exportToPDF(type) {
+                    try {
+                        this.showToastMessage('Generating PDF...', 'success');
+                        
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF('p', 'mm', 'a4');
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        const pageHeight = doc.internal.pageSize.getHeight();
+                        
+                        // Add header
+                        doc.setFontSize(20);
+                        doc.setTextColor(30, 64, 175);
+                        doc.text('EAGLE HOMES AGENCIES', pageWidth / 2, 20, { align: 'center' });
+                        
+                        doc.setFontSize(12);
+                        doc.setTextColor(107, 114, 128);
+                        doc.text('Property Management System', pageWidth / 2, 28, { align: 'center' });
+                        
+                        // Add report title
+                        doc.setFontSize(16);
+                        doc.setTextColor(0, 0, 0);
+                        const reportTitle = this.getReportTitle(type);
+                        doc.text(reportTitle, pageWidth / 2, 40, { align: 'center' });
+                        
+                        // Add date
+                        doc.setFontSize(10);
+                        doc.setTextColor(75, 85, 99);
+                        const dateStr = new Date().toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        doc.text(`Generated on: ${dateStr}`, pageWidth / 2, 48, { align: 'center' });
+                        
+                        let yPos = 60;
+                        
+                        // Generate content based on type
+                        switch(type) {
+                            case 'dashboard':
+                                yPos = this.generateDashboardPDF(doc, yPos, pageWidth);
+                                break;
+                            case 'tenants':
+                                yPos = this.generateTenantsPDF(doc, yPos, pageWidth);
+                                break;
+                            case 'properties':
+                                yPos = this.generatePropertiesPDF(doc, yPos, pageWidth);
+                                break;
+                            case 'payments':
+                                yPos = this.generatePaymentsPDF(doc, yPos, pageWidth);
+                                break;
+                            case 'statement':
+                                yPos = this.generateStatementPDF(doc, yPos, pageWidth);
+                                break;
+                            case 'reports':
+                                yPos = this.generateReportsPDF(doc, yPos, pageWidth);
+                                break;
+                            case 'utilities':
+                                yPos = this.generateUtilitiesPDF(doc, yPos, pageWidth);
+                                break;
+                        }
+                        
+                        // Add footer
+                        doc.setFontSize(8);
+                        doc.setTextColor(156, 163, 175);
+                        doc.text('Confidential - Eagle Homes Agencies', pageWidth / 2, pageHeight - 10, { align: 'center' });
+                        doc.text(`Page 1 of 1`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+                        
+                        // Save PDF
+                        const fileName = `Eagle_Homes_${reportTitle.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+                        doc.save(fileName);
+                        
+                        this.showToastMessage('PDF exported successfully!', 'success');
+                    } catch (error) {
+                        console.error('PDF Generation Error:', error);
+                        this.showToastMessage('Failed to generate PDF', 'error');
+                    }
+                },
+                
+                getReportTitle(type) {
+                    const titles = {
+                        'dashboard': 'Dashboard Summary',
+                        'tenants': 'Tenants Report',
+                        'properties': 'Properties Report',
+                        'payments': 'Payments Ledger',
+                        'statement': 'Landlord Statement',
+                        'reports': 'Financial Reports',
+                        'utilities': 'Utility Charges'
+                    };
+                    return titles[type] || 'Report';
+                },
+                
+                generateDashboardPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Dashboard Summary', 20, yPos);
+                    yPos += 10;
+                    
+                    // Stats
+                    doc.setFontSize(10);
+                    doc.text(`Total Expected Rent: Ksh ${this.formatNumber(this.totalRevenue)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Deposits Held: Ksh ${this.formatNumber(this.totalDeposits)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Occupancy Rate: ${this.occupancyRate}%`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Properties: ${Object.keys(this.properties).length}`, 20, yPos);
+                    yPos += 10;
+                    
+                    // Properties Table
+                    doc.setFontSize(12);
+                    doc.text('Properties Overview', 20, yPos);
+                    yPos += 8;
+                    
+                    const headers = ['Property', 'Units', 'Occupancy', 'Total Rent'];
+                    const columnWidths = [60, 30, 40, 40];
+                    
+                    // Table header
+                    doc.setFillColor(243, 244, 246);
+                    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.setTextColor(75, 85, 99);
+                    
+                    let xPos = 22;
+                    headers.forEach((header, i) => {
+                        doc.text(header, xPos, yPos + 6);
+                        xPos += columnWidths[i];
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Table rows
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    Object.entries(this.properties).forEach(([name, units], index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        const occupied = units.filter(u => u.status === 'occupied').length;
+                        const totalRent = units.reduce((sum, u) => sum + (u.rent || 0), 0);
+                        const occupancy = units.length > 0 ? Math.round((occupied / units.length) * 100) : 0;
+                        
+                        xPos = 22;
+                        doc.text(name, xPos, yPos);
+                        xPos += columnWidths[0];
+                        doc.text(units.length.toString(), xPos, yPos);
+                        xPos += columnWidths[1];
+                        doc.text(`${occupancy}%`, xPos, yPos);
+                        xPos += columnWidths[2];
+                        doc.text(`Ksh ${this.formatNumber(totalRent)}`, xPos, yPos);
+                        
+                        yPos += 6;
+                    });
+                    
+                    return yPos;
+                },
+                
+                generateTenantsPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Tenants Report', 20, yPos);
+                    yPos += 10;
+                    
+                    const headers = ['Property', 'Unit', 'Tenant', 'Phone', 'Rent', 'Deposit', 'Status'];
+                    const columnWidths = [40, 20, 50, 35, 30, 30, 30];
+                    
+                    // Table header
+                    doc.setFillColor(243, 244, 246);
+                    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.setTextColor(75, 85, 99);
+                    
+                    let xPos = 22;
+                    headers.forEach((header, i) => {
+                        doc.text(header, xPos, yPos + 6);
+                        xPos += columnWidths[i];
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Table rows
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    this.allTenants.forEach((tenant, index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        xPos = 22;
+                        doc.text(tenant.property, xPos, yPos);
+                        xPos += columnWidths[0];
+                        doc.text(tenant.unit, xPos, yPos);
+                        xPos += columnWidths[1];
+                        doc.text(tenant.name, xPos, yPos);
+                        xPos += columnWidths[2];
+                        doc.text(tenant.phone || '-', xPos, yPos);
+                        xPos += columnWidths[3];
+                        doc.text(`Ksh ${this.formatNumber(tenant.rent)}`, xPos, yPos);
+                        xPos += columnWidths[4];
+                        doc.text(`Ksh ${this.formatNumber(tenant.deposit)}`, xPos, yPos);
+                        xPos += columnWidths[5];
+                        doc.text(this.getStatusText(tenant.status), xPos, yPos);
+                        
+                        yPos += 6;
+                    });
+                    
+                    // Summary
+                    yPos += 10;
+                    doc.setFontSize(10);
+                    doc.text(`Total Tenants: ${this.allTenants.length}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Expected Rent: Ksh ${this.formatNumber(this.totalRevenue)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Deposits: Ksh ${this.formatNumber(this.totalDeposits)}`, 20, yPos);
+                    
+                    return yPos;
+                },
+                
+                generatePropertiesPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Properties Report', 20, yPos);
+                    yPos += 10;
+                    
+                    const headers = ['Property', 'Units', 'Occupied', 'Vacant', 'Occupancy', 'Total Rent'];
+                    const columnWidths = [50, 25, 25, 25, 30, 35];
+                    
+                    // Table header
+                    doc.setFillColor(243, 244, 246);
+                    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.setTextColor(75, 85, 99);
+                    
+                    let xPos = 22;
+                    headers.forEach((header, i) => {
+                        doc.text(header, xPos, yPos + 6);
+                        xPos += columnWidths[i];
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Table rows
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    Object.entries(this.properties).forEach(([name, units], index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        const occupied = units.filter(u => u.status === 'occupied').length;
+                        const vacant = units.filter(u => u.status === 'vacant').length;
+                        const totalRent = units.reduce((sum, u) => sum + (u.rent || 0), 0);
+                        const occupancy = units.length > 0 ? Math.round((occupied / units.length) * 100) : 0;
+                        
+                        xPos = 22;
+                        doc.text(name, xPos, yPos);
+                        xPos += columnWidths[0];
+                        doc.text(units.length.toString(), xPos, yPos);
+                        xPos += columnWidths[1];
+                        doc.text(occupied.toString(), xPos, yPos);
+                        xPos += columnWidths[2];
+                        doc.text(vacant.toString(), xPos, yPos);
+                        xPos += columnWidths[3];
+                        doc.text(`${occupancy}%`, xPos, yPos);
+                        xPos += columnWidths[4];
+                        doc.text(`Ksh ${this.formatNumber(totalRent)}`, xPos, yPos);
+                        
+                        yPos += 6;
+                    });
+                    
+                    // Summary
+                    yPos += 10;
+                    doc.setFontSize(10);
+                    const totalUnits = Object.values(this.properties).reduce((sum, units) => sum + units.length, 0);
+                    const totalOccupied = Object.values(this.properties).reduce((sum, units) => 
+                        sum + units.filter(u => u.status === 'occupied').length, 0);
+                    
+                    doc.text(`Total Properties: ${Object.keys(this.properties).length}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Units: ${totalUnits}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Occupied Units: ${totalOccupied}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Vacant Units: ${totalUnits - totalOccupied}`, 20, yPos);
+                    
+                    return yPos;
+                },
+                
+                generatePaymentsPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Payments Ledger', 20, yPos);
+                    yPos += 10;
+                    
+                    const headers = ['Date', 'Method', 'Reference', 'House', 'Amount', 'Status'];
+                    const columnWidths = [30, 35, 45, 25, 30, 25];
+                    
+                    // Table header
+                    doc.setFillColor(243, 244, 246);
+                    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.setTextColor(75, 85, 99);
+                    
+                    let xPos = 22;
+                    headers.forEach((header, i) => {
+                        doc.text(header, xPos, yPos + 6);
+                        xPos += columnWidths[i];
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Table rows
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    this.payments.forEach((payment, index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        xPos = 22;
+                        doc.text(payment.date || '-', xPos, yPos);
+                        xPos += columnWidths[0];
+                        doc.text(payment.method || '-', xPos, yPos);
+                        xPos += columnWidths[1];
+                        doc.text(payment.reference || '-', xPos, yPos);
+                        xPos += columnWidths[2];
+                        doc.text(payment.house_id || '-', xPos, yPos);
+                        xPos += columnWidths[3];
+                        doc.text(`Ksh ${this.formatNumber(payment.amount || 0)}`, xPos, yPos);
+                        xPos += columnWidths[4];
+                        doc.text(payment.status || '-', xPos, yPos);
+                        
+                        yPos += 6;
+                    });
+                    
+                    // Summary
+                    yPos += 10;
+                    doc.setFontSize(10);
+                    const totalAmount = this.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+                    const processed = this.payments.filter(p => p.status === 'Processed').length;
+                    
+                    doc.text(`Total Payments: ${this.payments.length}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Amount: Ksh ${this.formatNumber(totalAmount)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Processed: ${processed}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Pending: ${this.payments.length - processed}`, 20, yPos);
+                    
+                    return yPos;
+                },
+                
+                generateStatementPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`Landlord Statement - ${this.statementMonth}`, 20, yPos);
+                    yPos += 10;
+                    
+                    const headers = ['Unit', 'Tenant', 'Rent', 'Paid', 'Balance', 'Garbage', 'Remarks'];
+                    const columnWidths = [20, 45, 25, 25, 25, 25, 35];
+                    
+                    // Table header
+                    doc.setFillColor(243, 244, 246);
+                    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.setTextColor(75, 85, 99);
+                    
+                    let xPos = 22;
+                    headers.forEach((header, i) => {
+                        doc.text(header, xPos, yPos + 6);
+                        xPos += columnWidths[i];
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Table rows
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    this.statementData.forEach((tenant, index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        const balance = (tenant.rent || 0) - (tenant.amountPaid || 0);
+                        
+                        xPos = 22;
+                        doc.text(tenant.unit || '-', xPos, yPos);
+                        xPos += columnWidths[0];
+                        doc.text(tenant.name || '-', xPos, yPos);
+                        xPos += columnWidths[1];
+                        doc.text(`Ksh ${this.formatNumber(tenant.rent || 0)}`, xPos, yPos);
+                        xPos += columnWidths[2];
+                        doc.text(`Ksh ${this.formatNumber(tenant.amountPaid || 0)}`, xPos, yPos);
+                        xPos += columnWidths[3];
+                        doc.text(`Ksh ${this.formatNumber(balance)}`, xPos, yPos);
+                        xPos += columnWidths[4];
+                        doc.text(`Ksh ${this.formatNumber(tenant.garbage || 0)}`, xPos, yPos);
+                        xPos += columnWidths[5];
+                        doc.text(tenant.remarks || '-', xPos, yPos);
+                        
+                        yPos += 6;
+                    });
+                    
+                    // Summary
+                    yPos += 10;
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Statement Summary', 20, yPos);
+                    yPos += 8;
+                    
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`Total Rent Collected: Ksh ${this.formatNumber(this.totalRentCollected)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Management Commission (${this.commissionRate}%): Ksh ${this.formatNumber(this.commissionAmount)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Expenses: Ksh ${this.formatNumber(this.totalExpenses)}`, 20, yPos);
+                    yPos += 6;
+                    doc.setFont(undefined, 'bold');
+                    doc.text(`Net Pay to Landlord: Ksh ${this.formatNumber(this.netToLandlord)}`, 20, yPos);
+                    
+                    return yPos;
+                },
+                
+                generateReportsPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Financial Reports Summary', 20, yPos);
+                    yPos += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.text(`Report Period: ${this.reportStartDate} to ${this.reportEndDate}`, 20, yPos);
+                    yPos += 8;
+                    doc.text(`Report Type: ${this.reportType}`, 20, yPos);
+                    yPos += 10;
+                    
+                    // Summary Stats
+                    doc.setFontSize(12);
+                    doc.text('Financial Summary', 20, yPos);
+                    yPos += 8;
+                    
+                    doc.setFontSize(10);
+                    doc.text(`Total Revenue: Ksh ${this.formatNumber(this.reportData.totalRevenue || 0)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Rent Collected: Ksh ${this.formatNumber(this.reportData.rentCollected || 0)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Utilities Collected: Ksh ${this.formatNumber(this.reportData.utilitiesCollected || 0)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Outstanding Arrears: Ksh ${this.formatNumber(this.reportData.outstandingArrears || 0)}`, 20, yPos);
+                    yPos += 10;
+                    
+                    // Property Performance
+                    doc.setFontSize(12);
+                    doc.text('Top Performing Properties', 20, yPos);
+                    yPos += 8;
+                    
+                    this.topProperties.forEach((property, index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        doc.setFontSize(10);
+                        doc.text(`${property.name}: Ksh ${this.formatNumber(property.revenue)} (${property.occupancy}% occupancy, ${property.collectionRate}% collected)`, 20, yPos);
+                        yPos += 6;
+                    });
+                    
+                    return yPos;
+                },
+                
+                generateUtilitiesPDF(doc, yPos, pageWidth) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Utility Charges Report', 20, yPos);
+                    yPos += 10;
+                    
+                    const headers = ['House', 'Tenant', 'Water', 'Electricity', 'Garbage', 'Total'];
+                    const columnWidths = [30, 50, 30, 35, 30, 35];
+                    
+                    // Table header
+                    doc.setFillColor(243, 244, 246);
+                    doc.rect(20, yPos, pageWidth - 40, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.setTextColor(75, 85, 99);
+                    
+                    let xPos = 22;
+                    headers.forEach((header, i) => {
+                        doc.text(header, xPos, yPos + 6);
+                        xPos += columnWidths[i];
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Table rows
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    this.allTenants.forEach((tenant, index) => {
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        // Get utility inputs
+                        const waterInput = document.getElementById(`water-${tenant.id}`);
+                        const elecInput = document.getElementById(`elec-${tenant.id}`);
+                        const water = waterInput ? parseFloat(waterInput.value) || 0 : 0;
+                        const electricity = elecInput ? parseFloat(elecInput.value) || 0 : 0;
+                        const garbage = 200; // Default garbage fee
+                        const total = water + electricity + garbage;
+                        
+                        xPos = 22;
+                        doc.text(`${tenant.property}-${tenant.unit}`, xPos, yPos);
+                        xPos += columnWidths[0];
+                        doc.text(tenant.name, xPos, yPos);
+                        xPos += columnWidths[1];
+                        doc.text(`Ksh ${this.formatNumber(water)}`, xPos, yPos);
+                        xPos += columnWidths[2];
+                        doc.text(`Ksh ${this.formatNumber(electricity)}`, xPos, yPos);
+                        xPos += columnWidths[3];
+                        doc.text(`Ksh ${this.formatNumber(garbage)}`, xPos, yPos);
+                        xPos += columnWidths[4];
+                        doc.text(`Ksh ${this.formatNumber(total)}`, xPos, yPos);
+                        
+                        yPos += 6;
+                    });
+                    
+                    // Summary
+                    yPos += 10;
+                    doc.setFontSize(10);
+                    doc.text(`Total Units: ${this.allTenants.length}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Default Garbage Fee: Ksh 200 per unit`, 20, yPos);
+                    
+                    return yPos;
                 },
                 
                 // Property Management Functions
@@ -1874,7 +2433,7 @@
                         name: propertyName,
                         address: '',
                         units: property.length,
-                        manager: '',
+                        landlord: '',
                         notes: ''
                     };
                     this.showAddPropertyModal = true;
@@ -1923,7 +2482,7 @@
                     this.saveData();
                     this.showAddPropertyModal = false;
                     this.editingProperty = null;
-                    this.newProperty = { name: '', address: '', units: 0, manager: '', notes: '' };
+                    this.newProperty = { name: '', address: '', units: 0, landlord: '', notes: '' };
                     this.showToastMessage('Property saved successfully', 'success');
                 },
                 
@@ -2009,7 +2568,7 @@
                         unit: '',
                         name: '',
                         phone: '',
-                        email: '',
+                        phone2: '',
                         rent: 0,
                         deposit: 0,
                         entryDate: new Date().toISOString().slice(0, 10),
@@ -2030,56 +2589,7 @@
                     this.showToastMessage(`Saved utilities for ${tenantId}: Water: ${water}, Electricity: ${electricity}`, 'success');
                 },
                 
-                loadPropertyForUtilities() {
-                    if (!this.selectedProperty) return;
-                    
-                    const property = this.properties[this.selectedProperty];
-                    if (!property) return;
-                    
-                    // Get tenants for this property
-                    this.utilityData = property.map(tenant => ({
-                        unit: tenant.unit,
-                        tenant: tenant.name,
-                        water: 0,
-                        electricity: 0,
-                        garbage: 200,
-                        penalty: 0,
-                        other: 0
-                    }));
-                },
-                
-                loadUtilityData() {
-                    // In a real app, this would load saved utility data for the selected month
-                    if (this.selectedProperty) {
-                        this.loadPropertyForUtilities();
-                    }
-                },
-                
-                calculateUtilityTotal(utility) {
-                    const water = parseFloat(utility.water) || 0;
-                    const electricity = parseFloat(utility.electricity) || 0;
-                    const garbage = parseFloat(utility.garbage) || 0;
-                    const penalty = parseFloat(utility.penalty) || 0;
-                    const other = parseFloat(utility.other) || 0;
-                    return water + electricity + garbage + penalty + other;
-                },
-                
-                saveUtilities() {
-                    // Save utility data to localStorage
-                    const utilityKey = `eagle_utilities_${this.selectedProperty}_${this.utilityMonth}`;
-                    localStorage.setItem(utilityKey, JSON.stringify(this.utilityData));
-                    
-                    this.showToastMessage('Utility readings saved successfully', 'success');
-                },
-                
-                // Payment Functions
-                markPaymentAsPaid(payment) {
-                    payment.status = 'paid';
-                    this.saveData();
-                    this.showToastMessage('Payment marked as paid', 'success');
-                },
-                
-                // Landlord Statement Functions - COMPLETELY EDITABLE
+                // Landlord Statement Functions
                 addNewRow() {
                     this.statementData.push({
                         unit: "",
@@ -2088,6 +2598,7 @@
                         amountPaid: 0,
                         deposit: 0,
                         garbage: 200,
+                        other_bills: 0,
                         remarks: ""
                     });
                 },
@@ -2113,16 +2624,10 @@
                     this.showToastMessage('Landlord statement generated', 'success');
                 },
                 
-                printStatement() {
-                    window.print();
-                },
-                
                 saveStatement() {
-                    // Save statement data
                     localStorage.setItem('eagle_statement_data', JSON.stringify(this.statementData));
                     localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
                     
-                    // Create statement summary
                     const statementSummary = {
                         month: this.statementMonth,
                         property: this.selectedBuilding,
@@ -2149,6 +2654,10 @@
                     };
                     
                     this.showToastMessage('Report generated successfully', 'success');
+                },
+                
+                generateMonthlyReport() {
+                    this.generateReport();
                 },
                 
                 // System Functions
@@ -2277,7 +2786,7 @@
                 },
                 
                 formatNumber(num) {
-                    return new Intl.NumberFormat('en-KE').format(num);
+                    return new Intl.NumberFormat('en-KE').format(num || 0);
                 },
                 
                 getStatusClass(status) {
@@ -2300,25 +2809,6 @@
                     return texts[status] || status;
                 },
                 
-                getPaymentMethodClass(method) {
-                    const classes = {
-                        mpesa: 'bg-green-100 text-green-800',
-                        bank: 'bg-blue-100 text-blue-800',
-                        cash: 'bg-emerald-100 text-emerald-800'
-                    };
-                    return classes[method.toLowerCase()] || 'bg-gray-100 text-gray-800';
-                },
-                
-                getPaymentStatusClass(status) {
-                    const classes = {
-                        paid: 'bg-green-100 text-green-800',
-                        pending: 'bg-amber-100 text-amber-800',
-                        overdue: 'bg-red-100 text-red-800',
-                        unidentified: 'bg-red-100 text-red-800'
-                    };
-                    return classes[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
-                },
-                
                 getActivityClass(type) {
                     if (type.includes('Payment') || type.includes('paid')) {
                         return 'bg-green-100 text-green-800';
@@ -2337,73 +2827,6 @@
                     localStorage.setItem('eagle_payments', JSON.stringify(this.payments));
                     localStorage.setItem('eagle_settings', JSON.stringify(this.settings));
                     localStorage.setItem('userRole', this.userRole);
-                },
-                
-                exportData() {
-                    const data = {
-                        properties: this.properties,
-                        tenants: this.allTenants,
-                        payments: this.payments,
-                        statementData: this.statementData,
-                        expenses: this.expenses,
-                        settings: this.settings,
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `eagle-homes-data-${new Date().toISOString().slice(0, 10)}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    
-                    this.showToastMessage('Data exported successfully', 'success');
-                },
-                
-                exportPropertiesData() {
-                    this.exportData();
-                },
-                
-                exportPayments() {
-                    const data = {
-                        payments: this.payments,
-                        summary: {
-                            totalCollected: this.totalCollected,
-                            totalPending: this.totalPending,
-                            collectionRate: this.collectionRate
-                        },
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `payments-data-${new Date().toISOString().slice(0, 10)}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    
-                    this.showToastMessage('Payments exported', 'success');
-                },
-                
-                generateMonthlyReport() {
-                    this.generateReport();
-                },
-                
-                printReport() {
-                    window.print();
-                },
-                
-                printFinancialReport() {
-                    this.generateReport();
-                    setTimeout(() => window.print(), 500);
                 },
                 
                 // User Management
@@ -2431,6 +2854,143 @@
                 }
             };
         }
+
+        // Payment Manager Component
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('paymentManager', () => ({
+                payments: [],
+                paymentSearch: '',
+                pathFilter: 'all',
+                
+                // Resolve Payment Modal Variables
+                showResolveModal: false,
+                selectedPayment: {},
+                resolveHouseId: '',
+                
+                // Search & Filter Functionality
+                get filteredPayments() {
+                    let filtered = this.payments;
+
+                    if (this.pathFilter !== 'all') {
+                        filtered = filtered.filter(p => p.method === this.pathFilter);
+                    }
+
+                    if (this.paymentSearch.trim() !== '') {
+                        const term = this.paymentSearch.toLowerCase();
+                        filtered = filtered.filter(p => 
+                            (p.reference && p.reference.toLowerCase().includes(term)) ||
+                            (p.house_id && p.house_id.toLowerCase().includes(term)) ||
+                            (p.phone && p.phone.includes(term)) ||
+                            (p.status && p.status.toLowerCase().includes(term))
+                        );
+                    }
+                    return filtered;
+                },
+
+                // Fetch Payments
+                async fetchPayments() {
+                    try {
+                        const response = await fetch('get_payments.php');
+                        this.payments = await response.json();
+                    } catch (error) {
+                        console.error("Manual Sync Failed:", error);
+                        this.payments = this.getSamplePayments();
+                    }
+                },
+
+                // Open Resolve Modal
+                openResolveModal(payment) {
+                    this.selectedPayment = payment;
+                    this.resolveHouseId = '';
+                    this.showResolveModal = true;
+                },
+
+                // Submit Resolution
+                async submitResolution() {
+                    if (!this.resolveHouseId) {
+                        alert("Please enter a House ID");
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('resolve_payment.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                payment_id: this.selectedPayment.id,
+                                house_id: this.resolveHouseId.toUpperCase()
+                            })
+                        });
+
+                        const res = await response.json();
+                        if (res.status === 'success') {
+                            alert("Payment Resolved! Waterfall deductions applied.");
+                            this.showResolveModal = false;
+                            this.fetchPayments();
+                        } else {
+                            alert("Error: " + res.message);
+                        }
+                    } catch (e) {
+                        console.error("Resolution error:", e);
+                        alert("Server communication error.");
+                    }
+                },
+
+                // Helper Functions
+                formatNumber(number) {
+                    return new Intl.NumberFormat('en-KE').format(number || 0);
+                },
+
+                getPathClass(method) {
+                    const classes = {
+                        'Family Bank': 'bg-orange-100 text-orange-700 border-orange-300',
+                        'Co-op Bank': 'bg-green-100 text-green-700 border-green-300',
+                        'Payslip': 'bg-purple-100 text-purple-700 border-purple-300',
+                        'M-Pesa': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+                        'Cash': 'bg-gray-100 text-gray-700 border-gray-300'
+                    };
+                    return classes[method] || 'bg-gray-100 text-gray-700 border-gray-300';
+                },
+
+                // Sample Data for Testing
+                getSamplePayments() {
+                    return [
+                        {
+                            id: 1,
+                            reference: 'UAMKG4',
+                            house_id: 'EH01',
+                            phone: '0712345678',
+                            amount: 1500,
+                            method: 'Family Bank',
+                            date: '2025-01-22',
+                            time: '14:30',
+                            deductions_json: '{"water": 200, "garbage": 200}',
+                            status: 'Processed'
+                        },
+                        {
+                            id: 2,
+                            reference: 'RXB5T9',
+                            house_id: null,
+                            phone: '0723456789',
+                            amount: 3000,
+                            method: 'Co-op Bank',
+                            date: '2025-01-22',
+                            time: '15:45',
+                            deductions_json: '{}',
+                            status: 'Unidentified'
+                        }
+                    ];
+                },
+
+                // Initialization
+                init() {
+                    this.fetchPayments();
+                    setInterval(() => {
+                        this.fetchPayments();
+                    }, 30000);
+                }
+            }));
+        });
     </script>
 </body>
 </html>
