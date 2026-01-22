@@ -1,87 +1,152 @@
 <?php
-// bank_api.php - The "Brain"
+// ============================================
+// CONFIGURATION & CONSTANTS
+// ============================================
 define('FAMILY_BANK_PAYBILL', '222111');
 define('FAMILY_BANK_ACCOUNT', '045000037386');
 define('COOP_BANK_PAYBILL', '417185');
 define('COOP_BANK_ACCOUNT', '01192156596100');
+define('DEFAULT_RENT_AMOUNT', 15000);
 
-function extractHouseIdentifier($reference, $bankType) {
-    if ($bankType === 'family') {
-        if (strpos($reference, '#') !== false) {
-            $parts = explode('#', $reference);
-            return end($parts);
+/**
+ * 1. SMART IDENTIFICATION
+ * Detects which of the 4 paths the money came from.
+ */
+function identifyPaymentSource($data) {
+    $paybill = $data['BusinessShortCode'] ?? '';
+    $destAcc = $data['DestinationAccount'] ?? '';
+    $rawBillRef = strtoupper(trim($data['BillRefNumber'] ?? ''));
+    $amount = (float)($data['TransAmount'] ?? 0);
+    
+    $houseId = "";
+    $method = "M-Pesa"; // Default path
+
+    // PATH 1: Family Bank
+    if ($paybill == FAMILY_BANK_PAYBILL || $destAcc == FAMILY_BANK_ACCOUNT) {
+        $method = "Family Bank";
+        // Logic: Extract house after '#' or strip the 200200 prefix
+        if (strpos($rawBillRef, '#') !== false) {
+            $parts = explode('#', $rawBillRef);
+            $houseId = end($parts);
+        } else {
+            $houseId = str_replace("200200", "", $rawBillRef);
         }
-        return str_replace("200200", "", $reference);
+    } 
+    // PATH 2: Co-op Bank
+    elseif ($paybill == COOP_BANK_PAYBILL || $destAcc == COOP_BANK_ACCOUNT) {
+        $method = "Co-op Bank";
+        $houseId = $rawBillRef; 
+    } 
+    // PATH 3: Payslip (Manual Entry)
+    elseif (isset($data['isPayslip']) && $data['isPayslip'] == true) {
+        $method = "Payslip";
+        $houseId = $data['BillRefNumber'] ?? '';
     }
-    return $reference;
+    // PATH 4: Standard M-Pesa (Fallback)
+    else {
+        $houseId = $rawBillRef;
+    }
+    
+    return [
+        'house_id' => strtoupper(trim($houseId)),
+        'method'   => $method,
+        'amount'   => $amount,
+        'ref'      => $data['TransID'] ?? 'REF'.time()
+    ];
 }
 
-// 1. RECEIVE DATA
-$jsonResponse = file_get_contents('php://input');
-file_put_contents('bank_debug.log', "[" . date('Y-m-d H:i:s') . "] Data: " . $jsonResponse . PHP_EOL, FILE_APPEND);
-$data = json_decode($jsonResponse, true);
-
-if ($data) {
-    try {
-        $pdo = new PDO('mysql:host=localhost;dbname=rental_db;charset=utf8', 'root', '');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->beginTransaction();
-
-        // 2. IDENTIFY
-        $paybill = $data['BusinessShortCode'] ?? '';
-        $destAcc = $data['DestinationAccount'] ?? '';
-        $rawBillRef = strtoupper(trim($data['BillRefNumber'] ?? ''));
-        $amount = (float)($data['TransAmount'] ?? 0);
-        $transactionId = $data['TransID'] ?? 'TXN_'.time();
+/**
+ * 2. THE WATERFALL ENGINE
+ * Automatically deducts: Utilities -> Rent -> Credits
+ */
+function runWaterfall($houseId, $amount, $pdo) {
+    $remaining = $amount;
+    $breakdown = [];
+    
+    // A. UTILITIES (Water, Garbage, Electricity)
+    $stmt = $pdo->prepare("SELECT * FROM utility_bills WHERE house_id = ? AND status = 'unpaid' ORDER BY priority ASC");
+    $stmt->execute([$houseId]);
+    
+    while ($bill = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if ($remaining <= 0) break;
         
-        $houseId = ($paybill == FAMILY_BANK_PAYBILL || $destAcc == FAMILY_BANK_ACCOUNT) 
-                   ? extractHouseIdentifier($rawBillRef, 'family') 
-                   : $rawBillRef;
-        $houseId = trim(strtoupper($houseId));
-
-        // 3. CHECK HOUSE & PROCESS WATERFALL
-        $check = $pdo->prepare("SELECT id FROM houses WHERE id = ?");
-        $check->execute([$houseId]);
+        $paymentForBill = min($remaining, (float)$bill['amount']);
+        $remaining -= $paymentForBill;
+        $breakdown[$bill['bill_type']] = $paymentForBill;
         
-        $deductions = [];
-        $status = 'Unidentified';
-
-        if ($check->fetch() && !empty($houseId)) {
-            $status = 'Processed';
-            $remaining = $amount;
-
-            // Waterfall: Water -> Garbage -> Electricity -> Rent
-            $stmt = $pdo->prepare("SELECT * FROM utility_bills WHERE house_id = ? AND status = 'unpaid' ORDER BY priority ASC");
-            $stmt->execute([$houseId]);
-            while ($bill = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                if ($remaining >= $bill['amount']) {
-                    $remaining -= $bill['amount'];
-                    $deductions[$bill['bill_type']] = $bill['amount'];
-                    $pdo->prepare("UPDATE utility_bills SET status='paid', date_paid=NOW() WHERE id=?")->execute([$bill['id']]);
-                }
-            }
-            if ($remaining > 0) {
-                $deductions['rent'] = $remaining;
-            }
+        if ($paymentForBill >= (float)$bill['amount']) {
+            $pdo->prepare("UPDATE utility_bills SET status = 'paid' WHERE id = ?")->execute([$bill['id']]);
+        } else {
+            $pdo->prepare("UPDATE utility_bills SET amount = amount - ? WHERE id = ?")->execute([$paymentForBill, $bill['id']]);
         }
-
-        // 4. SAVE TO DATABASE
-        $stmt = $pdo->prepare("INSERT INTO payments (house_id, amount, reference, phone, bill_ref, deductions_json, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([
-            $houseId ?: 'UNKNOWN', 
-            $amount, 
-            $transactionId, 
-            $data['MSISDN'] ?? '', 
-            $rawBillRef, 
-            json_encode($deductions), 
-            $status
-        ]);
-
-        $pdo->commit();
-        echo json_encode(['status' => 'success']);
-
-    } catch (Exception $e) {
-        if(isset($pdo)) $pdo->rollBack();
-        file_put_contents('bank_debug.log', "ERROR: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
     }
+    
+    // B. RENT
+    if ($remaining > 0) {
+        $stmt = $pdo->prepare("SELECT monthly_rent FROM houses WHERE id = ?");
+        $stmt->execute([$houseId]);
+        $house = $stmt->fetch();
+        $rentDue = $house['monthly_rent'] ?? DEFAULT_RENT_AMOUNT;
+
+        $paymentForRent = min($remaining, (float)$rentDue);
+        $remaining -= $paymentForRent;
+        $breakdown['rent'] = $paymentForRent;
+    }
+    
+    // C. OVERPAYMENT (Credit for next month)
+    if ($remaining > 0) {
+        $breakdown['credit_applied'] = $remaining;
+        $pdo->prepare("INSERT INTO tenant_credits (house_id, balance) VALUES (?, ?) 
+                       ON DUPLICATE KEY UPDATE balance = balance + ?")
+            ->execute([$houseId, $remaining, $remaining]);
+        $remaining = 0;
+    }
+    
+    return $breakdown;
+}
+
+// ============================================
+// 3. EXECUTION
+// ============================================
+try {
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+    
+    $pdo = new PDO('mysql:host=localhost;dbname=rental_db', 'root', '');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $payment = identifyPaymentSource($data);
+    $houseId = $payment['house_id'];
+    
+    $pdo->beginTransaction();
+
+    // Check if House exists
+    $stmt = $pdo->prepare("SELECT id FROM houses WHERE id = ?");
+    $stmt->execute([$houseId]);
+    $exists = $stmt->fetch();
+
+    if (!$exists) {
+        // Record as Suspense (Unidentified)
+        $stmt = $pdo->prepare("INSERT INTO payments (amount, method, reference, house_id, status) VALUES (?, ?, ?, 'UNKNOWN', 'Unidentified')");
+        $stmt->execute([$payment['amount'], $payment['method'], $payment['ref']]);
+    } else {
+        // Run Waterfall and Record
+        $deductions = runWaterfall($houseId, $payment['amount'], $pdo);
+        $stmt = $pdo->prepare("INSERT INTO payments (house_id, amount, method, reference, deductions_json, status) VALUES (?, ?, ?, ?, ?, 'Processed')");
+        $stmt->execute([
+            $houseId, 
+            $payment['amount'], 
+            $payment['method'], 
+            $payment['ref'], 
+            json_encode($deductions)
+        ]);
+    }
+
+    $pdo->commit();
+    echo json_encode(['status' => 'success']);
+
+} catch (Exception $e) {
+    if (isset($pdo)) $pdo->rollBack();
+    header('Content-Type: application/json', true, 500);
+    echo json_encode(['error' => $e->getMessage()]);
 }
