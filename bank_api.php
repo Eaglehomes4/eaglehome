@@ -65,3 +65,10 @@ if (!empty($houseIdentifier)) {
     }
 }
 ?>
+    // In bank_api.php, after the identification logic:
+if (empty($houseIdentifier)) {
+    // 1. Tag it as "MISSING_HOUSE"
+    // 2. Save it to the payments table with house_id = 'UNKNOWN'
+    $db->execute("INSERT INTO payments (amount, method, reference, status) 
+                  VALUES (?, ?, ?, 'Unidentified')", [$amount, $paymentMethod, $rawBillRef]);
+}
