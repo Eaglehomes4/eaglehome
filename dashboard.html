@@ -772,9 +772,54 @@
             </div>
 
             <div class="p-4 md:p-8 pt-6">
+               <!-- Landlord Statement Tab - COMPLETELY EDITABLE -->
+        <div x-show="activeTab === 'statement'" x-cloak>
+            <div class="sticky-header p-6 md:p-8 pb-6 mt-12 lg:mt-0 no-print">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-800">Landlord Statement</h2>
+                        <p class="text-gray-500 font-medium">Monthly settlement report for landlords</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 md:gap-4">
+                        <button @click="printStatement()" 
+                                class="bg-slate-900 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition flex items-center gap-2">
+                            <i class="fas fa-print"></i>
+                            <span class="hidden md:inline">Print Statement</span>
+                        </button>
+                        <button @click="generateStatement()" 
+                                class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-file-alt"></i>
+                            <span class="hidden md:inline">Generate Statement</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-8 pt-6">
                 <!-- Landlord Statement Content -->
                 <div class="max-w-6xl mx-auto bg-white p-4 md:p-10 shadow-2xl rounded-sm border border-slate-200" id="printable-area">
                     
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs font-black text-slate-400 uppercase">Edit Mode:</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="editMode" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="addNewRow()" 
+                                    class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 no-print">
+                                <i class="fas fa-plus"></i>
+                                Add Row
+                            </button>
+                            <button @click="window.print()" class="bg-slate-900 text-white px-4 md:px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                                <i class="fas fa-print"></i>
+                                Export to PDF
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="text-center mb-6 md:mb-10 border-b-2 border-slate-100 pb-6 md:pb-8">
                         <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter uppercase">Eagle Homes Agencies</h1>
                         <p class="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">Landlord Remittance Statement</p>
@@ -809,6 +854,7 @@
                                     <th class="p-3 border border-slate-300 text-right">Balance</th>
                                     <th class="p-3 border border-slate-300 text-right">Other Bills</th>
                                     <th class="p-3 border border-slate-300">Remarks</th>
+                                    <th class="p-3 border border-slate-300 no-print">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -817,42 +863,42 @@
                                         <!-- Unit -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="text" x-model="tenant.unit" 
-                                                   class="w-full px-2 py-1 border rounded" 
+                                                   class="editable-input" 
                                                    placeholder="Unit No.">
                                         </td>
                                         
                                         <!-- Tenant Name -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="text" x-model="tenant.name" 
-                                                   class="w-full px-2 py-1 border rounded" 
+                                                   class="editable-input" 
                                                    placeholder="Enter tenant name">
                                         </td>
                                         
                                         <!-- Rent -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="number" x-model.number="tenant.rent" 
-                                                   class="w-full px-2 py-1 border rounded text-right" 
+                                                   class="editable-input text-right" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Amount Paid -->
                                         <td class="p-3 border border-slate-300 bg-blue-50/30">
                                             <input type="number" x-model.number="tenant.amountPaid" 
-                                                   class="w-full px-2 py-1 border rounded text-right font-bold text-blue-700" 
+                                                   class="editable-input text-right font-bold text-blue-700" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Deposit -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="number" x-model.number="tenant.deposit" 
-                                                   class="w-full px-2 py-1 border rounded text-right" 
+                                                   class="editable-input text-right" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Garbage -->
                                         <td class="p-3 border border-slate-300">
                                             <input type="number" x-model.number="tenant.garbage" 
-                                                   class="w-full px-2 py-1 border rounded text-right" 
+                                                   class="editable-input text-right" 
                                                    placeholder="200">
                                         </td>
                                         
@@ -864,16 +910,24 @@
 
                                         <!-- Other Bills -->
                                         <td class="p-3 border border-slate-300">
-                                            <input type="number" x-model.number="tenant.other_bills" 
-                                                   class="w-full px-2 py-1 border rounded text-right" 
+                                            <input type="number" x-model.number="tenant.other bills" 
+                                                   class="editable-input text-right" 
                                                    placeholder="0">
                                         </td>
                                         
                                         <!-- Remarks -->
                                         <td class="p-3 border border-slate-300">
                                             <textarea x-model="tenant.remarks" 
-                                                      class="w-full px-2 py-1 border rounded" 
-                                                      placeholder="Enter remarks..." rows="2"></textarea>
+                                                      class="editable-textarea" 
+                                                      placeholder="Enter remarks..."></textarea>
+                                        </td>
+                                        
+                                        <!-- Actions -->
+                                        <td class="p-3 border border-slate-300 text-center no-print">
+                                            <button @click="removeRow(index)" 
+                                                    class="text-red-500 hover:text-red-700 p-1">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 </template>
@@ -890,14 +944,23 @@
                                 <template x-for="(exp, index) in expenses" :key="index">
                                     <div class="flex items-center gap-3">
                                         <input type="text" x-model="exp.description" 
-                                               class="flex-1 px-2 py-1 border rounded" 
+                                               class="editable-input flex-1" 
                                                placeholder="Expense description">
                                         <input type="number" x-model.number="exp.amount" 
-                                               class="w-24 md:w-32 px-2 py-1 border rounded text-right" 
+                                               class="editable-input w-24 md:w-32 text-right" 
                                                placeholder="Amount">
+                                        <button @click="removeExpense(index)" 
+                                                class="text-red-500 hover:text-red-700 p-1 no-print">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                 </template>
                             </div>
+                            <button @click="addExpense()" 
+                                    class="no-print text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1">
+                                <i class="fas fa-plus"></i>
+                                Add Expense
+                            </button>
                         </div>
 
                         <!-- Summary Calculations -->
@@ -929,11 +992,18 @@
                                           x-text="'Ksh ' + formatNumber(netToLandlord)"></span>
                                 </div>
                             </div>
+                            <div class="mt-6 pt-4 border-t border-slate-200">
+                                <button @click="saveStatement()" 
+                                        class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700 transition no-print">
+                                    Save Statement
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <!-- Properties Management Tab -->
         <div x-show="activeTab === 'properties'" x-cloak>
