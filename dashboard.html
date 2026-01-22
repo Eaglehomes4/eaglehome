@@ -435,6 +435,22 @@
                     </div>
                 </div>
 
+                <!-- Unidentified Payments Alert -->
+                <div x-show="unidentifiedPayments.length > 0" class="mb-6">
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-exclamation-triangle text-amber-600 text-xl"></i>
+                            <div>
+                                <p class="text-amber-800 font-bold">Unidentified Payments Detected</p>
+                                <p class="text-amber-600 text-sm">There are <span x-text="unidentifiedPayments.length"></span> payments with missing or wrong house numbers.</p>
+                            </div>
+                        </div>
+                        <button @click="activeTab = 'suspense'" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-700 transition">
+                            Fix Issues Now
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Properties Overview -->
                 <div class="mb-8">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -1738,6 +1754,14 @@
                     return Math.round((this.totalCollected / totalRent) * 100);
                 },
                 
+                get unidentifiedPayments() {
+                    return this.payments.filter(p => p.status === 'Unidentified' || !p.houseId || p.houseId === '???');
+                },
+                
+                get totalUnidentified() {
+                    return this.unidentifiedPayments.reduce((sum, p) => sum + p.amount, 0);
+                },
+                
                 get recentActivity() {
                     const activities = [];
                     
@@ -2328,7 +2352,8 @@
                     const classes = {
                         paid: 'bg-green-100 text-green-800',
                         pending: 'bg-amber-100 text-amber-800',
-                        overdue: 'bg-red-100 text-red-800'
+                        overdue: 'bg-red-100 text-red-800',
+                        unidentified: 'bg-red-100 text-red-800'
                     };
                     return classes[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
                 },
