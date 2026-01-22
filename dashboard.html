@@ -810,6 +810,7 @@
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Date</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Acc / House</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Tenant Name</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Phone Number</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Bank Amount</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Auto-Deductions</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Bank Method</th>
@@ -830,6 +831,10 @@
                                         <td class="px-4 md:px-6 py-4 font-bold text-emerald-700" x-text="'Ksh ' + formatNumber(payment.amount)"></td>
                                         
                                         <td class="px-4 md:px-6 py-4">
+
+                                        <td class="px-4 md:px-6 py-4 text-sm" x-text="payment.tenantName"></td>
+                                        <td class="px-4 md:px-6 py-4 font-bold text-emerald-700" x-text="'Ksh ' + formatNumber(payment.amount)"></td>
+                                        
                                             <div class="text-xs space-y-1">
                                                 <template x-if="payment.waterDeduction > 0">
                                                     <div class="text-blue-600 font-medium">Water: -<span x-text="payment.waterDeduction"></span></div>
