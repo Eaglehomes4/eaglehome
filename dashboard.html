@@ -753,257 +753,242 @@
             </div>
         </div>
 
-        <!-- Landlord Statement Tab -->
-        <div x-show="activeTab === 'statement'" x-cloak>
-            <div class="sticky-header p-6 md:p-8 pb-6 mt-12 lg:mt-0 no-print">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-black text-slate-800">Landlord Statement</h2>
-                        <p class="text-gray-500 font-medium">Monthly settlement report for landlords</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 md:gap-4">
-                        <button @click="exportToPDF('statement')" 
-                                class="bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 transition flex items-center gap-2">
-                            <i class="fas fa-file-pdf"></i>
-                            <span class="hidden md:inline">Export PDF</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+// Add these methods to your managementSystem() object:
 
-            <div class="p-4 md:p-8 pt-6">
-               <!-- Landlord Statement Tab - COMPLETELY EDITABLE -->
-        <div x-show="activeTab === 'statement'" x-cloak>
-            <div class="sticky-header p-6 md:p-8 pb-6 mt-12 lg:mt-0 no-print">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-black text-slate-800">Landlord Statement</h2>
-                        <p class="text-gray-500 font-medium">Monthly settlement report for landlords</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 md:gap-4">
-                        <button @click="printStatement()" 
-                                class="bg-slate-900 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition flex items-center gap-2">
-                            <i class="fas fa-print"></i>
-                            <span class="hidden md:inline">Print Statement</span>
-                        </button>
-                        <button @click="generateStatement()" 
-                                class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
-                            <i class="fas fa-file-alt"></i>
-                            <span class="hidden md:inline">Generate Statement</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+// Landlord Statement Functions
+addNewRow() {
+    this.statementData.push({
+        unit: "",
+        name: "",
+        rent: 0,
+        amountPaid: 0,
+        deposit: 0,
+        garbage: 200,
+        other_bills: 0,
+        remarks: ""
+    });
+},
 
-            <div class="p-4 md:p-8 pt-6">
-                <!-- Landlord Statement Content -->
-                <div class="max-w-6xl mx-auto bg-white p-4 md:p-10 shadow-2xl rounded-sm border border-slate-200" id="printable-area">
-                    
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div class="flex items-center gap-4">
-                            <span class="text-xs font-black text-slate-400 uppercase">Edit Mode:</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" x-model="editMode" class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </label>
-                        </div>
-                        <div class="flex gap-2">
-                            <button @click="addNewRow()" 
-                                    class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 no-print">
-                                <i class="fas fa-plus"></i>
-                                Add Row
-                            </button>
-                            <button @click="window.print()" class="bg-slate-900 text-white px-4 md:px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                                <i class="fas fa-print"></i>
-                                Export to PDF
-                            </button>
-                        </div>
-                    </div>
+removeRow(index) {
+    if (confirm("Are you sure you want to remove this row?")) {
+        this.statementData.splice(index, 1);
+    }
+},
 
-                    <div class="text-center mb-6 md:mb-10 border-b-2 border-slate-100 pb-6 md:pb-8">
-                        <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter uppercase">Eagle Homes Agencies</h1>
-                        <p class="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">Landlord Remittance Statement</p>
-                        <div class="mt-4 flex flex-col md:flex-row gap-4 md:gap-8 text-sm font-bold text-slate-700">
-                            <div class="flex items-center">
-                                <span>Property: </span>
-                                <select x-model="selectedBuilding" class="border border-slate-300 rounded px-2 py-1 ml-2 w-full md:w-auto">
-                                    <option value="">Select Property</option>
-                                    <template x-for="(property, name) in properties" :key="name">
-                                        <option :value="name" x-text="name"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div class="flex items-center">
-                                <span>Month: </span>
-                                <input type="month" x-model="statementMonth" class="border border-slate-300 rounded px-2 py-1 ml-2 w-full md:w-auto">
-                            </div>
-                        </div>
-                    </div>
+addExpense() {
+    if (!this.editMode) {
+        this.showToastMessage('Please enable edit mode first', 'error');
+        return;
+    }
+    this.expenses.push({
+        description: "",
+        amount: 0
+    });
+},
 
-                    <!-- COMPLETELY EDITABLE TABLE -->
-                    <div class="table-container">
-                        <table class="w-full text-sm mb-8 border-collapse border border-slate-300 min-w-[800px]">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700 uppercase">
-                                    <th class="p-3 border border-slate-300">Unit</th>
-                                    <th class="p-3 border border-slate-300">Tenant Name</th>
-                                    <th class="p-3 border border-slate-300 text-right">Rent</th>
-                                    <th class="p-3 border border-slate-300 text-right">Amount Paid</th>
-                                    <th class="p-3 border border-slate-300 text-right">Deposit</th>
-                                    <th class="p-3 border border-slate-300 text-right">Garbage</th>
-                                    <th class="p-3 border border-slate-300 text-right">Balance</th>
-                                    <th class="p-3 border border-slate-300 text-right">Other Bills</th>
-                                    <th class="p-3 border border-slate-300">Remarks</th>
-                                    <th class="p-3 border border-slate-300 no-print">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="(tenant, index) in statementData" :key="index">
-                                    <tr class="hover:bg-slate-50">
-                                        <!-- Unit -->
-                                        <td class="p-3 border border-slate-300">
-                                            <input type="text" x-model="tenant.unit" 
-                                                   class="editable-input" 
-                                                   placeholder="Unit No.">
-                                        </td>
-                                        
-                                        <!-- Tenant Name -->
-                                        <td class="p-3 border border-slate-300">
-                                            <input type="text" x-model="tenant.name" 
-                                                   class="editable-input" 
-                                                   placeholder="Enter tenant name">
-                                        </td>
-                                        
-                                        <!-- Rent -->
-                                        <td class="p-3 border border-slate-300">
-                                            <input type="number" x-model.number="tenant.rent" 
-                                                   class="editable-input text-right" 
-                                                   placeholder="0">
-                                        </td>
-                                        
-                                        <!-- Amount Paid -->
-                                        <td class="p-3 border border-slate-300 bg-blue-50/30">
-                                            <input type="number" x-model.number="tenant.amountPaid" 
-                                                   class="editable-input text-right font-bold text-blue-700" 
-                                                   placeholder="0">
-                                        </td>
-                                        
-                                        <!-- Deposit -->
-                                        <td class="p-3 border border-slate-300">
-                                            <input type="number" x-model.number="tenant.deposit" 
-                                                   class="editable-input text-right" 
-                                                   placeholder="0">
-                                        </td>
-                                        
-                                        <!-- Garbage -->
-                                        <td class="p-3 border border-slate-300">
-                                            <input type="number" x-model.number="tenant.garbage" 
-                                                   class="editable-input text-right" 
-                                                   placeholder="200">
-                                        </td>
-                                        
-                                        <!-- Balance (Auto-calculated) -->
-                                        <td class="p-3 border border-slate-300 text-right font-mono font-bold" 
-                                            :class="(tenant.rent - tenant.amountPaid) > 0 ? 'text-red-500' : 'text-emerald-600'">
-                                            <span x-text="formatNumber((tenant.rent || 0) - (tenant.amountPaid || 0))"></span>
-                                        </td>
+removeExpense(index) {
+    this.expenses.splice(index, 1);
+},
 
-                                        <!-- Other Bills -->
-                                        <td class="p-3 border border-slate-300">
-                                            <input type="number" x-model.number="tenant.other bills" 
-                                                   class="editable-input text-right" 
-                                                   placeholder="0">
-                                        </td>
-                                        
-                                        <!-- Remarks -->
-                                        <td class="p-3 border border-slate-300">
-                                            <textarea x-model="tenant.remarks" 
-                                                      class="editable-textarea" 
-                                                      placeholder="Enter remarks..."></textarea>
-                                        </td>
-                                        
-                                        <!-- Actions -->
-                                        <td class="p-3 border border-slate-300 text-center no-print">
-                                            <button @click="removeRow(index)" 
-                                                    class="text-red-500 hover:text-red-700 p-1">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
+generateStatement() {
+    // Auto-populate statement with tenant data
+    if (this.selectedBuilding && this.properties[this.selectedBuilding]) {
+        const propertyTenants = this.properties[this.selectedBuilding];
+        
+        // Clear existing data
+        this.statementData = [];
+        
+        // Populate with tenants from selected property
+        propertyTenants.forEach(tenant => {
+            this.statementData.push({
+                unit: tenant.unit,
+                name: tenant.name,
+                rent: tenant.rent || 0,
+                amountPaid: 0, // Initialize to 0
+                deposit: tenant.deposit || 0,
+                garbage: 200, // Default garbage fee
+                other_bills: 0,
+                remarks: ""
+            });
+        });
+        
+        this.showToastMessage('Statement generated from property data', 'success');
+    } else {
+        // Add 5 empty rows if no property selected
+        this.statementData = [
+            { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+            { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+            { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+            { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
+            { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" }
+        ];
+        this.showToastMessage('Empty statement generated', 'success');
+    }
+},
 
-                    <!-- Summary Section -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mt-6 md:mt-10 border-t-2 border-slate-900 pt-6 md:pt-8">
-                        <!-- Expenses Section -->
-                        <div>
-                            <h3 class="font-black text-sm uppercase mb-4">Operational Expenses</h3>
-                            <div class="space-y-3 mb-4">
-                                <template x-for="(exp, index) in expenses" :key="index">
-                                    <div class="flex items-center gap-3">
-                                        <input type="text" x-model="exp.description" 
-                                               class="editable-input flex-1" 
-                                               placeholder="Expense description">
-                                        <input type="number" x-model.number="exp.amount" 
-                                               class="editable-input w-24 md:w-32 text-right" 
-                                               placeholder="Amount">
-                                        <button @click="removeExpense(index)" 
-                                                class="text-red-500 hover:text-red-700 p-1 no-print">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-                            <button @click="addExpense()" 
-                                    class="no-print text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1">
-                                <i class="fas fa-plus"></i>
-                                Add Expense
-                            </button>
-                        </div>
+saveStatement() {
+    // Save statement data
+    localStorage.setItem('eagle_statement_data', JSON.stringify(this.statementData));
+    localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
+    
+    // Create statement summary
+    const statementSummary = {
+        month: this.statementMonth,
+        property: this.selectedBuilding,
+        totalRentCollected: this.totalRentCollected,
+        commissionRate: this.commissionRate,
+        commissionAmount: this.commissionAmount,
+        totalExpenses: this.totalExpenses,
+        netToLandlord: this.netToLandlord,
+        timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem('eagle_statement_summary', JSON.stringify(statementSummary));
+    
+    this.showToastMessage('Landlord statement saved successfully', 'success');
+},
 
-                        <!-- Summary Calculations -->
-                        <div class="bg-slate-50 p-4 md:p-6 rounded-sm border border-slate-200">
-                            <h3 class="font-black text-sm uppercase mb-4">Statement Summary</h3>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-slate-600 font-medium">Total Rent Collected</span>
-                                    <span class="font-bold" x-text="'Ksh ' + formatNumber(totalRentCollected)"></span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-slate-600 font-medium">Management Commission</span>
-                                    <div class="flex items-center gap-2">
-                                        <input type="number" x-model.number="commissionRate" 
-                                               class="w-16 border border-slate-300 rounded px-2 py-1 text-right" 
-                                               step="0.01" min="0" max="100">
-                                        <span class="font-medium">%</span>
-                                        <span class="font-bold text-red-500" 
-                                              x-text="'- Ksh ' + formatNumber(commissionAmount)"></span>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center border-b border-slate-300 pb-2">
-                                    <span class="text-slate-600 font-medium">Total Expenses</span>
-                                    <span class="font-bold text-red-500" x-text="'- Ksh ' + formatNumber(totalExpenses)"></span>
-                                </div>
-                                <div class="flex justify-between items-center pt-2">
-                                    <span class="font-black text-slate-900 text-lg">Net Pay to Landlord</span>
-                                    <span class="font-black text-xl md:text-2xl text-emerald-700" 
-                                          x-text="'Ksh ' + formatNumber(netToLandlord)"></span>
-                                </div>
-                            </div>
-                            <div class="mt-6 pt-4 border-t border-slate-200">
-                                <button @click="saveStatement()" 
-                                        class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700 transition no-print">
-                                    Save Statement
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+// PDF Export for Statement
+exportStatementPDF() {
+    try {
+        this.showToastMessage('Generating PDF...', 'success');
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        
+        // Add header
+        doc.setFontSize(20);
+        doc.setTextColor(30, 64, 175);
+        doc.text('EAGLE HOMES AGENCIES', 105, 20, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.setTextColor(107, 114, 128);
+        doc.text('Landlord Remittance Statement', 105, 28, { align: 'center' });
+        
+        // Property and month info
+        doc.setFontSize(10);
+        doc.setTextColor(75, 85, 99);
+        doc.text(`Property: ${this.selectedBuilding || 'All Properties'}`, 20, 40);
+        doc.text(`Month: ${this.statementMonth || 'Not specified'}`, 20, 46);
+        
+        const dateStr = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        doc.text(`Generated on: ${dateStr}`, 105, 46, { align: 'center' });
+        
+        let yPos = 55;
+        
+        // Statement Table
+        const statementData = this.statementData.map(tenant => {
+            const balance = (tenant.rent || 0) - (tenant.amountPaid || 0);
+            return [
+                tenant.unit || '-',
+                tenant.name || '-',
+                `Ksh ${this.formatNumber(tenant.rent || 0)}`,
+                `Ksh ${this.formatNumber(tenant.amountPaid || 0)}`,
+                `Ksh ${this.formatNumber(tenant.deposit || 0)}`,
+                `Ksh ${this.formatNumber(tenant.garbage || 0)}`,
+                `Ksh ${this.formatNumber(balance)}`,
+                `Ksh ${this.formatNumber(tenant.other_bills || 0)}`,
+                tenant.remarks || '-'
+            ];
+        });
+        
+        doc.autoTable({
+            head: [['Unit', 'Tenant', 'Rent', 'Paid', 'Deposit', 'Garbage', 'Balance', 'Other', 'Remarks']],
+            body: statementData,
+            startY: yPos,
+            theme: 'grid',
+            headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+            margin: { left: 10, right: 10 },
+            styles: { fontSize: 8 },
+            columnStyles: {
+                2: { cellWidth: 20 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 20 }
+            }
+        });
+        
+        // Expenses Table
+        const finalY = doc.lastAutoTable.finalY || yPos + 100;
+        yPos = finalY + 10;
+        
+        if (this.expenses.length > 0) {
+            doc.setFontSize(12);
+            doc.text('Operational Expenses', 20, yPos);
+            yPos += 8;
+            
+            const expensesData = this.expenses.map(exp => [
+                exp.description || '-',
+                `Ksh ${this.formatNumber(exp.amount || 0)}`
+            ]);
+            
+            doc.autoTable({
+                head: [['Description', 'Amount']],
+                body: expensesData,
+                startY: yPos,
+                theme: 'grid',
+                headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                margin: { left: 20, right: 20 }
+            });
+            
+            yPos = doc.lastAutoTable.finalY + 10;
+        }
+        
+        // Summary Section
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Statement Summary', 20, yPos);
+        yPos += 8;
+        
+        doc.setFontSize(10);
+        doc.text(`Total Rent Collected: Ksh ${this.formatNumber(this.totalRentCollected)}`, 20, yPos);
+        yPos += 6;
+        doc.text(`Management Commission (${this.commissionRate}%): Ksh ${this.formatNumber(this.commissionAmount)}`, 20, yPos);
+        yPos += 6;
+        doc.text(`Total Expenses: Ksh ${this.formatNumber(this.totalExpenses)}`, 20, yPos);
+        yPos += 6;
+        doc.setFont(undefined, 'bold');
+        doc.text(`Net Pay to Landlord: Ksh ${this.formatNumber(this.netToLandlord)}`, 20, yPos);
+        
+        // Add footer
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text('Confidential - Eagle Homes Agencies', 105, 285, { align: 'center' });
+        doc.text(`Page 1 of 1`, 105, 290, { align: 'center' });
+        
+        // Save PDF
+        const fileName = `Eagle_Homes_Statement_${this.selectedBuilding || 'All'}_${this.statementMonth || 'Nodate'}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+        
+        this.showToastMessage('Statement PDF exported successfully!', 'success');
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        this.showToastMessage('Failed to generate PDF', 'error');
+    }
+},
 
+// Make sure these computed properties are defined in your managementSystem() object:
+get totalRentCollected() {
+    return this.statementData.reduce((sum, tenant) => sum + (Number(tenant.amountPaid) || 0), 0);
+},
+
+get commissionAmount() {
+    return this.totalRentCollected * (this.commissionRate / 100);
+},
+
+get totalExpenses() {
+    return this.expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+},
+
+get netToLandlord() {
+    return this.totalRentCollected - this.commissionAmount - this.totalExpenses;
+},
 
         <!-- Properties Management Tab -->
         <div x-show="activeTab === 'properties'" x-cloak>
