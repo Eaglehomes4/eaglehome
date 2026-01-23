@@ -253,7 +253,7 @@
                     
                     <p class="text-slate-500 text-sm mb-6">
                         Enter your registered email. A reset authorization code will be sent to the administrator at 
-                        <span class="font-bold text-slate-800">eaglehomesagencies4@gmail.com</span>.
+                        <span class="font-bold text-slate-800">jeremiahmburu76@gmail.com</span>.
                     </p>
                     
                     <div class="space-y-4">
@@ -466,15 +466,15 @@
             <ol class="text-xs text-slate-500 mt-1 space-y-1">
                 <li class="flex items-start gap-2">
                     <span class="font-bold">•</span>
-                    <span>Sign up at <a href="https://www.emailjs.com/" target="_blank" class="text-blue-600 hover:underline">EmailJS</a></span>
+                    <span>Ensure your EmailJS template has variables: <code>{{reset_code}}</code>, <code>{{user_email}}</code>, <code>{{user_role}}</code></span>
                 </li>
                 <li class="flex items-start gap-2">
                     <span class="font-bold">•</span>
-                    <span>Create Email Template with variables: {{reset_code}}, {{user_email}}, {{user_role}}</span>
+                    <span>Set <code>isDemoMode: false</code> in JavaScript below</span>
                 </li>
                 <li class="flex items-start gap-2">
                     <span class="font-bold">•</span>
-                    <span>Uncomment EmailJS code in script below and add your keys</span>
+                    <span>Test with your actual EmailJS credentials</span>
                 </li>
             </ol>
         </div>
@@ -507,23 +507,24 @@
                 errorTitle: '',
                 errorMessage: '',
                 
-                // EmailJS Configuration
+                // EmailJS Configuration - UPDATED WITH YOUR CREDENTIALS
                 emailjsConfig: {
-                    serviceId: 'service_8f45ji2',
-                    templateId: 'template_d00ps52', 
-                    publicKey: 'qoKpksa3NAbcJeLkk', 
-                    adminEmail: 'eaglehomesagencies4@gmail.com'
+                    serviceId: 'service_l8mddbx', // Your service ID
+                    templateId: 'template_va2rli4', // Your template ID
+                    publicKey: 'mxImeKQYfA_aBo1hp', // Your public key
+                    adminEmail: 'jeremiahmburu76@gmail.com' // Your email
                 },
                 
                 // Initialize
                 init() {
                     console.log('Eagle Homes Login System Initialized');
+                    console.log('EmailJS Configuration:', this.emailjsConfig);
                     console.log('Default credentials:');
                     console.log('Owner: username="owner_admin", password="Eagles2026!"');
                     console.log('Secretary: username="secretary_entry", password="Secret2026!"');
                     
-                    // Initialize EmailJS (uncomment for production)
-                    if (this.emailjsConfig.publicKey && this.emailjsConfig.publicKey !== 'qoKpksa3NAbcJeLkk') {
+                    // Initialize EmailJS with your public key
+                    if (this.emailjsConfig.publicKey && this.emailjsConfig.publicKey !== 'mxImeKQYfA_aBo1hp') {
                         emailjs.init(this.emailjsConfig.publicKey);
                         this.isDemoMode = false;
                         console.log('EmailJS initialized successfully');
@@ -584,14 +585,13 @@
                     // Prepare email data
                     const emailData = {
                         to_email: this.emailjsConfig.adminEmail,
-                        from_email: this.resetEmail,
+                        from_name: 'Eagle Homes Password Reset',
                         reset_code: resetCode,
                         user_email: this.resetEmail,
                         user_role: this.role,
                         timestamp: new Date().toLocaleString(),
                         subject: `Password Reset Request - Eagle Homes`,
-                        message: `
-Password Reset Request Received
+                        message: `Password Reset Request Received
 
 User Details:
 - Email: ${this.resetEmail}
@@ -602,8 +602,7 @@ Authorization Code: ${resetCode}
 
 This code is valid for 15 minutes. Please provide this code to the user so they can reset their password.
 
-System: Eagle Homes Digital Property Management
-                        `
+System: Eagle Homes Digital Property Management`
                     };
                     
                     try {
@@ -616,20 +615,26 @@ System: Eagle Homes Digital Property Management
                             console.log(`Role: ${this.role}`);
                             console.log(`Generated Code: ${resetCode}`);
                             console.log(`Email would be sent to: ${this.emailjsConfig.adminEmail}`);
+                            console.log(`Template ID: ${this.emailjsConfig.templateId}`);
                             
                             this.isSending = false;
                             this.authCodeSent = true;
                         } else {
                             // Production mode with EmailJS
-                            /*
                             const response = await emailjs.send(
                                 this.emailjsConfig.serviceId,
                                 this.emailjsConfig.templateId,
-                                emailData
+                                {
+                                    to_email: this.emailjsConfig.adminEmail,
+                                    reset_code: resetCode,
+                                    user_email: this.resetEmail,
+                                    user_role: this.role,
+                                    timestamp: new Date().toLocaleString()
+                                }
                             );
                             
                             console.log('EmailJS Response:', response);
-                            */
+                            console.log(`✅ Password reset email sent to ${this.emailjsConfig.adminEmail}`);
                             
                             this.isSending = false;
                             this.authCodeSent = true;
@@ -714,7 +719,11 @@ System: Eagle Homes Digital Property Management
                         
                         // Store the new password in localStorage for demo purposes
                         // In production, this would be handled by your backend
-                        localStorage.setItem(`user_${userRole}_password`, this.newPassword);
+                        if (userRole === 'owner') {
+                            localStorage.setItem('owner_password', this.newPassword);
+                        } else if (userRole === 'secretary') {
+                            localStorage.setItem('secretary_password', this.newPassword);
+                        }
                         
                         // Clear reset data
                         localStorage.removeItem('resetCode');
@@ -724,17 +733,21 @@ System: Eagle Homes Digital Property Management
                         
                         // Send confirmation email (in production)
                         if (!this.isDemoMode) {
-                            /*
-                            await emailjs.send(
-                                this.emailjsConfig.serviceId,
-                                'template_confirmation_id', // Your confirmation template
-                                {
-                                    to_email: storedEmail,
-                                    user_email: storedEmail,
-                                    timestamp: new Date().toLocaleString()
-                                }
-                            );
-                            */
+                            try {
+                                await emailjs.send(
+                                    this.emailjsConfig.serviceId,
+                                    'template_confirmation', // You need to create a confirmation template
+                                    {
+                                        to_email: storedEmail,
+                                        user_email: storedEmail,
+                                        timestamp: new Date().toLocaleString(),
+                                        message: 'Your password has been successfully reset.'
+                                    }
+                                );
+                                console.log(`✅ Confirmation email sent to ${storedEmail}`);
+                            } catch (emailError) {
+                                console.warn('Could not send confirmation email:', emailError);
+                            }
                         }
                         
                         // Show success
