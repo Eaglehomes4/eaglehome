@@ -1258,8 +1258,8 @@
                             <option value="occupied">Occupied</option>
                             <option value="vacant">Vacant</option>
                             <option value="landlord">Landlord Unit</option>
-                            <option value="staff">Care taker</option>
-                            <option value="staff">Store</option>
+                            <option value="caretaker">Caretaker</option>
+                            <option value="store">Store</option>
                         </select>
                     </div>
                 </div>
@@ -2287,8 +2287,8 @@
                         occupied: 'bg-green-100 text-green-800',
                         vacant: 'bg-red-100 text-red-800',
                         landlord: 'bg-purple-100 text-purple-800',
-                        caretaker: 'bg-amber-100 text-amber-800'
-                        store: 'bg-amber-100 text-amber-800'
+                        caretaker: 'bg-amber-100 text-amber-800',
+                        store: 'bg-blue-100 text-blue-800'
                     };
                     return classes[status] || 'bg-gray-100 text-gray-800';
                 },
@@ -2298,8 +2298,8 @@
                         occupied: 'Occupied',
                         vacant: 'Vacant',
                         landlord: 'Landlord',
-                        caretaker: 'caretaker',
-                        store: 'store'
+                        caretaker: 'Caretaker',
+                        store: 'Store'
                     };
                     return texts[status] || status;
                 },
