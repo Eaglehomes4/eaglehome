@@ -85,6 +85,12 @@
                 <i class="fas fa-university w-5 h-5"></i>
                 Payments
             </a>
+            <a href="#" @click.prevent="activeTab = 'notifications'" 
+               :class="activeTab === 'notifications' ? 'sidebar-link active' : ''"
+               class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-bell w-5 h-5"></i>
+                Notifications
+            </a>
             <a href="#" @click.prevent="activeTab = 'reports'" 
                :class="activeTab === 'reports' ? 'sidebar-link active' : ''"
                class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
@@ -198,6 +204,13 @@
                         class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
                     <i class="fas fa-university"></i>
                     Payments
+                </button>
+
+                <button @click="activeTab = 'notifications'; isMobileMenuOpen = false" 
+                        :class="activeTab === 'notifications' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'"
+                        class="w-full text-left p-4 font-bold rounded-2xl flex items-center gap-3 transition">
+                    <i class="fas fa-bell"></i>
+                    Notifications
                 </button>
 
                 <button @click="activeTab = 'reports'; isMobileMenuOpen = false" 
@@ -466,6 +479,7 @@
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Phone</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Rent (Ksh)</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Deposit</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Arrears</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Status</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Actions</th>
                                 </tr>
@@ -486,6 +500,9 @@
                                         <td class="px-4 md:px-6 py-4" x-text="tenant.phone || '-'"></td>
                                         <td class="px-4 md:px-6 py-4 font-bold" x-text="formatNumber(tenant.rent)"></td>
                                         <td class="px-4 md:px-6 py-4 font-medium text-emerald-600" x-text="formatNumber(tenant.deposit)"></td>
+                                        <td class="px-4 md:px-6 py-4">
+                                            <span x-text="formatNumber(tenant.arrears || 0)" :class="(tenant.arrears || 0) > 0 ? 'text-red-600 font-bold' : 'text-green-600'"></span>
+                                        </td>
                                         <td class="px-4 md:px-6 py-4">
                                             <span :class="getStatusClass(tenant.status)" 
                                                   class="px-2 py-1 rounded text-xs font-medium">
@@ -536,7 +553,7 @@
                 <div class="bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-6 md:p-8 bg-blue-600 text-white">
                         <h3 class="text-lg md:text-xl font-bold">Input Charges</h3>
-                        <p class="text-blue-100 text-xs md:text-sm">Enter water, electricity, and garbage.</p>
+                        <p class="text-blue-100 text-xs md:text-sm">Enter water, garbage, and penalties (manual entry only).</p>
                     </div>
 
                     <div class="table-container">
@@ -546,8 +563,8 @@
                                     <th class="p-4 text-left whitespace-nowrap">House</th>
                                     <th class="p-4 text-left whitespace-nowrap">Tenant</th>
                                     <th class="p-4 text-left whitespace-nowrap">Water</th>
-                                    <th class="p-4 text-left whitespace-nowrap">Electricity</th>
                                     <th class="p-4 text-left whitespace-nowrap">Garbage</th>
+                                    <th class="p-4 text-left whitespace-nowrap">Penalty</th>
                                     <th class="p-4 text-center">Action</th>
                                 </tr>
                             </thead>
@@ -557,8 +574,11 @@
                                         <td class="p-4 font-mono text-blue-600 font-bold" x-text="tenant.property + '-' + tenant.unit"></td>
                                         <td class="p-4 font-medium truncate max-w-[100px] md:max-w-none" x-text="tenant.name"></td>
                                         <td class="p-4"><input type="number" :id="'water-' + tenant.id" class="w-20 md:w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" placeholder="0.00"></td>
-                                        <td class="p-4"><input type="number" :id="'elec-' + tenant.id" class="w-20 md:w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" placeholder="0.00"></td>
                                         <td class="p-4 text-slate-400">200</td>
+                                        <td class="p-4">
+                                            <input type="number" :id="'penalty-' + tenant.id" class="w-20 md:w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" placeholder="0.00">
+                                            <div class="text-xs text-gray-500 mt-1">Manual entry only</div>
+                                        </td>
                                         <td class="p-4 text-center">
                                             <button @click="saveHouseUtilities(tenant.id)" class="bg-blue-50 text-blue-600 px-3 py-2 rounded-xl font-bold text-xs md:text-sm hover:bg-blue-600 hover:text-white transition">Update</button>
                                         </td>
@@ -669,18 +689,126 @@
                                                             <span class="font-bold text-slate-700" x-text="'-' + formatNumber(amt)"></span>
                                                         </div>
                                                     </template>
+                                                    <div x-show="p.overpayment_balance > 0" class="flex justify-between text-[10px]">
+                                                        <span class="text-emerald-600">Overpayment</span>
+                                                        <span class="font-bold text-emerald-700" x-text="'+' + formatNumber(p.overpayment_balance)"></span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <span :class="p.status === 'Processed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700 animate-pulse'" 
                                                   class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest block text-center" x-text="p.status"></span>
+                                            <div x-show="p.refund_id" class="text-[8px] text-purple-600 mt-1">
+                                                Refund: <span x-text="p.refund_id"></span>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <button x-show="p.status === 'Unidentified'" @click="openResolveModal(p)" 
                                                     class="text-red-500 hover:text-red-700 p-2 transition" title="Resolve Payment">
                                                 <i class="fas fa-fingerprint text-lg"></i>
                                             </button>
+                                            <button x-show="p.overpayment_balance > 0" @click="processRefund(p)" 
+                                                    class="text-purple-500 hover:text-purple-700 p-2 transition" title="Process Refund">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div x-show="activeTab === 'notifications'" x-cloak>
+            <div class="sticky-header p-6 md:p-8 pb-6 mt-12 lg:mt-0">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-800">Notifications & Messages</h2>
+                        <p class="text-gray-500 font-medium">Send automated and manual notifications to tenants</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 md:gap-4">
+                        <button @click="sendBroadcastMessage()" class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-bullhorn"></i>
+                            <span class="hidden md:inline">Send Broadcast</span>
+                        </button>
+                        <button @click="sendArrearsReminders()" class="bg-amber-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-amber-700 transition flex items-center gap-2">
+                            <i class="fas fa-bell"></i>
+                            <span class="hidden md:inline">Send Arrears Reminders</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-8 pt-6">
+                <!-- Message Templates -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Broadcast Message</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Message</label>
+                                <textarea x-model="broadcastMessage" rows="4" 
+                                          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" 
+                                          placeholder="Enter your message to all tenants..."></textarea>
+                            </div>
+                            <button @click="sendBroadcastMessage()" 
+                                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                                Send to All Tenants
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Automated Messages</h3>
+                        <div class="space-y-4">
+                            <div class="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                <p class="text-sm font-medium text-amber-800">Arrears Reminder</p>
+                                <p class="text-xs text-amber-600">Automatically sent on the 5th of every month to tenants with arrears</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded-lg border border-green-100">
+                                <p class="text-sm font-medium text-green-800">Holiday Messages</p>
+                                <p class="text-xs text-green-600">Automatic holiday greetings for Mashujaa Day, Madaraka Day, and Christmas</p>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                <p><i class="fas fa-info-circle mr-1"></i> Messages are sent only to tenants with phone numbers saved</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Log -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-bold text-slate-800">Message History</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="w-full min-w-[800px]">
+                            <thead class="bg-gray-50">
+                                <tr class="text-xs text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Date</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Type</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Recipient</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Message</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="notification in notifications" :key="notification.id">
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+                                        <td class="px-4 md:px-6 py-4" x-text="notification.date"></td>
+                                        <td class="px-4 md:px-6 py-4">
+                                            <span :class="notification.type === 'broadcast' ? 'bg-blue-100 text-blue-800' : notification.type === 'arrears' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'" 
+                                                  class="px-2 py-1 rounded text-xs font-medium" x-text="notification.type"></span>
+                                        </td>
+                                        <td class="px-4 md:px-6 py-4" x-text="notification.recipient || 'All Tenants'"></td>
+                                        <td class="px-4 md:px-6 py-4 text-sm" x-text="notification.message"></td>
+                                        <td class="px-4 md:px-6 py-4">
+                                            <span :class="notification.status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
+                                                  class="px-2 py-1 rounded text-xs font-medium" x-text="notification.status"></span>
                                         </td>
                                     </tr>
                                 </template>
@@ -728,7 +856,15 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-500 mb-2">Outstanding Arrears</p>
-                                    <h4 class="text-xl font-bold text-red-600">Ksh <span x-text="formatNumber(totalPending)"></span></h4>
+                                    <h4 class="text-xl font-bold text-red-600">Ksh <span x-text="formatNumber(totalArrears)"></span></h4>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-2">Overpayment Balance</p>
+                                    <h4 class="text-xl font-bold text-purple-600">Ksh <span x-text="formatNumber(totalOverpayment)"></span></h4>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-2">Refunds Processed</p>
+                                    <h4 class="text-xl font-bold text-amber-600">Ksh <span x-text="formatNumber(totalRefunds)"></span></h4>
                                 </div>
                             </div>
                         </div>
@@ -1041,9 +1177,12 @@
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Default Electricity Rate (per kWh)</label>
-                                <input type="number" x-model="settings.electricityRate" 
-                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Default Penalty (%)</label>
+                                <input type="number" x-model="settings.penaltyPercentage" min="0" max="100" step="0.1"
+                                       :disabled="userRole !== 'owner'"
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                                       placeholder="0-100%">
+                                <p class="text-xs text-gray-500 mt-1" x-show="userRole !== 'owner'">Only Owner can edit penalty percentage</p>
                             </div>
                             
                             <div>
@@ -1082,9 +1221,12 @@
                             </button>
                             
                             <button @click="clearAllData()" 
-                                    class="w-full bg-red-50 text-red-700 hover:bg-red-100 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                                    :class="userRole === 'owner' ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+                                    :disabled="userRole !== 'owner'"
+                                    class="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2">
                                 <i class="fas fa-trash"></i>
                                 Clear All Data
+                                <span x-show="userRole !== 'owner'" class="text-xs ml-2">(Owner only)</span>
                             </button>
                             
                             <button @click="rolloverMonth()" 
@@ -1128,6 +1270,49 @@
                     <button @click="submitResolution()" 
                             class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition shadow-xl active:scale-95">
                         Confirm & Apply Waterfall
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Modal -->
+    <div x-data="{ showRefundModal: false, selectedPayment: {}, refundAmount: 0, refundReason: '' }" x-cloak>
+        <div x-show="showRefundModal" 
+             class="fixed inset-0 z-[60] overflow-y-auto flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+            
+            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl border border-slate-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-black text-slate-800 uppercase italic">Process Refund</h3>
+                    <button @click="showRefundModal = false" class="text-slate-400 hover:text-red-500 transition">
+                        <i class="fas fa-times-circle text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="mb-6 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                    <p class="text-[10px] font-black text-purple-400 uppercase">Overpayment Details</p>
+                    <p class="font-mono font-bold text-purple-700" x-text="selectedPayment.reference"></p>
+                    <p class="text-lg font-black text-purple-800 mt-1" x-text="'Max: Ksh ' + formatNumber(selectedPayment.overpayment_balance)"></p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Refund Amount (Ksh)</label>
+                        <input type="number" x-model="refundAmount" :max="selectedPayment.overpayment_balance"
+                               class="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold text-lg">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Refund Reason (Required)</label>
+                        <input type="text" x-model="refundReason" placeholder="e.g. Duplicate payment, Overpayment refund" 
+                               class="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold text-lg">
+                    </div>
+
+                    <button @click="processRefundSubmission()" 
+                            :disabled="!refundReason || refundAmount <= 0 || refundAmount > selectedPayment.overpayment_balance"
+                            :class="!refundReason || refundAmount <= 0 || refundAmount > selectedPayment.overpayment_balance ? 'bg-gray-300 cursor-not-allowed' : 'bg-purple-900 hover:bg-black'"
+                            class="w-full text-white py-5 rounded-2xl font-black uppercase tracking-widest transition shadow-xl active:scale-95">
+                        Process Refund & Record
                     </button>
                 </div>
             </div>
@@ -1334,6 +1519,9 @@
                 toastMessage: '',
                 toastType: 'success',
                 
+                broadcastMessage: '',
+                notifications: [],
+                
                 properties: {},
                 payments: [],
                 statementData: [],
@@ -1341,7 +1529,7 @@
                 settings: {
                     companyName: 'Eagle Homes',
                     waterRate: 100,
-                    electricityRate: 20,
+                    penaltyPercentage: 5,
                     garbageFee: 200,
                     commissionRate: 10
                 },
@@ -1366,11 +1554,16 @@
                                 unit: unit.unit,
                                 name: unit.name,
                                 phone: unit.phone,
+                                phone2: unit.phone2,
                                 rent: unit.rent,
                                 deposit: unit.deposit,
+                                arrears: unit.arrears || 0,
+                                overpayment_balance: unit.overpayment_balance || 0,
                                 status: unit.status,
                                 entryDate: unit.entryDate,
-                                notes: unit.notes
+                                notes: unit.notes,
+                                utilities: unit.utilities || { water: 0, garbage: 200, penalty: 0 },
+                                paymentHistory: unit.paymentHistory || []
                             });
                         });
                     });
@@ -1392,7 +1585,19 @@
                 },
                 
                 get totalCollected() {
-                    return this.payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+                    return this.payments.filter(p => p.status === 'Processed').reduce((sum, p) => sum + p.amount, 0);
+                },
+                
+                get totalArrears() {
+                    return this.allTenants.reduce((sum, tenant) => sum + (tenant.arrears || 0), 0);
+                },
+                
+                get totalOverpayment() {
+                    return this.allTenants.reduce((sum, tenant) => sum + (tenant.overpayment_balance || 0), 0);
+                },
+                
+                get totalRefunds() {
+                    return this.payments.filter(p => p.refund_id).reduce((sum, p) => sum + (p.refund_amount || 0), 0);
                 },
                 
                 get totalPending() {
@@ -1400,7 +1605,7 @@
                 },
                 
                 get unidentifiedPayments() {
-                    return this.payments.filter(p => p.status === 'Unidentified' || !p.houseId || p.houseId === '???');
+                    return this.payments.filter(p => p.status === 'Unidentified' || !p.house_id || p.house_id === '???');
                 },
                 
                 get topProperties() {
@@ -1410,12 +1615,16 @@
                         const occupied = units.filter(u => u.status === 'occupied').length;
                         const total = units.length;
                         const revenue = units.reduce((sum, u) => sum + (u.rent || 0), 0);
+                        const collected = units.reduce((sum, u) => {
+                            const tenant = this.allTenants.find(t => t.property === name && t.unit === u.unit);
+                            return sum + (tenant ? (tenant.rent - (tenant.arrears || 0)) : 0);
+                        }, 0);
                         
                         propertyStats[name] = {
                             name: name,
                             occupancy: total > 0 ? Math.round((occupied / total) * 100) : 0,
                             revenue: revenue,
-                            collectionRate: 85
+                            collectionRate: revenue > 0 ? Math.round((collected / revenue) * 100) : 0
                         };
                     });
                     
@@ -1449,6 +1658,7 @@
                     const savedRole = localStorage.getItem('userRole');
                     const savedStatementData = localStorage.getItem('eagle_statement_data');
                     const savedExpenses = localStorage.getItem('eagle_expenses');
+                    const savedNotifications = localStorage.getItem('eagle_notifications');
                     
                     if (savedRole) this.userRole = savedRole;
                     if (savedSettings) this.settings = JSON.parse(savedSettings);
@@ -1473,25 +1683,78 @@
                     if (savedExpenses) {
                         this.expenses = JSON.parse(savedExpenses);
                     }
+                    
+                    if (savedNotifications) {
+                        this.notifications = JSON.parse(savedNotifications);
+                    }
+                    
+                    // Check for automated notifications
+                    this.checkAutomatedNotifications();
                 },
                 
                 initializeSampleData() {
                     this.properties = {
                         "ROSALIA HOUSE": [
-                            { unit: "1", name: "Paul Murimi", rent: 3000, deposit: 3000, phone: "0712345678", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                            { unit: "2", name: "Jane Mwangi", rent: 1500, deposit: 1500, phone: "0723456789", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                            { unit: "3", name: "John Kamau", rent: 3000, deposit: 3000, phone: "0734567890", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                        ],
-                        "JOSPHINE NJAMBI": [
-                            { unit: "1", name: "Simon Ndungu", rent: 4150, deposit: 4150, phone: "0745678901", status: "occupied", entryDate: "2025-01-01", notes: "" },
-                            { unit: "2", name: "Irene Gichuki", rent: 3650, deposit: 3650, phone: "0756789012", status: "occupied", entryDate: "2025-01-01", notes: "" },
+                            { 
+                                unit: "1", 
+                                name: "Paul Murimi", 
+                                rent: 3000, 
+                                deposit: 3000, 
+                                phone: "0712345678", 
+                                phone2: "",
+                                status: "occupied", 
+                                entryDate: "2025-01-01", 
+                                notes: "",
+                                arrears: 0,
+                                overpayment_balance: 0,
+                                utilities: { water: 0, garbage: 200, penalty: 0 },
+                                paymentHistory: []
+                            },
+                            { 
+                                unit: "2", 
+                                name: "Jane Mwangi", 
+                                rent: 1500, 
+                                deposit: 1500, 
+                                phone: "0723456789", 
+                                phone2: "",
+                                status: "occupied", 
+                                entryDate: "2025-01-01", 
+                                notes: "",
+                                arrears: 500,
+                                overpayment_balance: 0,
+                                utilities: { water: 100, garbage: 200, penalty: 0 },
+                                paymentHistory: []
+                            },
                         ]
                     };
                     
                     this.payments = [
-                        { id: 1, property: "ROSALIA HOUSE", unit: "1", tenant: "Paul Murimi", amount: 3000, method: "mpesa", status: "paid", date: "2025-01-05" },
-                        { id: 2, property: "ROSALIA HOUSE", unit: "2", tenant: "Jane Mwangi", amount: 1500, method: "cash", status: "paid", date: "2025-01-06" },
-                        { id: 3, property: "JOSPHINE NJAMBI", unit: "1", tenant: "Simon Ndungu", amount: 4150, method: "bank", status: "paid", date: "2025-01-07" },
+                        { 
+                            id: 1, 
+                            reference: 'UAMKG4',
+                            house_id: 'ROSALIA HOUSE-1', 
+                            tenant: 'Paul Murimi', 
+                            amount: 3000, 
+                            method: 'M-Pesa', 
+                            status: 'Processed', 
+                            date: '2025-01-05',
+                            time: '14:30',
+                            deductions_json: JSON.stringify({ water: 0, garbage: 200, rent: 2800 }),
+                            overpayment_balance: 0
+                        },
+                        { 
+                            id: 2, 
+                            reference: 'RXB5T9',
+                            house_id: null, 
+                            tenant: null, 
+                            amount: 2000, 
+                            method: 'Co-op Bank', 
+                            status: 'Unidentified', 
+                            date: '2025-01-06',
+                            time: '15:45',
+                            deductions_json: '{}',
+                            overpayment_balance: 0
+                        }
                     ];
                     
                     this.saveData();
@@ -1501,10 +1764,224 @@
                     this.statementData = [
                         { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
                         { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
-                        { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" },
                         { unit: "", name: "", rent: 0, amountPaid: 0, deposit: 0, garbage: 200, other_bills: 0, remarks: "" }
                     ];
+                },
+                
+                // Notification Functions
+                checkAutomatedNotifications() {
+                    const today = new Date();
+                    const day = today.getDate();
+                    const month = today.getMonth() + 1;
+                    
+                    // Check for arrears reminders on the 5th
+                    if (day === 5) {
+                        this.sendArrearsReminders();
+                    }
+                    
+                    // Check for holiday messages
+                    this.checkHolidayMessages(today);
+                },
+                
+                sendArrearsReminders() {
+                    const tenantsWithArrears = this.allTenants.filter(tenant => 
+                        (tenant.arrears || 0) > 0 && tenant.phone && tenant.status === 'occupied'
+                    );
+                    
+                    if (tenantsWithArrears.length === 0) {
+                        this.showToastMessage('No tenants with arrears to notify', 'success');
+                        return;
+                    }
+                    
+                    tenantsWithArrears.forEach(tenant => {
+                        const message = `Dear ${tenant.name}, this is a friendly reminder from Eagle Homes – Property Management. Your outstanding balance for ${tenant.property}-${tenant.unit} is Ksh ${this.formatNumber(tenant.arrears)}. Please clear to avoid penalties.`;
+                        
+                        this.notifications.unshift({
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString(),
+                            type: 'arrears',
+                            recipient: `${tenant.name} (${tenant.phone})`,
+                            message: message,
+                            status: 'sent'
+                        });
+                    });
+                    
+                    this.saveNotifications();
+                    this.showToastMessage(`Arrears reminders sent to ${tenantsWithArrears.length} tenants`, 'success');
+                },
+                
+                checkHolidayMessages(today) {
+                    const holidays = [
+                        { month: 10, day: 20, name: 'Mashujaa Day' },
+                        { month: 6, day: 1, name: 'Madaraka Day' },
+                        { month: 12, day: 25, name: 'Merry Christmas' }
+                    ];
+                    
+                    const holiday = holidays.find(h => h.month === today.getMonth() + 1 && h.day === today.getDate());
+                    
+                    if (holiday) {
+                        this.sendHolidayMessage(holiday.name);
+                    }
+                },
+                
+                sendHolidayMessage(holidayName) {
+                    const tenantsWithPhone = this.allTenants.filter(tenant => 
+                        (tenant.phone || tenant.phone2) && tenant.status === 'occupied'
+                    );
+                    
+                    tenantsWithPhone.forEach(tenant => {
+                        const message = `Dear ${tenant.name}, Eagle Homes wishes you a happy ${holidayName}! Thank you for being part of our community.`;
+                        
+                        this.notifications.unshift({
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString(),
+                            type: 'holiday',
+                            recipient: `${tenant.name} (${tenant.phone || tenant.phone2})`,
+                            message: message,
+                            status: 'sent'
+                        });
+                    });
+                    
+                    this.saveNotifications();
+                },
+                
+                sendBroadcastMessage() {
+                    if (!this.broadcastMessage.trim()) {
+                        this.showToastMessage('Please enter a message', 'error');
+                        return;
+                    }
+                    
+                    const tenantsWithPhone = this.allTenants.filter(tenant => 
+                        (tenant.phone || tenant.phone2) && tenant.status === 'occupied'
+                    );
+                    
+                    if (tenantsWithPhone.length === 0) {
+                        this.showToastMessage('No tenants with phone numbers to notify', 'error');
+                        return;
+                    }
+                    
+                    this.notifications.unshift({
+                        id: Date.now(),
+                        date: new Date().toLocaleDateString(),
+                        type: 'broadcast',
+                        recipient: 'All Tenants',
+                        message: this.broadcastMessage,
+                        status: 'sent'
+                    });
+                    
+                    this.saveNotifications();
+                    this.broadcastMessage = '';
+                    this.showToastMessage(`Broadcast message sent to ${tenantsWithPhone.length} tenants`, 'success');
+                },
+                
+                saveNotifications() {
+                    localStorage.setItem('eagle_notifications', JSON.stringify(this.notifications));
+                },
+                
+                // Utility Entry Functions
+                saveHouseUtilities(tenantId) {
+                    const tenant = this.allTenants.find(t => t.id === tenantId);
+                    if (!tenant) return;
+                    
+                    const waterInput = document.getElementById(`water-${tenantId}`);
+                    const penaltyInput = document.getElementById(`penalty-${tenantId}`);
+                    
+                    const water = parseFloat(waterInput?.value) || 0;
+                    const penalty = parseFloat(penaltyInput?.value) || 0;
+                    
+                    // Update tenant utilities
+                    const property = this.properties[tenant.property];
+                    const unitIndex = property.findIndex(u => u.unit === tenant.unit);
+                    
+                    if (unitIndex !== -1) {
+                        property[unitIndex].utilities = {
+                            water: water,
+                            garbage: this.settings.garbageFee || 200,
+                            penalty: penalty
+                        };
+                    }
+                    
+                    this.saveData();
+                    this.showToastMessage(`Utilities updated for ${tenant.name}`, 'success');
+                },
+                
+                // Strict Arrears-First Logic
+                applyWaterfallLogic(paymentAmount, tenant) {
+                    const deductions = {};
+                    let remainingAmount = paymentAmount;
+                    
+                    // 1. Garbage
+                    const garbageAmount = tenant.utilities?.garbage || this.settings.garbageFee || 200;
+                    if (garbageAmount > 0 && remainingAmount > 0) {
+                        const garbageDeduction = Math.min(garbageAmount, remainingAmount);
+                        deductions.garbage = garbageDeduction;
+                        remainingAmount -= garbageDeduction;
+                    }
+                    
+                    // 2. Water
+                    const waterAmount = tenant.utilities?.water || 0;
+                    if (waterAmount > 0 && remainingAmount > 0) {
+                        const waterDeduction = Math.min(waterAmount, remainingAmount);
+                        deductions.water = waterDeduction;
+                        remainingAmount -= waterDeduction;
+                    }
+                    
+                    // 3. Penalty (manually entered only, never automatic)
+                    const penaltyAmount = tenant.utilities?.penalty || 0;
+                    if (penaltyAmount > 0 && remainingAmount > 0) {
+                        const penaltyDeduction = Math.min(penaltyAmount, remainingAmount);
+                        deductions.penalty = penaltyDeduction;
+                        remainingAmount -= penaltyDeduction;
+                    }
+                    
+                    // 4. Arrears (strict arrears-first logic)
+                    const arrearsAmount = tenant.arrears || 0;
+                    if (arrearsAmount > 0 && remainingAmount > 0) {
+                        const arrearsDeduction = Math.min(arrearsAmount, remainingAmount);
+                        deductions.arrears = arrearsDeduction;
+                        remainingAmount -= arrearsDeduction;
+                    }
+                    
+                    // 5. Rent (only after all arrears cleared)
+                    const rentAmount = tenant.rent || 0;
+                    if (remainingAmount > 0) {
+                        const rentDeduction = Math.min(rentAmount, remainingAmount);
+                        deductions.rent = rentDeduction;
+                        remainingAmount -= rentDeduction;
+                    }
+                    
+                    // 6. Overpayment (if still remaining, store but don't auto-apply)
+                    if (remainingAmount > 0) {
+                        deductions.overpayment = remainingAmount;
+                    }
+                    
+                    return { deductions, remainingAmount };
+                },
+                
+                // Overpayment and duplicate payment handling
+                processOverpayment(tenantId, overpaymentAmount) {
+                    const tenant = this.allTenants.find(t => t.id === tenantId);
+                    if (!tenant) return;
+                    
+                    const property = this.properties[tenant.property];
+                    const unitIndex = property.findIndex(u => u.unit === tenant.unit);
+                    
+                    if (unitIndex !== -1) {
+                        property[unitIndex].overpayment_balance = (property[unitIndex].overpayment_balance || 0) + overpaymentAmount;
+                        this.saveData();
+                    }
+                },
+                
+                // Refund processing
+                processRefund(payment) {
+                    // This function is called from payment manager
+                    const refundModal = document.querySelector('[x-data*="showRefundModal"]');
+                    if (refundModal) {
+                        refundModal.__x.$data.selectedPayment = payment;
+                        refundModal.__x.$data.refundAmount = Math.min(payment.overpayment_balance, payment.overpayment_balance);
+                        refundModal.__x.$data.refundReason = '';
+                        refundModal.__x.$data.showRefundModal = true;
+                    }
                 },
                 
                 // PDF Export Function
@@ -1533,7 +2010,8 @@
                             'properties': 'Properties Report',
                             'statement': 'Landlord Statement',
                             'reports': 'Financial Reports',
-                            'utilities': 'Utility Charges'
+                            'utilities': 'Utility Charges',
+                            'notifications': 'Notifications Log'
                         };
                         doc.text(titles[type] || 'Report', 105, 40, { align: 'center' });
                         
@@ -1569,6 +2047,9 @@
                             case 'utilities':
                                 this.generateUtilitiesPDF(doc, yPos);
                                 break;
+                            case 'notifications':
+                                this.generateNotificationsPDF(doc, yPos);
+                                break;
                         }
                         
                         // Save PDF
@@ -1580,6 +2061,26 @@
                         console.error('PDF Generation Error:', error);
                         this.showToastMessage('Failed to generate PDF', 'error');
                     }
+                },
+                
+                generateNotificationsPDF(doc, yPos) {
+                    const notificationsData = this.notifications.map(n => [
+                        n.date,
+                        n.type,
+                        n.recipient || 'All',
+                        n.message.length > 50 ? n.message.substring(0, 50) + '...' : n.message,
+                        n.status
+                    ]);
+                    
+                    doc.autoTable({
+                        head: [['Date', 'Type', 'Recipient', 'Message', 'Status']],
+                        body: notificationsData,
+                        startY: yPos,
+                        theme: 'grid',
+                        headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                        margin: { left: 20, right: 20 },
+                        styles: { fontSize: 8 }
+                    });
                 },
                 
                 generateDashboardPDF(doc, yPos) {
@@ -1597,6 +2098,10 @@
                     doc.text(`Occupancy Rate: ${this.occupancyRate}%`, 20, yPos);
                     yPos += 6;
                     doc.text(`Total Properties: ${Object.keys(this.properties).length}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Arrears: Ksh ${this.formatNumber(this.totalArrears)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Overpayment Balance: Ksh ${this.formatNumber(this.totalOverpayment)}`, 20, yPos);
                     yPos += 15;
                     
                     // Properties table using autoTable
@@ -1632,16 +2137,19 @@
                         tenant.phone || '-',
                         `Ksh ${this.formatNumber(tenant.rent)}`,
                         `Ksh ${this.formatNumber(tenant.deposit)}`,
+                        `Ksh ${this.formatNumber(tenant.arrears || 0)}`,
+                        `Ksh ${this.formatNumber(tenant.overpayment_balance || 0)}`,
                         this.getStatusText(tenant.status)
                     ]);
                     
                     doc.autoTable({
-                        head: [['Property', 'Unit', 'Tenant', 'Phone', 'Rent', 'Deposit', 'Status']],
+                        head: [['Property', 'Unit', 'Tenant', 'Phone', 'Rent', 'Deposit', 'Arrears', 'Overpayment', 'Status']],
                         body: tenantsData,
                         startY: yPos,
                         theme: 'grid',
                         headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
-                        margin: { left: 20, right: 20 }
+                        margin: { left: 20, right: 20 },
+                        styles: { fontSize: 8 }
                     });
                     
                     // Add summary after table
@@ -1650,6 +2158,7 @@
                     doc.text(`Total Tenants: ${this.allTenants.length}`, 20, finalY + 10);
                     doc.text(`Total Expected Rent: Ksh ${this.formatNumber(this.totalRevenue)}`, 20, finalY + 16);
                     doc.text(`Total Deposits: Ksh ${this.formatNumber(this.totalDeposits)}`, 20, finalY + 22);
+                    doc.text(`Total Arrears: Ksh ${this.formatNumber(this.totalArrears)}`, 20, finalY + 28);
                 },
                 
                 generatePropertiesPDF(doc, yPos) {
@@ -1723,7 +2232,11 @@
                     yPos += 6;
                     doc.text(`Rent Collected: Ksh ${this.formatNumber(this.totalCollected)}`, 20, yPos);
                     yPos += 6;
-                    doc.text(`Outstanding Arrears: Ksh ${this.formatNumber(this.totalPending)}`, 20, yPos);
+                    doc.text(`Outstanding Arrears: Ksh ${this.formatNumber(this.totalArrears)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Overpayment Balance: Ksh ${this.formatNumber(this.totalOverpayment)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Refunds Processed: Ksh ${this.formatNumber(this.totalRefunds)}`, 20, yPos);
                     yPos += 15;
                     
                     // Top properties
@@ -1750,25 +2263,23 @@
                 
                 generateUtilitiesPDF(doc, yPos) {
                     const utilitiesData = this.allTenants.map(tenant => {
-                        const waterInput = document.getElementById(`water-${tenant.id}`);
-                        const elecInput = document.getElementById(`elec-${tenant.id}`);
-                        const water = waterInput ? parseFloat(waterInput.value) || 0 : 0;
-                        const electricity = elecInput ? parseFloat(elecInput.value) || 0 : 0;
-                        const garbage = 200;
-                        const total = water + electricity + garbage;
+                        const water = tenant.utilities?.water || 0;
+                        const garbage = tenant.utilities?.garbage || this.settings.garbageFee || 200;
+                        const penalty = tenant.utilities?.penalty || 0;
+                        const total = water + garbage + penalty;
                         
                         return [
                             `${tenant.property}-${tenant.unit}`,
                             tenant.name,
                             `Ksh ${this.formatNumber(water)}`,
-                            `Ksh ${this.formatNumber(electricity)}`,
                             `Ksh ${this.formatNumber(garbage)}`,
+                            `Ksh ${this.formatNumber(penalty)}`,
                             `Ksh ${this.formatNumber(total)}`
                         ];
                     });
                     
                     doc.autoTable({
-                        head: [['House', 'Tenant', 'Water', 'Electricity', 'Garbage', 'Total']],
+                        head: [['House', 'Tenant', 'Water', 'Garbage', 'Penalty', 'Total']],
                         body: utilitiesData,
                         startY: yPos,
                         theme: 'grid',
@@ -2047,7 +2558,11 @@
                                 deposit: 0,
                                 status: "vacant",
                                 entryDate: "",
-                                notes: ""
+                                notes: "",
+                                arrears: 0,
+                                overpayment_balance: 0,
+                                utilities: { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 },
+                                paymentHistory: []
                             });
                         }
                     } else if (targetUnits < currentUnits) {
@@ -2069,7 +2584,27 @@
                 },
                 
                 viewTenantDetails(tenant) {
-                    alert(`Tenant Details:\n\nName: ${tenant.name}\nProperty: ${tenant.property}\nUnit: ${tenant.unit}\nRent: Ksh ${tenant.rent}\nStatus: ${tenant.status}`);
+                    const details = `
+Tenant Details:
+
+Name: ${tenant.name}
+Property: ${tenant.property}
+Unit: ${tenant.unit}
+Rent: Ksh ${this.formatNumber(tenant.rent)}
+Deposit: Ksh ${this.formatNumber(tenant.deposit)}
+Arrears: Ksh ${this.formatNumber(tenant.arrears || 0)}
+Overpayment Balance: Ksh ${this.formatNumber(tenant.overpayment_balance || 0)}
+Status: ${this.getStatusText(tenant.status)}
+Phone: ${tenant.phone || 'N/A'}
+Phone 2: ${tenant.phone2 || 'N/A'}
+Entry Date: ${tenant.entryDate || 'N/A'}
+
+Utilities:
+- Water: Ksh ${this.formatNumber(tenant.utilities?.water || 0)}
+- Garbage: Ksh ${this.formatNumber(tenant.utilities?.garbage || 200)}
+- Penalty: Ksh ${this.formatNumber(tenant.utilities?.penalty || 0)}
+                    `;
+                    alert(details);
                 },
                 
                 deleteTenant(tenant) {
@@ -2101,26 +2636,39 @@
                     const existingIndex = property.findIndex(u => u.unit === this.newTenant.unit);
                     
                     if (existingIndex !== -1) {
+                        // Update existing tenant
+                        const existing = property[existingIndex];
                         property[existingIndex] = {
                             unit: this.newTenant.unit,
                             name: this.newTenant.name,
                             rent: parseFloat(this.newTenant.rent) || 0,
                             deposit: parseFloat(this.newTenant.deposit) || 0,
                             phone: this.newTenant.phone || '',
+                            phone2: this.newTenant.phone2 || '',
                             status: this.newTenant.status,
                             entryDate: this.newTenant.entryDate,
-                            notes: this.newTenant.notes || ''
+                            notes: this.newTenant.notes || '',
+                            arrears: existing.arrears || 0,
+                            overpayment_balance: existing.overpayment_balance || 0,
+                            utilities: existing.utilities || { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 },
+                            paymentHistory: existing.paymentHistory || []
                         };
                     } else {
+                        // Add new tenant
                         property.push({
                             unit: this.newTenant.unit,
                             name: this.newTenant.name,
                             rent: parseFloat(this.newTenant.rent) || 0,
                             deposit: parseFloat(this.newTenant.deposit) || 0,
                             phone: this.newTenant.phone || '',
+                            phone2: this.newTenant.phone2 || '',
                             status: this.newTenant.status,
                             entryDate: this.newTenant.entryDate,
-                            notes: this.newTenant.notes || ''
+                            notes: this.newTenant.notes || '',
+                            arrears: 0,
+                            overpayment_balance: 0,
+                            utilities: { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 },
+                            paymentHistory: []
                         });
                     }
                     
@@ -2140,17 +2688,6 @@
                         notes: ''
                     };
                     this.showToastMessage('Tenant saved successfully', 'success');
-                },
-                
-                // Utility Entry Functions
-                saveHouseUtilities(tenantId) {
-                    const waterInput = document.getElementById('water-' + tenantId);
-                    const elecInput = document.getElementById('elec-' + tenantId);
-                    
-                    const water = parseFloat(waterInput?.value) || 0;
-                    const electricity = parseFloat(elecInput?.value) || 0;
-                    
-                    this.showToastMessage(`Saved utilities for ${tenantId}: Water: ${water}, Electricity: ${electricity}`, 'success');
                 },
                 
                 // System Functions
@@ -2175,21 +2712,37 @@
                 },
                 
                 rolloverMonth() {
-                    if (confirm('Rollover to next month? This will reset monthly data for the new period.')) {
+                    if (confirm('Rollover to next month? This will reset monthly utilities and carry forward arrears.')) {
                         Object.values(this.properties).forEach(property => {
                             property.forEach(tenant => {
-                                tenant.water = '';
-                                tenant.electricity = '';
-                                tenant.amountPaid = 0;
+                                // Reset utilities for new month
+                                tenant.utilities = { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 };
+                                // Arrears carry forward automatically via arrears field
+                                // Overpayment balance persists
                             });
                         });
-                        this.showToastMessage('Month rolled over successfully', 'success');
+                        this.showToastMessage('Month rolled over successfully. Arrears carried forward.', 'success');
                     }
                 },
                 
                 saveSettings() {
+                    if (this.userRole !== 'owner' && this.settings.penaltyPercentage !== this.getStoredPenaltyPercentage()) {
+                        this.showToastMessage('Only owners can change penalty percentage', 'error');
+                        this.settings.penaltyPercentage = this.getStoredPenaltyPercentage();
+                        return;
+                    }
+                    
                     localStorage.setItem('eagle_settings', JSON.stringify(this.settings));
                     this.showToastMessage('Settings saved successfully', 'success');
+                },
+                
+                getStoredPenaltyPercentage() {
+                    const savedSettings = localStorage.getItem('eagle_settings');
+                    if (savedSettings) {
+                        const parsed = JSON.parse(savedSettings);
+                        return parsed.penaltyPercentage || 5;
+                    }
+                    return 5;
                 },
                 
                 backupData() {
@@ -2199,6 +2752,7 @@
                         statementData: this.statementData,
                         expenses: this.expenses,
                         settings: this.settings,
+                        notifications: this.notifications,
                         timestamp: new Date().toISOString()
                     };
                     
@@ -2233,10 +2787,12 @@
                                 this.statementData = backup.statementData || this.statementData;
                                 this.expenses = backup.expenses || [];
                                 this.settings = backup.settings || this.settings;
+                                this.notifications = backup.notifications || [];
                                 
                                 this.saveData();
                                 localStorage.setItem('eagle_statement_data', JSON.stringify(this.statementData));
                                 localStorage.setItem('eagle_expenses', JSON.stringify(this.expenses));
+                                localStorage.setItem('eagle_notifications', JSON.stringify(this.notifications));
                                 this.showToastMessage('Data restored successfully', 'success');
                                 setTimeout(() => location.reload(), 1000);
                             } catch (error) {
@@ -2251,6 +2807,11 @@
                 },
                 
                 clearAllData() {
+                    if (this.userRole !== 'owner') {
+                        this.showToastMessage('Only owners can clear all data', 'error');
+                        return;
+                    }
+                    
                     if (confirm('WARNING: This will delete ALL data. Are you absolutely sure?')) {
                         localStorage.clear();
                         this.showToastMessage('All data cleared. Refreshing...', 'success');
@@ -2338,7 +2899,7 @@
             };
         }
 
-        // Payment Manager Component - FIXED VERSION
+        // Payment Manager Component
         function paymentManager() {
             return {
                 payments: [],
@@ -2348,7 +2909,6 @@
                 selectedPayment: {},
                 resolveHouseId: '',
                 
-                // FIXED: Proper filteredPayments computation
                 get filteredPayments() {
                     let filtered = this.payments;
                     
@@ -2357,7 +2917,7 @@
                         filtered = filtered.filter(p => p.method === this.pathFilter);
                     }
                     
-                    // Filter by search term - FIXED: Now searches all relevant fields
+                    // Filter by search term
                     if (this.paymentSearch.trim() !== '') {
                         const term = this.paymentSearch.toLowerCase();
                         filtered = filtered.filter(p => {
@@ -2373,56 +2933,172 @@
                     return filtered;
                 },
                 
-                // FIXED: Proper filter function
                 filterPayments() {
-                    // This is triggered by the search input
-                    // The computed property will automatically update
-                    console.log('Filtering payments with search:', this.paymentSearch);
+                    // Triggered by search input
                 },
                 
-                // FIXED: Fetch payments with sample data
                 fetchPayments() {
-                    console.log('Refreshing payments...');
-                    // For testing, use sample data
-                    this.payments = this.getSamplePayments();
-                    this.showToastMessage('Payments refreshed successfully!', 'success');
+                    const savedPayments = localStorage.getItem('eagle_payments');
+                    if (savedPayments) {
+                        this.payments = JSON.parse(savedPayments);
+                    } else {
+                        this.payments = this.getSamplePayments();
+                    }
                 },
                 
-                // FIXED: Open resolve modal
                 openResolveModal(payment) {
                     this.selectedPayment = payment;
                     this.resolveHouseId = '';
                     this.showResolveModal = true;
-                    console.log('Opening resolve modal for payment:', payment);
                 },
                 
-                // FIXED: Submit resolution
                 submitResolution() {
                     if (!this.resolveHouseId) {
                         alert("Please enter a House ID");
                         return;
                     }
                     
-                    // Simulate API call
-                    setTimeout(() => {
-                        // Update the payment status
-                        const index = this.payments.findIndex(p => p.id === this.selectedPayment.id);
-                        if (index !== -1) {
-                            this.payments[index].house_id = this.resolveHouseId.toUpperCase();
-                            this.payments[index].status = 'Processed';
-                            this.payments[index].deductions_json = JSON.stringify({
-                                water: 200,
-                                garbage: 200,
-                                rent: this.selectedPayment.amount - 400
-                            });
+                    // Parse house ID (format: PROPERTY-UNIT)
+                    const [property, unit] = this.resolveHouseId.split('-');
+                    if (!property || !unit) {
+                        alert("Invalid House ID format. Use: PROPERTY-UNIT (e.g. ROSALIA HOUSE-1)");
+                        return;
+                    }
+                    
+                    // Find tenant
+                    const mainSystem = document.querySelector('[x-data="managementSystem()"]').__x.$data;
+                    const tenant = mainSystem.allTenants.find(t => 
+                        t.property === property && t.unit === unit
+                    );
+                    
+                    if (!tenant) {
+                        alert("Tenant not found for the specified House ID");
+                        return;
+                    }
+                    
+                    // Apply waterfall logic
+                    const { deductions, remainingAmount } = mainSystem.applyWaterfallLogic(
+                        this.selectedPayment.amount, 
+                        tenant
+                    );
+                    
+                    // Update payment record
+                    const index = this.payments.findIndex(p => p.id === this.selectedPayment.id);
+                    if (index !== -1) {
+                        this.payments[index].house_id = this.resolveHouseId;
+                        this.payments[index].tenant = tenant.name;
+                        this.payments[index].status = 'Processed';
+                        this.payments[index].deductions_json = JSON.stringify(deductions);
+                        
+                        if (remainingAmount > 0) {
+                            this.payments[index].overpayment_balance = remainingAmount;
+                            // Store overpayment in tenant record
+                            mainSystem.processOverpayment(tenant.id, remainingAmount);
                         }
                         
-                        this.showResolveModal = false;
-                        this.showToastMessage(`Payment resolved for House ${this.resolveHouseId}!`, 'success');
-                    }, 500);
+                        // Update tenant arrears
+                        const arrearsPaid = deductions.arrears || 0;
+                        if (arrearsPaid > 0) {
+                            const propertyData = mainSystem.properties[tenant.property];
+                            const unitIndex = propertyData.findIndex(u => u.unit === tenant.unit);
+                            if (unitIndex !== -1) {
+                                propertyData[unitIndex].arrears = Math.max(0, (propertyData[unitIndex].arrears || 0) - arrearsPaid);
+                            }
+                        }
+                        
+                        // Add to payment history
+                        const paymentHistory = {
+                            date: new Date().toISOString().slice(0, 10),
+                            amount: this.selectedPayment.amount,
+                            deductions: deductions,
+                            reference: this.selectedPayment.reference
+                        };
+                        
+                        const propertyData = mainSystem.properties[tenant.property];
+                        const unitIndex = propertyData.findIndex(u => u.unit === tenant.unit);
+                        if (unitIndex !== -1) {
+                            if (!propertyData[unitIndex].paymentHistory) {
+                                propertyData[unitIndex].paymentHistory = [];
+                            }
+                            propertyData[unitIndex].paymentHistory.push(paymentHistory);
+                        }
+                        
+                        mainSystem.saveData();
+                        localStorage.setItem('eagle_payments', JSON.stringify(this.payments));
+                    }
+                    
+                    this.showResolveModal = false;
+                    this.showToastMessage(`Payment resolved for ${this.resolveHouseId}!`, 'success');
+                    
+                    // Refresh payments
+                    this.fetchPayments();
                 },
                 
-                // FIXED: Export payments to PDF
+                processRefund(payment) {
+                    const refundModal = document.querySelector('[x-data*="showRefundModal"]');
+                    if (refundModal) {
+                        refundModal.__x.$data.selectedPayment = payment;
+                        refundModal.__x.$data.refundAmount = Math.min(payment.overpayment_balance, payment.overpayment_balance);
+                        refundModal.__x.$data.refundReason = '';
+                        refundModal.__x.$data.showRefundModal = true;
+                    }
+                },
+                
+                processRefundSubmission() {
+                    const refundModal = document.querySelector('[x-data*="showRefundModal"]');
+                    if (!refundModal) return;
+                    
+                    const { selectedPayment, refundAmount, refundReason } = refundModal.__x.$data;
+                    
+                    if (!refundReason || refundAmount <= 0 || refundAmount > selectedPayment.overpayment_balance) {
+                        this.showToastMessage('Invalid refund amount or reason', 'error');
+                        return;
+                    }
+                    
+                    // Update payment record
+                    const index = this.payments.findIndex(p => p.id === selectedPayment.id);
+                    if (index !== -1) {
+                        const refundId = 'REF-' + Date.now().toString().slice(-6);
+                        this.payments[index].overpayment_balance -= refundAmount;
+                        this.payments[index].refund_id = refundId;
+                        this.payments[index].refund_amount = refundAmount;
+                        this.payments[index].refund_reason = refundReason;
+                        this.payments[index].refund_date = new Date().toISOString().slice(0, 10);
+                        
+                        // Update tenant overpayment balance
+                        const mainSystem = document.querySelector('[x-data="managementSystem()"]').__x.$data;
+                        const tenantId = this.payments[index].house_id;
+                        const tenant = mainSystem.allTenants.find(t => t.id === tenantId);
+                        if (tenant) {
+                            const property = mainSystem.properties[tenant.property];
+                            const unitIndex = property.findIndex(u => u.unit === tenant.unit);
+                            if (unitIndex !== -1) {
+                                property[unitIndex].overpayment_balance = Math.max(0, (property[unitIndex].overpayment_balance || 0) - refundAmount);
+                            }
+                        }
+                        
+                        mainSystem.saveData();
+                        localStorage.setItem('eagle_payments', JSON.stringify(this.payments));
+                        
+                        // Add to notifications
+                        mainSystem.notifications.unshift({
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString(),
+                            type: 'refund',
+                            recipient: `${tenant?.name || 'Tenant'} (${refundId})`,
+                            message: `Refund of Ksh ${this.formatNumber(refundAmount)} processed. Reason: ${refundReason}`,
+                            status: 'sent'
+                        });
+                        mainSystem.saveNotifications();
+                    }
+                    
+                    refundModal.__x.$data.showRefundModal = false;
+                    this.showToastMessage(`Refund of Ksh ${this.formatNumber(refundAmount)} processed successfully`, 'success');
+                    
+                    // Refresh payments
+                    this.fetchPayments();
+                },
+                
                 exportPaymentsPDF() {
                     try {
                         const { jsPDF } = window.jspdf;
@@ -2454,29 +3130,35 @@
                             p.reference || '-',
                             p.house_id || '-',
                             `Ksh ${this.formatNumber(p.amount || 0)}`,
+                            p.overpayment_balance > 0 ? `Ksh ${this.formatNumber(p.overpayment_balance)}` : '-',
+                            p.refund_id || '-',
                             p.status || '-'
                         ]);
                         
                         // Create table
                         doc.autoTable({
-                            head: [['Date', 'Method', 'Reference', 'House', 'Amount', 'Status']],
+                            head: [['Date', 'Method', 'Reference', 'House', 'Amount', 'Overpayment', 'Refund ID', 'Status']],
                             body: tableData,
                             startY: 45,
                             theme: 'grid',
                             headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
-                            margin: { left: 20, right: 20 }
+                            margin: { left: 15, right: 15 },
+                            styles: { fontSize: 8 }
                         });
                         
                         // Add summary
                         const finalY = doc.lastAutoTable.finalY || 100;
                         const totalAmount = this.filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
                         const processed = this.filteredPayments.filter(p => p.status === 'Processed').length;
+                        const totalOverpayment = this.filteredPayments.reduce((sum, p) => sum + (p.overpayment_balance || 0), 0);
+                        const totalRefunds = this.filteredPayments.filter(p => p.refund_id).reduce((sum, p) => sum + (p.refund_amount || 0), 0);
                         
                         doc.setFontSize(10);
                         doc.text(`Total Payments: ${this.filteredPayments.length}`, 20, finalY + 10);
                         doc.text(`Total Amount: Ksh ${this.formatNumber(totalAmount)}`, 20, finalY + 16);
                         doc.text(`Processed: ${processed}`, 20, finalY + 22);
-                        doc.text(`Pending: ${this.filteredPayments.length - processed}`, 20, finalY + 28);
+                        doc.text(`Overpayment Balance: Ksh ${this.formatNumber(totalOverpayment)}`, 20, finalY + 28);
+                        doc.text(`Refunds Processed: Ksh ${this.formatNumber(totalRefunds)}`, 20, finalY + 34);
                         
                         // Save PDF
                         const fileName = `Eagle_Homes_Payments_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -2511,13 +3193,14 @@
                         {
                             id: 1,
                             reference: 'UAMKG4',
-                            house_id: 'EH01',
+                            house_id: 'ROSALIA HOUSE-1',
                             phone: '0712345678',
-                            amount: 1500,
-                            method: 'Family Bank',
+                            amount: 3000,
+                            method: 'M-Pesa',
                             date: '2025-01-22',
                             time: '14:30',
-                            deductions_json: '{"water": 200, "garbage": 200, "rent": 1100}',
+                            deductions_json: JSON.stringify({ garbage: 200, water: 0, rent: 2800 }),
+                            overpayment_balance: 0,
                             status: 'Processed'
                         },
                         {
@@ -2525,36 +3208,26 @@
                             reference: 'RXB5T9',
                             house_id: null,
                             phone: '0723456789',
-                            amount: 3000,
+                            amount: 2000,
                             method: 'Co-op Bank',
                             date: '2025-01-22',
                             time: '15:45',
                             deductions_json: '{}',
+                            overpayment_balance: 0,
                             status: 'Unidentified'
                         },
                         {
                             id: 3,
                             reference: 'ABC123',
-                            house_id: 'EH03',
-                            phone: '0734567890',
-                            amount: 2500,
+                            house_id: 'ROSALIA HOUSE-2',
+                            phone: '0723456789',
+                            amount: 1200,
                             method: 'M-Pesa',
                             date: '2025-01-21',
                             time: '10:15',
-                            deductions_json: '{"water": 150, "garbage": 200, "rent": 2150}',
+                            deductions_json: JSON.stringify({ garbage: 200, water: 100, arrears: 500, rent: 400 }),
+                            overpayment_balance: 0,
                             status: 'Processed'
-                        },
-                        {
-                            id: 4,
-                            reference: 'XYZ789',
-                            house_id: null,
-                            phone: '0745678901',
-                            amount: 1800,
-                            method: 'Family Bank',
-                            date: '2025-01-20',
-                            time: '16:20',
-                            deductions_json: '{}',
-                            status: 'Unidentified'
                         }
                     ];
                 },
@@ -2580,9 +3253,17 @@
                 // Initialize
                 init() {
                     this.fetchPayments();
-                    console.log('Payment manager initialized');
                 }
             };
+        }
+        
+        // Global function for refund processing
+        function processRefundSubmission() {
+            const refundModal = document.querySelector('[x-data*="showRefundModal"]');
+            if (!refundModal) return;
+            
+            const paymentManager = document.querySelector('[x-data="paymentManager()"]').__x.$data;
+            paymentManager.processRefundSubmission();
         }
     </script>
 </body>
