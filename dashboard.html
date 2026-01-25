@@ -47,6 +47,17 @@
                 display: none !important;
             }
         }
+        /* Scrollbar styling */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body x-data="managementSystem()" x-init="init()" class="min-h-screen bg-gray-50">
@@ -731,7 +742,10 @@
                         <p class="text-gray-500 font-medium">Send automated and manual notifications to tenants</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 md:gap-4">
-                        <button @click="sendBroadcastMessage()" class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                        <!-- SECRETARY RESTRICTION: Only owner can send broadcast -->
+                        <button x-show="userRole === 'owner'" 
+                                @click="sendBroadcastMessage()" 
+                                class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
                             <i class="fas fa-bullhorn"></i>
                             <span class="hidden md:inline">Send Broadcast</span>
                         </button>
@@ -751,12 +765,21 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-2">Message</label>
+                                <!-- SECRETARY RESTRICTION: Disable textarea for secretary -->
                                 <textarea x-model="broadcastMessage" rows="4" 
+                                          :disabled="userRole !== 'owner'"
+                                          :class="userRole !== 'owner' ? 'bg-gray-100 cursor-not-allowed' : ''"
                                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" 
                                           placeholder="Enter your message to all tenants..."></textarea>
+                                <p x-show="userRole !== 'owner'" class="text-xs text-red-500 mt-1">
+                                    <i class="fas fa-lock mr-1"></i> Only owner can send broadcast messages
+                                </p>
                             </div>
+                            <!-- SECRETARY RESTRICTION: Disable button for secretary -->
                             <button @click="sendBroadcastMessage()" 
-                                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                                    :disabled="userRole !== 'owner'"
+                                    :class="userRole !== 'owner' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+                                    class="w-full text-white py-3 rounded-lg font-medium transition">
                                 Send to All Tenants
                             </button>
                         </div>
@@ -775,6 +798,9 @@
                             </div>
                             <div class="text-xs text-gray-500">
                                 <p><i class="fas fa-info-circle mr-1"></i> Messages are sent only to tenants with phone numbers saved</p>
+                                <p x-show="userRole !== 'owner'" class="text-red-500 mt-1">
+                                    <i class="fas fa-shield-alt mr-1"></i> Broadcast messages restricted to Owner only
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -794,6 +820,7 @@
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Recipient</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Message</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Status</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Sent By</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -809,6 +836,12 @@
                                         <td class="px-4 md:px-6 py-4">
                                             <span :class="notification.status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
                                                   class="px-2 py-1 rounded text-xs font-medium" x-text="notification.status"></span>
+                                        </td>
+                                        <td class="px-4 md:px-6 py-4">
+                                            <span :class="notification.sentBy === 'owner' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'" 
+                                                  class="px-2 py-1 rounded text-xs font-medium">
+                                                <span x-text="notification.sentBy === 'owner' ? 'Owner' : 'System'"></span>
+                                            </span>
                                         </td>
                                     </tr>
                                 </template>
@@ -1802,7 +1835,8 @@
                             type: 'arrears',
                             recipient: `${tenant.name} (${tenant.phone})`,
                             message: message,
-                            status: 'sent'
+                            status: 'sent',
+                            sentBy: 'system'
                         });
                     });
                     
@@ -1838,7 +1872,8 @@
                             type: 'holiday',
                             recipient: `${tenant.name} (${tenant.phone || tenant.phone2})`,
                             message: message,
-                            status: 'sent'
+                            status: 'sent',
+                            sentBy: 'system'
                         });
                     });
                     
@@ -1846,6 +1881,12 @@
                 },
                 
                 sendBroadcastMessage() {
+                    // SECRETARY RESTRICTION: Check if user is owner
+                    if (this.userRole !== 'owner') {
+                        this.showToastMessage('Only owners can send broadcast messages', 'error');
+                        return;
+                    }
+                    
                     if (!this.broadcastMessage.trim()) {
                         this.showToastMessage('Please enter a message', 'error');
                         return;
@@ -1866,7 +1907,8 @@
                         type: 'broadcast',
                         recipient: 'All Tenants',
                         message: this.broadcastMessage,
-                        status: 'sent'
+                        status: 'sent',
+                        sentBy: 'owner'
                     });
                     
                     this.saveNotifications();
@@ -2069,11 +2111,12 @@
                         n.type,
                         n.recipient || 'All',
                         n.message.length > 50 ? n.message.substring(0, 50) + '...' : n.message,
-                        n.status
+                        n.status,
+                        n.sentBy === 'owner' ? 'Owner' : 'System'
                     ]);
                     
                     doc.autoTable({
-                        head: [['Date', 'Type', 'Recipient', 'Message', 'Status']],
+                        head: [['Date', 'Type', 'Recipient', 'Message', 'Status', 'Sent By']],
                         body: notificationsData,
                         startY: yPos,
                         theme: 'grid',
@@ -3087,7 +3130,8 @@ Utilities:
                             type: 'refund',
                             recipient: `${tenant?.name || 'Tenant'} (${refundId})`,
                             message: `Refund of Ksh ${this.formatNumber(refundAmount)} processed. Reason: ${refundReason}`,
-                            status: 'sent'
+                            status: 'sent',
+                            sentBy: 'owner'
                         });
                         mainSystem.saveNotifications();
                     }
