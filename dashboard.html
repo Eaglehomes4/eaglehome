@@ -471,7 +471,7 @@
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Phone</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Rent (Ksh)</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Deposit</th>
-                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Arrears</th>
+                                    <th class="px-4 md:px-6 py-4 font-bold text-left">Arrears (KES)</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Status</th>
                                     <th class="px-4 md:px-6 py-4 font-bold text-left">Actions</th>
                                 </tr>
@@ -493,8 +493,8 @@
                                         <td class="px-4 md:px-6 py-4 font-bold" x-text="formatNumber(tenant.rent)"></td>
                                         <td class="px-4 md:px-6 py-4 font-medium text-emerald-600" x-text="formatNumber(tenant.deposit)"></td>
                                         <td class="px-4 md:px-6 py-4">
-                                            <span x-text="formatNumber(tenant.arrears || 0)"
-                                                  :class="(tenant.arrears || 0) > 0 ? 'text-red-600 font-bold' : 'text-green-600'"></span>
+                                            <span x-text="'Ksh ' + formatNumber(tenant.arrears || 0)"
+                                                  :class="(tenant.arrears || 0) > 0 ? 'text-red-600 font-bold' : 'text-green-600 font-medium'"></span>
                                         </td>
                                         <td class="px-4 md:px-6 py-4">
                                             <span :class="getStatusClass(tenant.status)"
@@ -1389,6 +1389,13 @@
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Rent Arrears (KES)</label>
+                        <input type="number" x-model="newTenant.arrears" min="0" step="0.01"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="0">
+                        <p class="text-xs text-gray-500 mt-1">Current outstanding balance. Default is 0 if left empty.</p>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Entry Date</label>
                         <input type="date" x-model="newTenant.entryDate"
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
@@ -1462,6 +1469,7 @@
                     phone2: '',
                     rent: 0,
                     deposit: 0,
+                    arrears: 0, // Added arrears field
                     entryDate: new Date().toISOString().slice(0, 10),
                     status: 'occupied',
                     notes: ''
@@ -1506,7 +1514,7 @@
                                 phone2: unit.phone2,
                                 rent: unit.rent,
                                 deposit: unit.deposit,
-                                arrears: unit.arrears || 0,
+                                arrears: unit.arrears || 0, // Include arrears
                                 overpayment_balance: unit.overpayment_balance || 0,
                                 status: unit.status,
                                 entryDate: unit.entryDate,
@@ -1599,6 +1607,14 @@
 
                     if (savedProperties) {
                         this.properties = JSON.parse(savedProperties);
+                        // Ensure all tenants have arrears field for backward compatibility
+                        Object.values(this.properties).forEach(property => {
+                            property.forEach(tenant => {
+                                if (tenant.arrears === undefined) {
+                                    tenant.arrears = 0;
+                                }
+                            });
+                        });
                     } else {
                         this.initializeSampleData();
                     }
@@ -1642,12 +1658,12 @@
                                 name: "Paul Murimi",
                                 rent: 3000,
                                 deposit: 3000,
+                                arrears: 0, // Added arrears field
                                 phone: "0712345678",
                                 phone2: "",
                                 status: "occupied",
                                 entryDate: "2025-01-01",
                                 notes: "",
-                                arrears: 0,
                                 overpayment_balance: 0,
                                 utilities: { water: 0, garbage: 200, penalty: 0 },
                                 paymentHistory: []
@@ -1657,12 +1673,12 @@
                                 name: "Jane Mwangi",
                                 rent: 1500,
                                 deposit: 1500,
+                                arrears: 500, // Added arrears with value
                                 phone: "0723456789",
                                 phone2: "",
                                 status: "occupied",
                                 entryDate: "2025-01-01",
                                 notes: "",
-                                arrears: 500,
                                 overpayment_balance: 0,
                                 utilities: { water: 100, garbage: 200, penalty: 0 },
                                 paymentHistory: []
@@ -2323,10 +2339,10 @@
                                 name: "Vacant",
                                 rent: 0,
                                 deposit: 0,
+                                arrears: 0, // Default arrears for new units
                                 status: "vacant",
                                 entryDate: "",
                                 notes: "",
-                                arrears: 0,
                                 overpayment_balance: 0,
                                 utilities: { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 },
                                 paymentHistory: []
@@ -2346,7 +2362,10 @@
                 // Tenant Management Functions
                 editTenant(tenant) {
                     this.editingTenant = tenant.id;
-                    this.newTenant = { ...tenant };
+                    this.newTenant = { 
+                        ...tenant,
+                        arrears: tenant.arrears || 0 // Ensure arrears is populated
+                    };
                     this.showAddTenantModal = true;
                 },
 
@@ -2398,6 +2417,13 @@ Utilities:
                         return;
                     }
 
+                    // Validate arrears - ensure it's a number and default to 0 if empty
+                    const arrears = parseFloat(this.newTenant.arrears) || 0;
+                    if (arrears < 0) {
+                        this.showToastMessage('Arrears cannot be negative', 'error');
+                        return;
+                    }
+
                     const existingIndex = property.findIndex(u => u.unit === this.newTenant.unit);
                     if (existingIndex !== -1) {
                         // Update existing tenant
@@ -2407,12 +2433,12 @@ Utilities:
                             name: this.newTenant.name,
                             rent: parseFloat(this.newTenant.rent) || 0,
                             deposit: parseFloat(this.newTenant.deposit) || 0,
+                            arrears: arrears, // Save validated arrears
                             phone: this.newTenant.phone || '',
                             phone2: this.newTenant.phone2 || '',
                             status: this.newTenant.status,
                             entryDate: this.newTenant.entryDate,
                             notes: this.newTenant.notes || '',
-                            arrears: existing.arrears || 0,
                             overpayment_balance: existing.overpayment_balance || 0,
                             utilities: existing.utilities || { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 },
                             paymentHistory: existing.paymentHistory || []
@@ -2424,12 +2450,12 @@ Utilities:
                             name: this.newTenant.name,
                             rent: parseFloat(this.newTenant.rent) || 0,
                             deposit: parseFloat(this.newTenant.deposit) || 0,
+                            arrears: arrears, // Save validated arrears
                             phone: this.newTenant.phone || '',
                             phone2: this.newTenant.phone2 || '',
                             status: this.newTenant.status,
                             entryDate: this.newTenant.entryDate,
                             notes: this.newTenant.notes || '',
-                            arrears: 0,
                             overpayment_balance: 0,
                             utilities: { water: 0, garbage: this.settings.garbageFee || 200, penalty: 0 },
                             paymentHistory: []
@@ -2447,6 +2473,7 @@ Utilities:
                         phone2: '',
                         rent: 0,
                         deposit: 0,
+                        arrears: 0, // Reset arrears field
                         entryDate: new Date().toISOString().slice(0, 10),
                         status: 'occupied',
                         notes: ''
@@ -2550,6 +2577,15 @@ Utilities:
                                 this.expenses = backup.expenses || [];
                                 this.settings = backup.settings || this.settings;
                                 this.notifications = backup.notifications || [];
+
+                                // Ensure arrears field exists for backward compatibility
+                                Object.values(this.properties).forEach(property => {
+                                    property.forEach(tenant => {
+                                        if (tenant.arrears === undefined) {
+                                            tenant.arrears = 0;
+                                        }
+                                    });
+                                });
 
                                 this.saveData();
                                 localStorage.setItem('eagle_statement_data', JSON.stringify(this.statementData));
@@ -2663,9 +2699,8 @@ Utilities:
                     }, 3000);
                 },
 
-                // PDF Export Functions (same as before, but consolidated)
+                // PDF Export Functions
                 async exportToPDF(type) {
-                    // Existing PDF export logic remains the same
                     try {
                         this.showToastMessage('Generating PDF...', 'success');
                         const { jsPDF } = window.jspdf;
@@ -2739,9 +2774,7 @@ Utilities:
                     }
                 },
 
-                // Existing PDF generation methods (abbreviated for brevity)
                 generateDashboardPDF(doc, yPos) {
-                    // Existing implementation
                     doc.setFontSize(12);
                     doc.setTextColor(0, 0, 0);
                     doc.text('Dashboard Summary', 20, yPos);
@@ -2749,27 +2782,165 @@ Utilities:
                     doc.setFontSize(10);
                     doc.text(`Total Expected Rent: Ksh ${this.formatNumber(this.totalRevenue)}`, 20, yPos);
                     yPos += 6;
-                    // ... rest of the method
+                    doc.text(`Total Deposits Held: Ksh ${this.formatNumber(this.totalDeposits)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Occupancy Rate: ${this.occupancyRate}%`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Total Properties: ${Object.keys(this.properties).length}`, 20, yPos);
+                    yPos += 10;
+                    
+                    // Property Summary
+                    doc.setFontSize(12);
+                    doc.text('Properties Overview', 20, yPos);
+                    yPos += 10;
+                    
+                    Object.entries(this.properties).forEach(([name, units], index) => {
+                        if (yPos > 250) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        const occupied = units.filter(u => u.status === 'occupied').length;
+                        const total = units.length;
+                        const revenue = units.reduce((sum, u) => sum + (u.rent || 0), 0);
+                        
+                        doc.setFontSize(10);
+                        doc.text(`${name} (${occupied}/${total} occupied)`, 20, yPos);
+                        doc.text(`Ksh ${this.formatNumber(revenue)}`, 180, yPos, { align: 'right' });
+                        yPos += 6;
+                    });
                 },
 
                 generateTenantsPDF(doc, yPos) {
-                    // Existing implementation
+                    // Prepare tenant data for table
+                    const tenantData = this.allTenants.map(t => [
+                        t.property,
+                        t.unit,
+                        t.name,
+                        t.phone || '-',
+                        `Ksh ${this.formatNumber(t.rent)}`,
+                        `Ksh ${this.formatNumber(t.deposit)}`,
+                        `Ksh ${this.formatNumber(t.arrears || 0)}`,
+                        this.getStatusText(t.status)
+                    ]);
+                    
+                    doc.autoTable({
+                        head: [['Property', 'Unit', 'Name', 'Phone', 'Rent', 'Deposit', 'Arrears', 'Status']],
+                        body: tenantData,
+                        startY: yPos,
+                        theme: 'grid',
+                        headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                        margin: { left: 15, right: 15 },
+                        styles: { fontSize: 8 }
+                    });
                 },
 
                 generatePropertiesPDF(doc, yPos) {
-                    // Existing implementation
+                    const propertyData = Object.entries(this.properties).map(([name, units]) => {
+                        const occupied = units.filter(u => u.status === 'occupied').length;
+                        const total = units.length;
+                        const revenue = units.reduce((sum, u) => sum + (u.rent || 0), 0);
+                        const occupancy = total > 0 ? Math.round((occupied / total) * 100) : 0;
+                        
+                        return [name, total, occupied, `${occupancy}%`, `Ksh ${this.formatNumber(revenue)}`];
+                    });
+                    
+                    doc.autoTable({
+                        head: [['Property', 'Total Units', 'Occupied', 'Occupancy Rate', 'Monthly Revenue']],
+                        body: propertyData,
+                        startY: yPos,
+                        theme: 'grid',
+                        headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                        margin: { left: 15, right: 15 },
+                        styles: { fontSize: 9 }
+                    });
                 },
 
                 generateStatementPDF(doc, yPos) {
-                    // Existing implementation
+                    const statementData = this.statementData.map(s => [
+                        s.unit || '-',
+                        s.name || '-',
+                        `Ksh ${this.formatNumber(s.rent || 0)}`,
+                        `Ksh ${this.formatNumber(s.amountPaid || 0)}`,
+                        `Ksh ${this.formatNumber(s.deposit || 0)}`,
+                        `Ksh ${this.formatNumber(s.garbage || 0)}`,
+                        `Ksh ${this.formatNumber(s.Water || 0)}`,
+                        s.remarks || '-'
+                    ]);
+                    
+                    doc.autoTable({
+                        head: [['Unit', 'Tenant', 'Monthly Rent', 'Amount Paid', 'Deposit', 'Garbage', 'Water', 'Remarks']],
+                        body: statementData,
+                        startY: yPos,
+                        theme: 'grid',
+                        headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                        margin: { left: 15, right: 15 },
+                        styles: { fontSize: 8 }
+                    });
+                    
+                    // Add summary
+                    const finalY = doc.lastAutoTable.finalY || 100;
+                    doc.setFontSize(10);
+                    doc.text(`Total Rent Collected: Ksh ${this.formatNumber(this.totalRentCollected)}`, 20, finalY + 10);
+                    doc.text(`Commission (${this.commissionRate}%): Ksh ${this.formatNumber(this.commissionAmount)}`, 20, finalY + 16);
+                    doc.text(`Total Expenses: Ksh ${this.formatNumber(this.totalExpenses)}`, 20, finalY + 22);
+                    doc.text(`Net to Landlord: Ksh ${this.formatNumber(this.netToLandlord)}`, 20, finalY + 28);
                 },
 
                 generateReportsPDF(doc, yPos) {
-                    // Existing implementation
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Financial Summary', 20, yPos);
+                    yPos += 10;
+                    doc.setFontSize(10);
+                    doc.text(`Total Revenue: Ksh ${this.formatNumber(this.totalRevenue)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Rent Collected: Ksh ${this.formatNumber(this.totalCollected)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Outstanding Arrears: Ksh ${this.formatNumber(this.totalArrears)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Overpayment Balance: Ksh ${this.formatNumber(this.totalOverpayment)}`, 20, yPos);
+                    yPos += 6;
+                    doc.text(`Refunds Processed: Ksh ${this.formatNumber(this.totalRefunds)}`, 20, yPos);
+                    yPos += 10;
+                    
+                    // Top Properties
+                    doc.setFontSize(12);
+                    doc.text('Top Performing Properties', 20, yPos);
+                    yPos += 10;
+                    
+                    this.topProperties.forEach((property, index) => {
+                        if (yPos > 250) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        doc.setFontSize(10);
+                        doc.text(`${index + 1}. ${property.name}`, 20, yPos);
+                        doc.text(`Revenue: Ksh ${this.formatNumber(property.revenue)}`, 100, yPos);
+                        doc.text(`${property.collectionRate}% collected`, 180, yPos, { align: 'right' });
+                        yPos += 6;
+                    });
                 },
 
                 generateUtilitiesPDF(doc, yPos) {
-                    // Existing implementation
+                    const utilityData = this.allTenants.map(t => [
+                        `${t.property}-${t.unit}`,
+                        t.name,
+                        `Ksh ${this.formatNumber(t.utilities?.water || 0)}`,
+                        `Ksh ${this.formatNumber(t.utilities?.garbage || 200)}`,
+                        `Ksh ${this.formatNumber(t.utilities?.penalty || 0)}`
+                    ]);
+                    
+                    doc.autoTable({
+                        head: [['House', 'Tenant', 'Water', 'Garbage', 'Penalty']],
+                        body: utilityData,
+                        startY: yPos,
+                        theme: 'grid',
+                        headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                        margin: { left: 15, right: 15 },
+                        styles: { fontSize: 8 }
+                    });
                 },
 
                 generateNotificationsPDF(doc, yPos) {
@@ -2781,6 +2952,7 @@ Utilities:
                         n.status,
                         n.sentBy === 'owner' ? 'Owner' : 'System'
                     ]);
+                    
                     doc.autoTable({
                         head: [['Date', 'Type', 'Recipient', 'Message', 'Status', 'Sent By']],
                         body: notificationsData,
@@ -2793,7 +2965,97 @@ Utilities:
                 },
 
                 exportStatementPDF() {
-                    // Existing implementation
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF('p', 'mm', 'a4');
+                        
+                        // Header
+                        doc.setFontSize(20);
+                        doc.setTextColor(30, 64, 175);
+                        doc.text('EAGLE HOMES AGENCIES', 105, 20, { align: 'center' });
+                        doc.setFontSize(12);
+                        doc.setTextColor(107, 114, 128);
+                        doc.text('Landlord Statement', 105, 28, { align: 'center' });
+                        
+                        // Statement Details
+                        doc.setFontSize(10);
+                        doc.setTextColor(75, 85, 99);
+                        const monthYear = this.statementMonth ? new Date(this.statementMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'N/A';
+                        doc.text(`Month: ${monthYear}`, 20, 40);
+                        doc.text(`Property: ${this.selectedBuilding || 'All Properties'}`, 20, 46);
+                        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 52);
+                        
+                        // Statement Table
+                        const tableData = this.statementData.map(s => [
+                            s.unit || '-',
+                            s.name || '-',
+                            `Ksh ${this.formatNumber(s.rent || 0)}`,
+                            `Ksh ${this.formatNumber(s.amountPaid || 0)}`,
+                            `Ksh ${this.formatNumber(s.deposit || 0)}`,
+                            `Ksh ${this.formatNumber(s.garbage || 0)}`,
+                            `Ksh ${this.formatNumber(s.Water || 0)}`,
+                            s.remarks || '-'
+                        ]);
+                        
+                        doc.autoTable({
+                            head: [['Unit', 'Tenant', 'Rent', 'Paid', 'Deposit', 'Garbage', 'Water', 'Remarks']],
+                            body: tableData,
+                            startY: 60,
+                            theme: 'grid',
+                            headStyles: { fillColor: [243, 244, 246], textColor: [75, 85, 99] },
+                            margin: { left: 15, right: 15 },
+                            styles: { fontSize: 8 }
+                        });
+                        
+                        // Summary
+                        const finalY = doc.lastAutoTable.finalY || 100;
+                        doc.setFontSize(11);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text('Statement Summary', 20, finalY + 15);
+                        
+                        doc.setFontSize(10);
+                        doc.text(`Total Rent Collected:`, 20, finalY + 25);
+                        doc.text(`Ksh ${this.formatNumber(this.totalRentCollected)}`, 180, finalY + 25, { align: 'right' });
+                        
+                        doc.text(`Commission (${this.commissionRate}%):`, 20, finalY + 31);
+                        doc.text(`Ksh ${this.formatNumber(this.commissionAmount)}`, 180, finalY + 31, { align: 'right' });
+                        
+                        // Expenses
+                        if (this.expenses.length > 0) {
+                            doc.text('Expenses:', 20, finalY + 40);
+                            let expenseY = finalY + 46;
+                            this.expenses.forEach(expense => {
+                                doc.text(`${expense.description}:`, 30, expenseY);
+                                doc.text(`Ksh ${this.formatNumber(expense.amount || 0)}`, 180, expenseY, { align: 'right' });
+                                expenseY += 6;
+                            });
+                            expenseY += 6;
+                            doc.text(`Total Expenses:`, 20, expenseY);
+                            doc.text(`Ksh ${this.formatNumber(this.totalExpenses)}`, 180, expenseY, { align: 'right' });
+                            expenseY += 6;
+                            doc.text(`Net to Landlord:`, 20, expenseY);
+                            doc.text(`Ksh ${this.formatNumber(this.netToLandlord)}`, 180, expenseY, { align: 'right' });
+                        } else {
+                            doc.text(`Total Expenses:`, 20, finalY + 37);
+                            doc.text(`Ksh ${this.formatNumber(this.totalExpenses)}`, 180, finalY + 37, { align: 'right' });
+                            
+                            doc.text(`Net to Landlord:`, 20, finalY + 43);
+                            doc.text(`Ksh ${this.formatNumber(this.netToLandlord)}`, 180, finalY + 43, { align: 'right' });
+                        }
+                        
+                        // Footer
+                        doc.setFontSize(8);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text('This is an automated statement generated by Eagle Homes Property Management System', 105, 280, { align: 'center' });
+                        
+                        // Save PDF
+                        const fileName = `Eagle_Homes_Statement_${this.statementMonth || 'all'}_${new Date().toISOString().slice(0, 10)}.pdf`;
+                        doc.save(fileName);
+                        this.showToastMessage('Statement PDF exported successfully!', 'success');
+                    } catch (error) {
+                        console.error('Statement PDF Export Error:', error);
+                        this.showToastMessage('Failed to export statement PDF', 'error');
+                    }
                 }
             };
         }
