@@ -1,4 +1,3 @@
-index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +21,9 @@ index.html
     <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
+    <!-- CryptoJS for hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
     <style>
         body { font-family: 'Inter', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
@@ -39,6 +41,12 @@ index.html
         input:-webkit-autofill:focus {
             -webkit-box-shadow: 0 0 0px 1000px white inset !important;
             box-shadow: 0 0 0px 1000px white inset !important;
+        }
+        
+        .password-strength-meter {
+            height: 4px;
+            border-radius: 2px;
+            transition: width 0.3s ease;
         }
     </style>
 </head>
@@ -85,7 +93,7 @@ index.html
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
-                    <span class="text-sm font-medium">Secure Role-Based Access</span>
+                    <span class="text-sm font-medium">Secure Password Reset System</span>
                 </div>
             </div>
         </div>
@@ -192,7 +200,7 @@ index.html
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                Your Email Address
+                                Email Address
                             </label>
                             <input
                                 type="email"
@@ -201,6 +209,29 @@ index.html
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 @keyup.enter="sendResetEmail"
                             >
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                Account Type
+                            </label>
+                            <div class="flex bg-slate-100 p-1 rounded-xl shadow-inner">
+                                <button
+                                    type="button"
+                                    @click="resetRole = 'owner'"
+                                    :class="resetRole === 'owner' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'"
+                                    class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
+                                >
+                                    Owner
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="resetRole = 'secretary'"
+                                    :class="resetRole === 'secretary' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'"
+                                    class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
+                                >
+                                    Secretary
+                                </button>
+                            </div>
                         </div>
                         <button
                             type="button"
@@ -260,6 +291,9 @@ index.html
                                 @input="formatCode"
                             >
                         </div>
+                        <div class="text-xs text-slate-500 text-center" x-show="resetExpiry">
+                            Code expires at: <span x-text="formatTime(resetExpiry)"></span>
+                        </div>
                         <button
                             type="button"
                             @click="verifyResetCode()"
@@ -280,13 +314,20 @@ index.html
                                 </span>
                             </template>
                         </button>
-                        <div class="text-center">
+                        <div class="text-center space-x-4">
                             <button
                                 type="button"
                                 @click="sendResetEmail()"
                                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
                             >
                                 Resend Email
+                            </button>
+                            <button
+                                type="button"
+                                @click="resetStep = 1"
+                                class="text-slate-500 hover:text-slate-700 text-sm font-medium"
+                            >
+                                Use Different Email
                             </button>
                         </div>
                     </div>
@@ -304,6 +345,31 @@ index.html
                         </div>
                         <h2 class="text-2xl font-black text-slate-900">Set New Password</h2>
                     </div>
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-xs font-semibold text-slate-500">Password Strength</span>
+                            <span class="text-xs font-bold" 
+                                  :class="{
+                                    'text-red-600': passwordStrength < 2,
+                                    'text-yellow-600': passwordStrength === 2,
+                                    'text-green-600': passwordStrength > 2
+                                  }"
+                                  x-text="passwordStrengthText">
+                            </span>
+                        </div>
+                        <div class="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full transition-all duration-300"
+                                 :class="{
+                                    'w-1/4 bg-red-500': passwordStrength < 2,
+                                    'w-2/4 bg-yellow-500': passwordStrength === 2,
+                                    'w-3/4 bg-green-500': passwordStrength === 3,
+                                    'w-full bg-emerald-500': passwordStrength === 4
+                                 }"></div>
+                        </div>
+                    </div>
+                    
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -312,6 +378,7 @@ index.html
                             <input
                                 type="password"
                                 x-model="newPassword"
+                                @input="checkPasswordStrength"
                                 placeholder="Minimum 8 characters"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
@@ -327,11 +394,29 @@ index.html
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                         </div>
+                        <div class="text-xs text-slate-500 space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span :class="newPassword.length >= 8 ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <span>At least 8 characters</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span :class="/[A-Z]/.test(newPassword) ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <span>At least one uppercase letter</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span :class="/\d/.test(newPassword) ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <span>At least one number</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span :class=/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <span>At least one special character</span>
+                            </div>
+                        </div>
                         <button
                             type="button"
                             @click="updatePassword()"
-                            :disabled="isUpdating || newPassword.length < 8 || newPassword !== confirmPassword"
-                            :class="newPassword.length < 8 || newPassword !== confirmPassword ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
+                            :disabled="isUpdating || passwordStrength < 3 || newPassword !== confirmPassword"
+                            :class="passwordStrength < 3 || newPassword !== confirmPassword ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
                             class="w-full bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors duration-200"
                         >
                             <template x-if="!isUpdating">
@@ -417,9 +502,13 @@ index.html
                 showResetModal: false,
                 resetStep: 1,
                 resetEmail: '',
+                resetRole: 'owner',
                 resetCode: '',
+                resetExpiry: null,
                 newPassword: '',
                 confirmPassword: '',
+                passwordStrength: 0,
+                passwordStrengthText: 'Very Weak',
                 isSending: false,
                 isVerifying: false,
                 isUpdating: false,
@@ -432,11 +521,11 @@ index.html
                 errorTitle: '',
                 errorMessage: '',
                 
-                // EmailJS Configuration - UPDATE THESE WITH YOUR ACTUAL EMAILJS CREDENTIALS
+                // EmailJS Configuration - Using your provided credentials
                 emailjsConfig: {
-                    serviceId: 'service_l8mddbx', 
-                    templateId: 'template_va2rli4',   
-                    publicKey: 'mxImeKQYfA_aBo1hp'       
+                    serviceId: 'service_ww5f9xf',
+                    templateId: 'template_6l75enj',
+                    publicKey: '9g1-R3t-AKYFKPHXf'
                 },
                 
                 // Initialize
@@ -446,13 +535,16 @@ index.html
                     // Initialize EmailJS
                     if (typeof emailjs !== 'undefined') {
                         emailjs.init(this.emailjsConfig.publicKey);
-                        console.log('EmailJS initialized');
+                        console.log('EmailJS initialized with your credentials');
                     } else {
                         console.error('EmailJS not loaded');
                     }
                     
                     // Check if user came from reset link
                     this.checkResetToken();
+                    
+                    // Check for existing reset data
+                    this.checkStoredResetData();
                 },
                 
                 // Check for reset token in URL
@@ -464,20 +556,54 @@ index.html
                         try {
                             // Decode the token from URL
                             const data = JSON.parse(atob(token));
-                            if (data.email && data.code && data.expiry > Date.now()) {
-                                this.resetEmail = data.email;
-                                this.role = data.role || 'owner';
-                                this.resetCode = data.code;
-                                this.resetStep = 2;
-                                this.showResetModal = true;
-                                
-                                this.showSuccessNotification(
-                                    'Reset Link Opened',
-                                    'Please enter the 6-digit code from your email'
-                                );
+                            const currentTime = Date.now();
+                            
+                            if (data.email && data.code && data.expiry && data.role) {
+                                if (data.expiry > currentTime) {
+                                    this.resetEmail = data.email;
+                                    this.resetRole = data.role;
+                                    this.resetCode = data.code;
+                                    this.resetExpiry = data.expiry;
+                                    this.resetStep = 2;
+                                    this.showResetModal = true;
+                                    
+                                    // Store for verification
+                                    localStorage.setItem('resetData', JSON.stringify(data));
+                                    
+                                    this.showSuccessNotification(
+                                        'Reset Link Opened',
+                                        'Please enter the 6-digit code from your email'
+                                    );
+                                    
+                                    // Clean URL
+                                    window.history.replaceState({}, document.title, window.location.pathname);
+                                } else {
+                                    this.showErrorNotification(
+                                        'Link Expired',
+                                        'This reset link has expired. Please request a new one.'
+                                    );
+                                }
                             }
                         } catch (e) {
-                            console.log('Invalid or expired reset token');
+                            console.log('Invalid reset token:', e);
+                        }
+                    }
+                },
+                
+                // Check for stored reset data
+                checkStoredResetData() {
+                    const storedData = localStorage.getItem('resetData');
+                    if (storedData) {
+                        const data = JSON.parse(storedData);
+                        const currentTime = Date.now();
+                        
+                        if (data.expiry && data.expiry > currentTime) {
+                            this.resetEmail = data.email || '';
+                            this.resetRole = data.role || 'owner';
+                            this.resetExpiry = data.expiry;
+                        } else {
+                            // Clear expired data
+                            localStorage.removeItem('resetData');
                         }
                     }
                 },
@@ -494,15 +620,20 @@ index.html
                     // Generate 6-digit code
                     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
                     
-                    // Create reset token (expires in 15 minutes)
+                    // Set expiry (15 minutes from now)
+                    const expiryTime = Date.now() + (15 * 60 * 1000);
+                    
+                    // Create reset data
                     const resetData = {
                         email: this.resetEmail,
+                        role: this.resetRole,
                         code: resetCode,
-                        expiry: Date.now() + (15 * 60 * 1000), // 15 minutes
-                        role: this.role
+                        expiry: expiryTime,
+                        created: Date.now(),
+                        verified: false
                     };
                     
-                    // Create reset link
+                    // Create reset token for URL
                     const resetToken = btoa(JSON.stringify(resetData));
                     const resetLink = `${window.location.origin}${window.location.pathname}?token=${resetToken}`;
                     
@@ -512,13 +643,16 @@ index.html
                     // Prepare data for EmailJS
                     const templateParams = {
                         to_email: this.resetEmail,
+                        user_email: this.resetEmail,
                         reset_code: resetCode,
                         reset_link: resetLink,
-                        user_email: this.resetEmail,
-                        user_role: this.role
+                        expiry_time: this.formatTime(expiryTime),
+                        role: this.resetRole === 'owner' ? 'Owner' : 'Secretary',
+                        site_name: 'Eagle Homes'
                     };
                     
-                    console.log('Sending reset email with params:', templateParams);
+                    console.log('Sending reset email to:', this.resetEmail);
+                    console.log('Reset code:', resetCode);
                     
                     try {
                         // Send email via EmailJS
@@ -530,63 +664,38 @@ index.html
                         
                         console.log('EmailJS Response:', response);
                         
-                        // Move to next step
-                        this.resetStep = 2;
-                        this.showSuccessNotification(
-                            'Email Sent!',
-                            `We've sent a password reset email to ${this.resetEmail}. Check your inbox (and spam folder).`
-                        );
+                        if (response.status === 200) {
+                            // Move to next step
+                            this.resetStep = 2;
+                            this.resetExpiry = expiryTime;
+                            this.showSuccessNotification(
+                                'Email Sent Successfully!',
+                                `We've sent a password reset email to ${this.resetEmail}. Please check your inbox (and spam folder).`
+                            );
+                        } else {
+                            throw new Error('Email service returned non-200 status');
+                        }
                         
                     } catch (error) {
                         console.error('EmailJS Error:', error);
                         
-                        // Try fallback method if EmailJS fails
-                        this.tryFallbackEmail(resetCode, resetLink, error);
+                        // Check for specific errors
+                        let errorMessage = 'Failed to send reset email. ';
+                        
+                        if (error.status === 400) {
+                            errorMessage += 'Invalid email address or template configuration.';
+                        } else if (error.status === 401) {
+                            errorMessage += 'Email service authentication failed. Check your EmailJS credentials.';
+                        } else if (error.status === 403) {
+                            errorMessage += 'Email service access denied.';
+                        } else {
+                            errorMessage += 'Please try again or contact support.';
+                        }
+                        
+                        this.showErrorNotification('Email Error', errorMessage);
                         
                     } finally {
                         this.isSending = false;
-                    }
-                },
-                
-                // Fallback email method
-                async tryFallbackEmail(code, link, originalError) {
-                    console.log('Trying fallback email method...');
-                    
-                    try {
-                        // Try to send via your PHP backend as fallback
-                        const response = await fetch('login_process.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                action: 'request_reset',
-                                email: this.resetEmail,
-                                role: this.role,
-                                code: code,
-                                link: link
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            this.resetStep = 2;
-                            this.showSuccessNotification(
-                                'Email Sent (Fallback)!',
-                                `We've sent a password reset email to ${this.resetEmail}. Check your inbox.`
-                            );
-                        } else {
-                            throw new Error(data.message || 'Fallback failed');
-                        }
-                    } catch (fallbackError) {
-                        console.error('Fallback email error:', fallbackError);
-                        
-                        // If both methods fail, show error
-                        this.showErrorNotification(
-                            'Email Error',
-                            'Failed to send reset email. Please check your email address and try again. Error: ' + originalError.text
-                        );
                     }
                 },
                 
@@ -601,54 +710,107 @@ index.html
                     
                     // Get stored reset data
                     const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
+                    const currentTime = Date.now();
                     
-                    // Check if code matches and is not expired
+                    // Validate stored data
                     if (!storedData.email || !storedData.code || !storedData.expiry) {
-                        this.showErrorNotification('No Reset Request', 'Please request a new reset email');
+                        this.showErrorNotification(
+                            'No Reset Request Found',
+                            'Please request a new reset email'
+                        );
                         this.resetStep = 1;
                         this.isVerifying = false;
                         return;
                     }
                     
-                    if (storedData.expiry < Date.now()) {
-                        this.showErrorNotification('Code Expired', 'Reset code has expired. Please request a new one.');
+                    // Check expiry
+                    if (storedData.expiry < currentTime) {
+                        this.showErrorNotification(
+                            'Code Expired',
+                            'Reset code has expired. Please request a new one.'
+                        );
                         this.resetStep = 1;
                         localStorage.removeItem('resetData');
                         this.isVerifying = false;
                         return;
                     }
                     
+                    // Check email match
                     if (storedData.email !== this.resetEmail) {
-                        this.showErrorNotification('Email Mismatch', 'Please use the email you requested the reset with');
+                        this.showErrorNotification(
+                            'Email Mismatch',
+                            'Please use the email you requested the reset with'
+                        );
                         this.isVerifying = false;
                         return;
                     }
                     
+                    // Check code match
                     if (storedData.code !== this.resetCode) {
-                        this.showErrorNotification('Invalid Code', 'The code you entered is incorrect. Please check your email.');
+                        this.showErrorNotification(
+                            'Invalid Code',
+                            'The code you entered is incorrect. Please check your email.'
+                        );
                         this.resetCode = '';
                         this.isVerifying = false;
                         return;
                     }
                     
                     // Code is valid
-                    this.isVerifying = false;
-                    this.resetStep = 3;
-                    this.showSuccessNotification(
-                        'Code Verified!',
-                        'Now set your new password'
-                    );
+                    setTimeout(() => {
+                        // Update stored data to mark as verified
+                        storedData.verified = true;
+                        storedData.verifiedAt = currentTime;
+                        localStorage.setItem('resetData', JSON.stringify(storedData));
+                        
+                        this.isVerifying = false;
+                        this.resetStep = 3;
+                        this.showSuccessNotification(
+                            'Code Verified!',
+                            'Now set your new secure password'
+                        );
+                    }, 500);
+                },
+                
+                // Check password strength
+                checkPasswordStrength() {
+                    const password = this.newPassword;
+                    let strength = 0;
+                    let text = 'Very Weak';
+                    
+                    if (password.length >= 8) strength++;
+                    if (/[A-Z]/.test(password)) strength++;
+                    if (/\d/.test(password)) strength++;
+                    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+                    
+                    switch(strength) {
+                        case 1: text = 'Weak'; break;
+                        case 2: text = 'Fair'; break;
+                        case 3: text = 'Good'; break;
+                        case 4: text = 'Strong'; break;
+                        default: text = 'Very Weak';
+                    }
+                    
+                    this.passwordStrength = strength;
+                    this.passwordStrengthText = text;
                 },
                 
                 // Update password
                 async updatePassword() {
-                    if (this.newPassword.length < 8) {
-                        this.showErrorNotification('Weak Password', 'Password must be at least 8 characters long');
+                    // Validate password strength
+                    if (this.passwordStrength < 3) {
+                        this.showErrorNotification(
+                            'Weak Password',
+                            'Please choose a stronger password with at least 8 characters including uppercase, numbers, and special characters.'
+                        );
                         return;
                     }
                     
                     if (this.newPassword !== this.confirmPassword) {
-                        this.showErrorNotification('Password Mismatch', 'Passwords do not match');
+                        this.showErrorNotification(
+                            'Password Mismatch',
+                            'Passwords do not match. Please re-enter your passwords.'
+                        );
                         return;
                     }
                     
@@ -658,6 +820,14 @@ index.html
                         // Get stored reset data
                         const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
                         
+                        // Validate stored data
+                        if (!storedData.email || !storedData.code || !storedData.verified) {
+                            throw new Error('Reset session invalid or expired');
+                        }
+                        
+                        // Hash the password for security
+                        const hashedPassword = CryptoJS.SHA256(this.newPassword).toString();
+                        
                         // Send to PHP backend to update password
                         const response = await fetch('login_process.php', {
                             method: 'POST',
@@ -665,24 +835,32 @@ index.html
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                action: 'update_password_with_email',
+                                action: 'reset_password',
                                 email: storedData.email,
                                 role: storedData.role,
-                                new_password: this.newPassword,
-                                reset_code: storedData.code
+                                new_password: hashedPassword,
+                                reset_code: storedData.code,
+                                token: btoa(JSON.stringify(storedData))
                             })
                         });
                         
-                        const data = await response.json();
+                        let data;
+                        try {
+                            data = await response.json();
+                        } catch (e) {
+                            console.error('JSON parse error:', e);
+                            throw new Error('Server response error');
+                        }
                         
                         if (data.success) {
-                            // Clear reset data
+                            // Clear all reset data
                             localStorage.removeItem('resetData');
+                            localStorage.removeItem('resetAttempts');
                             
                             // Show success
                             this.showSuccessNotification(
-                                'Password Updated!',
-                                'Your password has been reset successfully. You can now login with your new password.'
+                                'Password Updated Successfully!',
+                                'Your password has been reset. You can now login with your new password.'
                             );
                             
                             // Close modal after 3 seconds
@@ -691,31 +869,40 @@ index.html
                                 // Clear URL if there was a token
                                 window.history.replaceState({}, document.title, window.location.pathname);
                             }, 3000);
+                            
                         } else {
-                            this.showErrorNotification('Update Failed', data.message);
+                            throw new Error(data.message || 'Password update failed');
                         }
+                        
                     } catch (error) {
                         console.error('Password update error:', error);
                         
-                        // For demo purposes, update localStorage as fallback
-                        if (this.role === 'owner') {
-                            localStorage.setItem('owner_password', this.newPassword);
+                        // Fallback for demo purposes
+                        const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
+                        
+                        if (storedData.email && storedData.role) {
+                            // Store in localStorage for demo
+                            const demoKey = `${storedData.role}_${storedData.email.replace(/[@.]/g, '_')}_password`;
+                            localStorage.setItem(demoKey, this.newPassword);
+                            
+                            // Clear reset data
+                            localStorage.removeItem('resetData');
+                            
+                            this.showSuccessNotification(
+                                'Password Updated (Demo Mode)!',
+                                'Your password has been reset. You can now login with your new password.'
+                            );
+                            
+                            setTimeout(() => {
+                                this.closeResetModal();
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            }, 3000);
                         } else {
-                            localStorage.setItem('secretary_password', this.newPassword);
+                            this.showErrorNotification(
+                                'Update Failed',
+                                'Unable to update password. Please try again or contact support.'
+                            );
                         }
-                        
-                        // Clear reset data
-                        localStorage.removeItem('resetData');
-                        
-                        this.showSuccessNotification(
-                            'Password Updated (Demo)!',
-                            'Your password has been reset successfully. You can now login with your new password.'
-                        );
-                        
-                        setTimeout(() => {
-                            this.closeResetModal();
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                        }, 3000);
                     } finally {
                         this.isUpdating = false;
                     }
@@ -724,7 +911,12 @@ index.html
                 // Handle login
                 async handleLogin() {
                     // For demo purposes, keep hardcoded credentials
-                    if (this.role === 'owner' && this.username === 'owner_admin' && this.password === 'Eagles2026!') {
+                    const demoCredentials = {
+                        owner: { username: 'owner_admin', password: 'Eagles2026!' },
+                        secretary: { username: 'secretary_entry', password: 'Secret2026!' }
+                    };
+                    
+                    if (this.role === 'owner' && this.username === demoCredentials.owner.username && this.password === demoCredentials.owner.password) {
                         localStorage.setItem('userRole', 'owner');
                         localStorage.setItem('username', this.username);
                         this.showSuccessNotification('Login Successful', 'Welcome back, Owner!');
@@ -733,7 +925,7 @@ index.html
                             window.location.href = 'dashboard.html';
                         }, 1500);
                         
-                    } else if (this.role === 'secretary' && this.username === 'secretary_entry' && this.password === 'Secret2026!') {
+                    } else if (this.role === 'secretary' && this.username === demoCredentials.secretary.username && this.password === demoCredentials.secretary.password) {
                         localStorage.setItem('userRole', 'secretary');
                         localStorage.setItem('username', this.username);
                         this.showSuccessNotification('Login Successful', 'Welcome back, Secretary!');
@@ -745,6 +937,9 @@ index.html
                     } else {
                         // Try PHP backend login
                         try {
+                            // Hash password for secure transmission
+                            const hashedPassword = CryptoJS.SHA256(this.password).toString();
+                            
                             const response = await fetch('login_process.php', {
                                 method: 'POST',
                                 headers: {
@@ -753,7 +948,7 @@ index.html
                                 body: JSON.stringify({
                                     action: 'login',
                                     username: this.username,
-                                    password: this.password,
+                                    password: hashedPassword,
                                     role: this.role
                                 })
                             });
@@ -763,7 +958,7 @@ index.html
                             if (data.success) {
                                 localStorage.setItem('userRole', this.role);
                                 localStorage.setItem('username', this.username);
-                                localStorage.setItem('session_token', data.data.session_token);
+                                localStorage.setItem('session_token', data.data?.session_token || 'demo_token');
                                 
                                 this.showSuccessNotification(
                                     'Login Successful', 
@@ -774,7 +969,7 @@ index.html
                                     window.location.href = 'dashboard.html';
                                 }, 1500);
                             } else {
-                                this.showErrorNotification('Login Failed', data.message);
+                                this.showErrorNotification('Login Failed', data.message || 'Invalid credentials');
                                 this.password = '';
                             }
                         } catch (error) {
@@ -798,15 +993,24 @@ index.html
                     }
                 },
                 
+                // Format time for display
+                formatTime(timestamp) {
+                    const date = new Date(timestamp);
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                },
+                
                 // Close reset modal
                 closeResetModal() {
                     this.showResetModal = false;
                     setTimeout(() => {
                         this.resetStep = 1;
                         this.resetEmail = '';
+                        this.resetRole = this.role;
                         this.resetCode = '';
                         this.newPassword = '';
                         this.confirmPassword = '';
+                        this.passwordStrength = 0;
+                        this.passwordStrengthText = 'Very Weak';
                         this.isSending = false;
                         this.isVerifying = false;
                         this.isUpdating = false;
@@ -839,4 +1043,3 @@ index.html
     </script>
 </body>
 </html>
-
