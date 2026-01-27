@@ -32,10 +32,20 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .fade-in { animation: fadeIn 0.3s ease-out; }
+        
+        /* Custom styles for better UX */
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
-<body class="bg-gradient min-h-screen flex items-center justify-center p-4" x-data="loginApp()">
-
+<body class="bg-gradient min-h-screen flex items-center justify-center p-4" x-data="loginApp()" x-init="init()">
+    
     <!-- Main Login Container -->
     <div class="max-w-4xl w-full flex flex-col md:flex-row shadow-2xl rounded-3xl overflow-hidden border border-slate-700 fade-in">
         
@@ -81,45 +91,47 @@
                 </div>
             </div>
         </div>
-
+        
         <!-- Right Login Panel -->
         <div class="md:w-1/2 glass p-8 md:p-12">
             <div class="mb-10 text-center">
                 <h2 class="text-3xl font-bold text-slate-800">Secure Portal</h2>
                 <p class="text-slate-500 mt-2">Access your digital dashboard</p>
             </div>
-
+            
             <!-- Role Selection -->
             <div class="flex bg-slate-100 p-1 rounded-xl mb-8 shadow-inner">
-                <button 
+                <button
                     type="button"
-                    @click="role = 'owner'" 
-                    :class="role === 'owner' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'" 
+                    @click="role = 'owner'"
+                    :class="role === 'owner' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'"
                     class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
                 >
                     Owner
                 </button>
-                <button 
+                <button
                     type="button"
-                    @click="role = 'secretary'" 
-                    :class="role === 'secretary' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'" 
+                    @click="role = 'secretary'"
+                    :class="role === 'secretary' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'"
                     class="flex-1 py-2 rounded-lg font-semibold transition-all duration-200"
                 >
                     Secretary
                 </button>
             </div>
-
+            
             <!-- Login Form -->
             <form @submit.prevent="handleLogin" class="space-y-6">
+                <input type="hidden" name="role" x-model="role">
+                
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                         Username
                     </label>
-                    <input 
-                        type="text" 
-                        name="username" 
+                    <input
+                        type="text"
+                        name="username"
                         x-model="username"
-                        required 
+                        required
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         placeholder="Enter your ID"
                         autocomplete="username"
@@ -130,30 +142,30 @@
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                         Password
                     </label>
-                    <input 
-                        type="password" 
-                        name="password" 
+                    <input
+                        type="password"
+                        name="password"
                         x-model="password"
-                        required 
+                        required
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         placeholder="••••••••"
                         autocomplete="current-password"
                     >
                 </div>
                 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                     Log In as <span class="capitalize" x-text="role"></span>
                 </button>
             </form>
-
+            
             <!-- Forgot Password Link -->
             <div class="mt-6 text-center">
-                <button 
+                <button
                     type="button"
-                    @click="showResetModal = true" 
+                    @click="showResetModal = true"
                     class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1 mx-auto"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +176,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Password Reset Modal -->
     <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl fade-in" @click.away="closeResetModal">
@@ -182,7 +194,7 @@
                     </div>
                     
                     <p class="text-slate-500 text-sm mb-6">
-                        Enter your registered email address. We'll send a reset link and code to your inbox.
+                        We'll send a password reset link and 6-digit code to your registered email.
                     </p>
                     
                     <div class="space-y-4">
@@ -190,20 +202,20 @@
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                                 Your Email Address
                             </label>
-                            <input 
-                                type="email" 
-                                x-model="resetEmail" 
-                                placeholder="jeremiahmburu76@gmail.com" 
+                            <input
+                                type="email"
+                                x-model="resetEmail"
+                                placeholder="jeremiahmburu76@gmail.com"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 @keyup.enter="sendResetEmail"
                             >
                         </div>
                         
-                        <button 
+                        <button
                             type="button"
-                            @click="sendResetEmail()" 
-                            :disabled="isSending || !resetEmail.includes('@')"
-                            :class="!resetEmail.includes('@') ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800'"
+                            @click="sendResetEmail()"
+                            :disabled="isSending || !isValidEmail(resetEmail)"
+                            :class="!isValidEmail(resetEmail) || isSending ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800'"
                             class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors duration-200"
                         >
                             <template x-if="!isSending">
@@ -222,7 +234,7 @@
                     </div>
                 </div>
             </template>
-
+            
             <!-- Step 2: Enter Code from Email -->
             <template x-if="resetStep === 2">
                 <div>
@@ -250,21 +262,22 @@
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                                 6-Digit Code from Email
                             </label>
-                            <input 
-                                type="text" 
-                                x-model="resetCode" 
-                                placeholder="123456" 
+                            <input
+                                type="text"
+                                x-model="resetCode"
+                                placeholder="123456"
                                 maxlength="6"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 text-center text-2xl font-black tracking-[0.5em] outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 @input="formatCode"
+                                @keyup.enter="verifyResetCode"
                             >
                         </div>
                         
-                        <button 
+                        <button
                             type="button"
-                            @click="verifyResetCode()" 
+                            @click="verifyResetCode()"
                             :disabled="isVerifying || resetCode.length !== 6"
-                            :class="resetCode.length !== 6 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
+                            :class="resetCode.length !== 6 || isVerifying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
                             class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors duration-200"
                         >
                             <template x-if="!isVerifying">
@@ -282,9 +295,9 @@
                         </button>
                         
                         <div class="text-center">
-                            <button 
+                            <button
                                 type="button"
-                                @click="sendResetEmail()" 
+                                @click="sendResetEmail()"
                                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
                             >
                                 Resend Email
@@ -293,7 +306,7 @@
                     </div>
                 </div>
             </template>
-
+            
             <!-- Step 3: Set New Password -->
             <template x-if="resetStep === 3">
                 <div>
@@ -309,33 +322,41 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                New Password
+                                New Password (min 8 characters)
                             </label>
-                            <input 
-                                type="password" 
-                                x-model="newPassword" 
-                                placeholder="Minimum 8 characters" 
+                            <input
+                                type="password"
+                                x-model="newPassword"
+                                placeholder="Minimum 8 characters"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                @keyup.enter="updatePassword"
                             >
+                            <p class="text-xs text-slate-400 mt-1" x-show="newPassword.length > 0 && newPassword.length < 8">
+                                <span class="text-red-500">⚠ Password too short</span>
+                            </p>
                         </div>
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                                 Confirm Password
                             </label>
-                            <input 
-                                type="password" 
-                                x-model="confirmPassword" 
-                                placeholder="Re-enter your password" 
+                            <input
+                                type="password"
+                                x-model="confirmPassword"
+                                placeholder="Re-enter your password"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                @keyup.enter="updatePassword"
                             >
+                            <p class="text-xs text-slate-400 mt-1" x-show="confirmPassword.length > 0 && newPassword !== confirmPassword">
+                                <span class="text-red-500">⚠ Passwords don't match</span>
+                            </p>
                         </div>
-
-                        <button 
+                        
+                        <button
                             type="button"
-                            @click="updatePassword()" 
+                            @click="updatePassword()"
                             :disabled="isUpdating || newPassword.length < 8 || newPassword !== confirmPassword"
-                            :class="newPassword.length < 8 || newPassword !== confirmPassword ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
+                            :class="newPassword.length < 8 || newPassword !== confirmPassword || isUpdating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
                             class="w-full bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors duration-200"
                         >
                             <template x-if="!isUpdating">
@@ -354,17 +375,17 @@
                     </div>
                 </div>
             </template>
-
-            <button 
+            
+            <button
                 type="button"
-                @click="closeResetModal" 
+                @click="closeResetModal"
                 class="w-full mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors duration-200"
             >
                 Cancel
             </button>
         </div>
     </div>
-
+    
     <!-- Success Message -->
     <div x-show="showSuccess" x-cloak class="fixed top-4 right-4 z-50 max-w-md fade-in">
         <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-5 shadow-xl">
@@ -386,7 +407,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Error Message -->
     <div x-show="showError" x-cloak class="fixed top-4 right-4 z-50 max-w-md fade-in">
         <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-5 shadow-xl">
@@ -408,7 +429,7 @@
             </div>
         </div>
     </div>
-
+    
     <script>
         function loginApp() {
             return {
@@ -420,7 +441,7 @@
                 // Reset password state
                 showResetModal: false,
                 resetStep: 1,
-                resetEmail: '',
+                resetEmail: 'jeremiahmburu76@gmail.com', // Fixed to your email
                 resetCode: '',
                 newPassword: '',
                 confirmPassword: '',
@@ -442,15 +463,23 @@
                 },
                 
                 // Initialize
-                init() {
+                async init() {
                     console.log('Eagle Homes Login System Initialized');
                     
-                    // Initialize EmailJS
-                    emailjs.init(this.emailjsConfig.publicKey);
-                    console.log('EmailJS initialized with key:', this.emailjsConfig.publicKey);
-                    
-                    // Check if user came from reset link
-                    this.checkResetToken();
+                    try {
+                        // Initialize EmailJS FIRST
+                        await emailjs.init(this.emailjsConfig.publicKey);
+                        console.log('✅ EmailJS initialized successfully');
+                        
+                        // Check if user came from reset link
+                        this.checkResetToken();
+                    } catch (error) {
+                        console.error('❌ EmailJS initialization failed:', error);
+                        this.showErrorNotification(
+                            'Service Error',
+                            'Email service is temporarily unavailable. Please try again later.'
+                        );
+                    }
                 },
                 
                 // Check for reset token in URL
@@ -459,9 +488,12 @@
                     const token = urlParams.get('token');
                     
                     if (token) {
-                        // Decode the token
                         try {
-                            const data = JSON.parse(atob(token));
+                            // Decode the token
+                            const decodedToken = decodeURIComponent(token);
+                            const data = JSON.parse(atob(decodedToken));
+                            
+                            // Validate token
                             if (data.email && data.code && data.expiry > Date.now()) {
                                 this.resetEmail = data.email;
                                 this.resetCode = data.code;
@@ -471,47 +503,76 @@
                                     'Reset Link Opened',
                                     'Please enter the 6-digit code from your email'
                                 );
+                                
+                                // Store for verification
+                                localStorage.setItem('resetData', JSON.stringify(data));
+                            } else if (data.expiry <= Date.now()) {
+                                this.showErrorNotification(
+                                    'Link Expired',
+                                    'This reset link has expired. Please request a new one.'
+                                );
                             }
-                        } catch (e) {
-                            console.log('Invalid or expired reset token');
+                        } catch (error) {
+                            console.error('Invalid reset token:', error);
+                            this.showErrorNotification(
+                                'Invalid Link',
+                                'This reset link is invalid or corrupted. Please request a new one.'
+                            );
                         }
                     }
                 },
                 
+                // Validate email format
+                isValidEmail(email) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailRegex.test(email);
+                },
+                
                 // Send reset email
                 async sendResetEmail() {
-                    if (!this.resetEmail || !this.resetEmail.includes('@')) {
-                        this.showErrorNotification('Invalid Email', 'Please enter a valid email address');
+                    // Force use of specified email
+                    if (!this.resetEmail || !this.isValidEmail(this.resetEmail)) {
+                        this.showErrorNotification(
+                            'Invalid Email',
+                            'Please enter a valid email address (jeremiahmburu76@gmail.com)'
+                        );
                         return;
                     }
                     
+                    // For security, always use the specified email
+                    const targetEmail = 'jeremiahmburu76@gmail.com';
+                    
                     this.isSending = true;
                     
-                    // Generate 6-digit code
-                    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+                    // Generate secure 6-digit code
+                    const resetCode = String(Math.floor(100000 + Math.random() * 900000));
                     
                     // Create reset token (expires in 15 minutes)
                     const resetData = {
-                        email: this.resetEmail,
+                        email: targetEmail,
                         code: resetCode,
                         expiry: Date.now() + (15 * 60 * 1000), // 15 minutes
-                        role: this.role
+                        role: this.role,
+                        timestamp: Date.now()
                     };
                     
-                    // Create reset link
+                    // Create secure reset link
                     const resetToken = btoa(JSON.stringify(resetData));
-                    const resetLink = `${window.location.origin}${window.location.pathname}?token=${resetToken}`;
+                    const encodedToken = encodeURIComponent(resetToken);
+                    const resetLink = `${window.location.origin}${window.location.pathname}?token=${encodedToken}`;
                     
-                    // Prepare data for EmailJS
+                    // Prepare data for EmailJS - MATCHES TEMPLATE VARIABLES
                     const templateParams = {
-                        to_email: this.resetEmail,
+                        to_email: targetEmail,
                         reset_code: resetCode,
                         reset_link: resetLink,
-                        user_email: this.resetEmail,
-                        user_role: this.role
+                        user_email: targetEmail,
+                        user_role: this.role.charAt(0).toUpperCase() + this.role.slice(1),
+                        expiry_time: '15 minutes'
                     };
                     
-                    console.log('Sending reset email with params:', templateParams);
+                    console.log('📧 Sending reset email to:', targetEmail);
+                    console.log('Template params:', templateParams);
                     
                     try {
                         // Send email via EmailJS
@@ -521,23 +582,24 @@
                             templateParams
                         );
                         
-                        console.log('EmailJS Response:', response);
+                        console.log('✅ Email sent successfully:', response);
                         
                         // Store reset data in localStorage for verification
                         localStorage.setItem('resetData', JSON.stringify(resetData));
+                        localStorage.setItem('lastResetEmail', targetEmail);
                         
                         // Move to next step
                         this.resetStep = 2;
                         this.showSuccessNotification(
-                            'Email Sent!',
-                            `We've sent a password reset email to ${this.resetEmail}. Check your inbox (and spam folder).`
+                            'Email Sent Successfully!',
+                            `We've sent a password reset email to ${targetEmail}. Check your inbox (and spam folder).`
                         );
                         
                     } catch (error) {
-                        console.error('EmailJS Error:', error);
+                        console.error('❌ EmailJS Error:', error);
                         this.showErrorNotification(
-                            'Email Error',
-                            'Failed to send reset email. Please check your email address and try again.'
+                            'Email Sending Failed',
+                            'Failed to send reset email. Please check your internet connection and try again. Error: ' + error.text
                         );
                     } finally {
                         this.isSending = false;
@@ -547,136 +609,191 @@
                 // Verify reset code
                 verifyResetCode() {
                     if (!this.resetCode || this.resetCode.length !== 6) {
-                        this.showErrorNotification('Invalid Code', 'Please enter the 6-digit code from your email');
+                        this.showErrorNotification(
+                            'Invalid Code',
+                            'Please enter the 6-digit code from your email'
+                        );
                         return;
                     }
                     
                     this.isVerifying = true;
                     
                     // Get stored reset data
-                    const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
-                    
-                    // Check if code matches and is not expired
-                    if (!storedData.email || !storedData.code || !storedData.expiry) {
-                        this.showErrorNotification('No Reset Request', 'Please request a new reset email');
+                    const storedDataStr = localStorage.getItem('resetData');
+                    if (!storedDataStr) {
+                        this.showErrorNotification(
+                            'No Reset Request',
+                            'Please request a new reset email first'
+                        );
                         this.resetStep = 1;
                         this.isVerifying = false;
                         return;
                     }
                     
-                    if (storedData.expiry < Date.now()) {
-                        this.showErrorNotification('Code Expired', 'Reset code has expired. Please request a new one.');
-                        this.resetStep = 1;
-                        localStorage.removeItem('resetData');
+                    try {
+                        const storedData = JSON.parse(storedDataStr);
+                        
+                        // Check if code is expired
+                        if (storedData.expiry < Date.now()) {
+                            this.showErrorNotification(
+                                'Code Expired',
+                                'Reset code has expired. Please request a new one.'
+                            );
+                            this.resetStep = 1;
+                            localStorage.removeItem('resetData');
+                            this.isVerifying = false;
+                            return;
+                        }
+                        
+                        // Check if email matches
+                        const targetEmail = 'jeremiahmburu76@gmail.com';
+                        if (storedData.email !== targetEmail) {
+                            this.showErrorNotification(
+                                'Email Mismatch',
+                                'Please use the email you requested the reset with'
+                            );
+                            this.isVerifying = false;
+                            return;
+                        }
+                        
+                        // Check if code matches
+                        if (storedData.code !== this.resetCode) {
+                            this.showErrorNotification(
+                                'Invalid Code',
+                                'The code you entered is incorrect. Please check your email carefully.'
+                            );
+                            this.resetCode = '';
+                            this.isVerifying = false;
+                            return;
+                        }
+                        
+                        // Code is valid
                         this.isVerifying = false;
-                        return;
-                    }
-                    
-                    if (storedData.email !== this.resetEmail) {
-                        this.showErrorNotification('Email Mismatch', 'Please use the email you requested the reset with');
+                        this.resetStep = 3;
+                        this.showSuccessNotification(
+                            'Code Verified!',
+                            'Now set your new password'
+                        );
+                        
+                    } catch (error) {
+                        console.error('Verification error:', error);
+                        this.showErrorNotification(
+                            'Verification Failed',
+                            'An error occurred during verification. Please try again.'
+                        );
                         this.isVerifying = false;
-                        return;
                     }
-                    
-                    if (storedData.code !== this.resetCode) {
-                        this.showErrorNotification('Invalid Code', 'The code you entered is incorrect. Please check your email.');
-                        this.resetCode = '';
-                        this.isVerifying = false;
-                        return;
-                    }
-                    
-                    // Code is valid
-                    this.isVerifying = false;
-                    this.resetStep = 3;
-                    this.showSuccessNotification(
-                        'Code Verified!',
-                        'Now set your new password'
-                    );
                 },
                 
                 // Update password
                 async updatePassword() {
+                    // Validate password
                     if (this.newPassword.length < 8) {
-                        this.showErrorNotification('Weak Password', 'Password must be at least 8 characters long');
+                        this.showErrorNotification(
+                            'Weak Password',
+                            'Password must be at least 8 characters long'
+                        );
                         return;
                     }
                     
                     if (this.newPassword !== this.confirmPassword) {
-                        this.showErrorNotification('Password Mismatch', 'Passwords do not match');
+                        this.showErrorNotification(
+                            'Password Mismatch',
+                            'Passwords do not match. Please try again.'
+                        );
                         return;
                     }
                     
                     this.isUpdating = true;
                     
                     try {
-                        // Simulate API call
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        // In a real app, send to backend
+                        const response = await fetch('login_process.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: new URLSearchParams({
+                                action: 'reset_password',
+                                email: 'jeremiahmburu76@gmail.com',
+                                new_password: this.newPassword,
+                                role: this.role,
+                                reset_code: this.resetCode
+                            })
+                        });
                         
-                        // In a real app, you would send this to your backend:
-                        // await fetch('/api/reset-password', {
-                        //     method: 'POST',
-                        //     headers: { 'Content-Type': 'application/json' },
-                        //     body: JSON.stringify({
-                        //         email: this.resetEmail,
-                        //         newPassword: this.newPassword,
-                        //         role: this.role
-                        //     })
-                        // });
+                        const result = await response.json();
                         
-                        // For demo purposes, update localStorage
-                        if (this.role === 'owner') {
-                            localStorage.setItem('owner_password', this.newPassword);
+                        if (result.success) {
+                            // Clear reset data
+                            localStorage.removeItem('resetData');
+                            localStorage.removeItem('lastResetEmail');
+                            
+                            // Show success
+                            this.showSuccessNotification(
+                                'Password Updated Successfully!',
+                                'Your password has been reset. You can now login with your new password.'
+                            );
+                            
+                            // Close modal after 3 seconds
+                            setTimeout(() => {
+                                this.closeResetModal();
+                                // Clear URL if there was a token
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            }, 3000);
                         } else {
-                            localStorage.setItem('secretary_password', this.newPassword);
+                            throw new Error(result.message || 'Password update failed');
                         }
                         
-                        // Clear reset data
-                        localStorage.removeItem('resetData');
-                        
-                        // Show success
-                        this.showSuccessNotification(
-                            'Password Updated!',
-                            'Your password has been reset successfully. You can now login with your new password.'
-                        );
-                        
-                        // Close modal after 3 seconds
-                        setTimeout(() => {
-                            this.closeResetModal();
-                            // Clear URL if there was a token
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                        }, 3000);
-                        
                     } catch (error) {
-                        this.showErrorNotification('Update Failed', 'Failed to update password. Please try again.');
+                        console.error('Update error:', error);
+                        this.showErrorNotification(
+                            'Update Failed',
+                            'Failed to update password. Please try again. ' + error.message
+                        );
                     } finally {
                         this.isUpdating = false;
                     }
                 },
                 
                 // Handle login
-                handleLogin() {
-                    if (this.role === 'owner' && this.username === 'owner_admin' && this.password === 'Eagles2026!') {
-                        localStorage.setItem('userRole', 'owner');
-                        localStorage.setItem('username', this.username);
-                        this.showSuccessNotification('Login Successful', 'Welcome back, Owner!');
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 1500);
-                    } else if (this.role === 'secretary' && this.username === 'secretary_entry' && this.password === 'Secret2026!') {
-                        localStorage.setItem('userRole', 'secretary');
-                        localStorage.setItem('username', this.username);
-                        this.showSuccessNotification('Login Successful', 'Welcome back, Secretary!');
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 1500);
-                    } else {
+                async handleLogin() {
+                    try {
+                        const response = await fetch('login_process.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: new URLSearchParams({
+                                username: this.username,
+                                password: this.password,
+                                role: this.role
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            this.showSuccessNotification(
+                                'Login Successful!',
+                                `Welcome back, ${this.role.charAt(0).toUpperCase() + this.role.slice(1)}!`
+                            );
+                            
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 1500);
+                        } else {
+                            this.showErrorNotification(
+                                'Login Failed',
+                                result.message || 'Invalid credentials'
+                            );
+                            this.password = '';
+                        }
+                    } catch (error) {
                         this.showErrorNotification(
-                            'Login Failed',
-                            this.role === 'owner' 
-                                ? 'Invalid Owner credentials'
-                                : 'Invalid Secretary credentials'
+                            'Connection Error',
+                            'Unable to connect to server. Please try again.'
                         );
-                        this.password = '';
                     }
                 },
                 
@@ -693,7 +810,6 @@
                     this.showResetModal = false;
                     setTimeout(() => {
                         this.resetStep = 1;
-                        this.resetEmail = '';
                         this.resetCode = '';
                         this.newPassword = '';
                         this.confirmPassword = '';
@@ -725,6 +841,5 @@
             }
         }
     </script>
-
 </body>
 </html>
