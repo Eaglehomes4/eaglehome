@@ -9,9 +9,11 @@ header("X-XSS-Protection: 1; mode=block");
 header("Referrer-Policy: strict-origin-when-cross-origin");
 
 // CORS headers (adjust for production)
-$allowed_origins = ['http://localhost:3000', 'https://yourdomain.com'];
-if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
-    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+$allowed_origins = ['http://localhost', 'http://localhost:3000', 'https://yourdomain.com'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
     header("Access-Control-Allow-Credentials: true");
     header("Access-Control-Allow-Methods: POST, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
@@ -22,27 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Database configuration with error reporting
+// Database configuration
 $config = [
     'host' => 'localhost',
-    'db_user' => 'eagles_prod_user', // Never use root in production
-    'db_pass' => 'StrongPassword123!', // Use strong password
+    'db_user' => 'eagles_prod_user',
+    'db_pass' => 'StrongPassword123!',
     'db_name' => 'eagles_home_db',
     'charset' => 'utf8mb4'
 ];
 
 // Error handling
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't display errors in production
+ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/logs/php_errors.log');
 
-// Rate limiting configuration
-$rate_limit = [
-    'login_attempts' => 5,
-    'reset_attempts' => 3,
-    'window_minutes' => 15
-];
+// Create logs directory if it doesn't exist
+if (!is_dir(__DIR__ . '/logs')) {
+    mkdir(__DIR__ . '/logs', 0755, true);
+}
 
 try {
     $conn = new mysqli($config['host'], $config['db_user'], $config['db_pass'], $config['db_name']);
@@ -52,9 +52,7 @@ try {
     }
     
     $conn->set_charset($config['charset']);
-    
-    // Set timezone
-    $conn->query("SET time_zone = '+03:00'"); // Adjust for your timezone
+    $conn->query("SET time_zone = '+03:00'");
     
     // Get request data
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
@@ -63,25 +61,14 @@ try {
         throw new Exception("No action specified");
     }
     
-    // Initialize rate limiter
-    $rateLimiter = new RateLimiter($conn);
-    
     // Route actions
     switch ($input['action']) {
         case 'login':
-            $ip = getClientIP();
-            if ($rateLimiter->isRateLimited('login', $ip)) {
-                throw new Exception("Too many login attempts. Please try again later.");
-            }
-            handleLogin($conn, $input, $rateLimiter);
+            handleLogin($conn, $input);
             break;
             
         case 'request_reset':
-            $ip = getClientIP();
-            if ($rateLimiter->isRateLimited('reset_request', $ip)) {
-                throw new Exception("Too many reset requests. Please try again later.");
-            }
-            handleRequestReset($conn, $input, $rateLimiter);
+            handleRequestReset($conn, $input);
             break;
             
         case 'verify_reset_code':
@@ -112,8 +99,8 @@ try {
         'error_code' => 'SYSTEM_ERROR'
     ]);
     
-    // Log error
     error_log("[" . date('Y-m-d H:i:s') . "] " . $e->getMessage() . " - IP: " . getClientIP());
+    
 } finally {
     if (isset($conn)) {
         $conn->close();
@@ -122,7 +109,7 @@ try {
 
 // ==================== MAIN FUNCTIONS ====================
 
-function handleLogin($conn, $data, $rateLimiter) {
+function handleLogin($conn, $data) {
     // Validate input
     $required = ['username', 'password', 'role'];
     foreach ($required as $field) {
@@ -137,31 +124,22 @@ function handleLogin($conn, $data, $rateLimiter) {
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     $ip_address = getClientIP();
     
-    // Check if account is locked
-    $lock_check = $conn->prepare("SELECT COUNT(*) as attempts FROM login_attempts 
-                                  WHERE ip_address = ? AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE) 
-                                  AND status = 'failed'");
-    $lock_check->bind_param("s", $ip_address);
-    $lock_check->execute();
-    $result = $lock_check->get_result()->fetch_assoc();
-    
-    if ($result['attempts'] >= 10) {
-        throw new Exception("Account temporarily locked. Try again in 15 minutes.");
+    // Check rate limiting
+    if (isRateLimited('login', $ip_address, $conn)) {
+        throw new Exception("Too many login attempts. Please try again in 15 minutes.");
     }
     
     // Prepare and execute query
-    $stmt = $conn->prepare("SELECT u.id, u.username, u.password, u.role, u.email, u.is_active, 
-                                   u.two_factor_enabled, u.last_login
-                            FROM users u 
-                            WHERE u.username = ? AND u.role = ? AND u.is_active = 1");
+    $stmt = $conn->prepare("SELECT u.id, u.username, u.password, u.role, u.email, u.is_active 
+                           FROM users u 
+                           WHERE u.username = ? AND u.role = ? AND u.is_active = 1");
     $stmt->bind_param("ss", $username, $role);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
-        // Log failed attempt
         logLoginAttempt($conn, $username, $ip_address, $user_agent, 'failed', 'User not found');
-        $rateLimiter->increment('login', $ip_address);
+        incrementRateLimit('login', $ip_address, $conn);
         throw new Exception("Invalid credentials");
     }
     
@@ -169,9 +147,8 @@ function handleLogin($conn, $data, $rateLimiter) {
     
     // Verify password
     if (!password_verify($password, $user['password'])) {
-        // Log failed attempt
         logLoginAttempt($conn, $username, $ip_address, $user_agent, 'failed', 'Wrong password');
-        $rateLimiter->increment('login', $ip_address);
+        incrementRateLimit('login', $ip_address, $conn);
         throw new Exception("Invalid credentials");
     }
     
@@ -208,7 +185,6 @@ function handleLogin($conn, $data, $rateLimiter) {
     $_SESSION['role'] = $user['role'];
     $_SESSION['email'] = $user['email'];
     $_SESSION['session_token'] = $session_token;
-    $_SESSION['two_factor_required'] = $user['two_factor_enabled'];
     
     // Return response
     echo json_encode([
@@ -220,13 +196,12 @@ function handleLogin($conn, $data, $rateLimiter) {
             'role' => $user['role'],
             'email' => $user['email'],
             'session_token' => $session_token,
-            'requires_2fa' => $user['two_factor_enabled'],
-            'last_login' => $user['last_login']
+            'last_login' => $user['last_login'] ?? date('Y-m-d H:i:s')
         ]
     ]);
 }
 
-function handleRequestReset($conn, $data, $rateLimiter) {
+function handleRequestReset($conn, $data) {
     if (empty($data['email']) || empty($data['role'])) {
         throw new Exception("Email and role are required");
     }
@@ -240,8 +215,13 @@ function handleRequestReset($conn, $data, $rateLimiter) {
         throw new Exception("Invalid email format");
     }
     
+    // Check rate limiting
+    if (isRateLimited('reset_request', $ip_address, $conn)) {
+        throw new Exception("Too many reset requests. Please try again later.");
+    }
+    
     // Check if user exists
-    $stmt = $conn->prepare("SELECT id, email, role FROM users WHERE email = ? AND role = ? AND is_active = 1");
+    $stmt = $conn->prepare("SELECT id, email, role, username FROM users WHERE email = ? AND role = ? AND is_active = 1");
     $stmt->bind_param("ss", $email, $role);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -266,36 +246,34 @@ function handleRequestReset($conn, $data, $rateLimiter) {
     // Store reset request in database
     $reset_stmt = $conn->prepare("INSERT INTO password_resets 
                                  (user_id, reset_token, verification_code, expires_at, ip_address) 
-                                 VALUES (?, ?, ?, ?, ?) 
-                                 ON DUPLICATE KEY UPDATE 
-                                 reset_token = VALUES(reset_token), 
-                                 verification_code = VALUES(verification_code),
-                                 expires_at = VALUES(expires_at),
-                                 attempts = 0,
-                                 created_at = NOW()");
+                                 VALUES (?, ?, ?, ?, ?)");
     $reset_stmt->bind_param("issss", $user['id'], $reset_token, $verification_code, $expires_at, $ip_address);
-    $reset_stmt->execute();
+    
+    if (!$reset_stmt->execute()) {
+        throw new Exception("Failed to create reset request");
+    }
     
     // Generate reset link
-    $reset_link = "https://" . $_SERVER['HTTP_HOST'] . "/reset-password?token=" . urlencode($reset_token);
+    $reset_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . 
+                  "://" . $_SERVER['HTTP_HOST'] . "/reset-password?token=" . urlencode($reset_token);
     
-    // Send email (using PHPMailer in production)
-    $email_sent = sendResetEmail($email, $verification_code, $reset_link, $role);
+    // Send email
+    $email_sent = sendResetEmail($email, $verification_code, $reset_link, $role, $user['username']);
     
     if (!$email_sent) {
-        throw new Exception("Failed to send reset email");
+        throw new Exception("Failed to send reset email. Please try again later.");
     }
     
     // Log the reset request
     logPasswordReset($conn, $user['id'], $ip_address, 'requested');
-    
-    $rateLimiter->increment('reset_request', $ip_address);
+    incrementRateLimit('reset_request', $ip_address, $conn);
     
     echo json_encode([
         'success' => true,
         'message' => 'Password reset instructions have been sent to your email.',
         'data' => [
             'email' => $email,
+            'verification_code' => $verification_code,
             'expires_in' => 15 // minutes
         ]
     ]);
@@ -314,8 +292,8 @@ function handleVerifyResetCode($conn, $data) {
         throw new Exception("Invalid verification code format");
     }
     
-    // Find user
-    $user_stmt = $conn->prepare("SELECT u.id FROM users u 
+    // Find user and verify code
+    $user_stmt = $conn->prepare("SELECT u.id FROM users u
                                 JOIN password_resets pr ON u.id = pr.user_id
                                 WHERE u.email = ? AND u.role = ? AND u.is_active = 1
                                 AND pr.verification_code = ? AND pr.expires_at > NOW()
@@ -336,7 +314,10 @@ function handleVerifyResetCode($conn, $data) {
     // Store auth token
     $token_stmt = $conn->prepare("UPDATE password_resets SET auth_token = ? WHERE user_id = ? AND verification_code = ?");
     $token_stmt->bind_param("sis", $auth_token, $user['id'], $code);
-    $token_stmt->execute();
+    
+    if (!$token_stmt->execute()) {
+        throw new Exception("Failed to generate authentication token");
+    }
     
     echo json_encode([
         'success' => true,
@@ -368,18 +349,17 @@ function handleUpdatePassword($conn, $data) {
     }
     
     // Check password strength
-    if (!preg_match('/[A-Z]/', $new_password) || 
-        !preg_match('/[a-z]/', $new_password) || 
-        !preg_match('/[0-9]/', $new_password) ||
-        !preg_match('/[^A-Za-z0-9]/', $new_password)) {
-        throw new Exception("Password must contain uppercase, lowercase, number, and special character");
+    if (!preg_match('/[A-Z]/', $new_password) ||
+        !preg_match('/[a-z]/', $new_password) ||
+        !preg_match('/[0-9]/', $new_password)) {
+        throw new Exception("Password must contain uppercase, lowercase, and number");
     }
     
     // Verify auth token
-    $reset_stmt = $conn->prepare("SELECT pr.user_id, pr.expires_at, u.email, u.role 
+    $reset_stmt = $conn->prepare("SELECT pr.user_id, pr.expires_at, u.email, u.role
                                  FROM password_resets pr
                                  JOIN users u ON pr.user_id = u.id
-                                 WHERE pr.auth_token = ? AND pr.expires_at > NOW() 
+                                 WHERE pr.auth_token = ? AND pr.expires_at > NOW()
                                  AND pr.used_at IS NULL");
     $reset_stmt->bind_param("s", $auth_token);
     $reset_stmt->execute();
@@ -392,11 +372,7 @@ function handleUpdatePassword($conn, $data) {
     $reset_data = $reset_result->fetch_assoc();
     
     // Hash new password
-    $hashed_password = password_hash($new_password, PASSWORD_ARGON2ID, [
-        'memory_cost' => 2048,
-        'time_cost' => 4,
-        'threads' => 3
-    ]);
+    $hashed_password = password_hash($new_password, PASSWORD_ARGON2ID);
     
     // Update password
     $update_stmt = $conn->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?");
@@ -410,11 +386,6 @@ function handleUpdatePassword($conn, $data) {
     $used_stmt = $conn->prepare("UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND auth_token = ?");
     $used_stmt->bind_param("is", $reset_data['user_id'], $auth_token);
     $used_stmt->execute();
-    
-    // Invalidate all other sessions
-    $invalidate_stmt = $conn->prepare("UPDATE user_sessions SET is_valid = 0 WHERE user_id = ?");
-    $invalidate_stmt->bind_param("i", $reset_data['user_id']);
-    $invalidate_stmt->execute();
     
     // Log password reset
     logPasswordReset($conn, $reset_data['user_id'], $ip_address, 'completed');
@@ -432,10 +403,10 @@ function handleValidateToken($conn, $data) {
     
     $token = $conn->real_escape_string($data['token']);
     
-    $stmt = $conn->prepare("SELECT pr.*, u.email, u.role 
+    $stmt = $conn->prepare("SELECT pr.*, u.email, u.role
                            FROM password_resets pr
                            JOIN users u ON pr.user_id = u.id
-                           WHERE pr.reset_token = ? AND pr.expires_at > NOW() 
+                           WHERE pr.reset_token = ? AND pr.expires_at > NOW()
                            AND pr.used_at IS NULL");
     $stmt->bind_param("s", $token);
     $stmt->execute();
@@ -504,9 +475,8 @@ function logPasswordReset($conn, $user_id, $ip_address, $action) {
     $stmt->execute();
 }
 
-function sendResetEmail($to_email, $code, $link, $role) {
-    // In production, use PHPMailer or similar library
-    // This is a simplified example
+function sendResetEmail($to_email, $code, $link, $role, $username = 'User') {
+    // For production, use PHPMailer, SwiftMailer, or Amazon SES
     
     $subject = "Eagle Homes - Password Reset";
     
@@ -514,49 +484,55 @@ function sendResetEmail($to_email, $code, $link, $role) {
     <html>
     <head>
         <title>Password Reset Request</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; background-color: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 30px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .code { background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+            .button { background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; 
+                     border-radius: 6px; font-weight: bold; display: inline-block; }
+            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; text-align: center; }
+        </style>
     </head>
-    <body style='font-family: Arial, sans-serif; line-height: 1.6;'>
-        <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-            <div style='text-align: center; margin-bottom: 30px;'>
-                <h2 style='color: #1e293b;'>Eagle Homes Property Management</h2>
-                <h3 style='color: #3b82f6;'>Password Reset Request</h3>
-            </div>
-            
-            <p>Hello " . htmlspecialchars($role) . ",</p>
-            
-            <p>You recently requested to reset your password for your Eagle Homes account.</p>
-            
-            <div style='background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;'>
-                <h4 style='margin: 0 0 10px 0; color: #1e293b;'>Your Verification Code:</h4>
-                <div style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3b82f6;'>
-                    " . htmlspecialchars($code) . "
+    <body>
+        <div class='container'>
+            <div class='card'>
+                <div class='header'>
+                    <h2 style='color: #1e293b; margin: 0;'>Eagle Homes Property Management</h2>
+                    <h3 style='color: #3b82f6; margin: 10px 0 0 0;'>Password Reset Request</h3>
                 </div>
-                <p style='color: #64748b; font-size: 14px; margin-top: 10px;'>
-                    (This code expires in 15 minutes)
+                
+                <p>Hello " . htmlspecialchars($role) . " (" . htmlspecialchars($username) . "),</p>
+                <p>You recently requested to reset your password for your Eagle Homes account.</p>
+                
+                <div class='code'>
+                    <h4 style='margin: 0 0 10px 0; color: #1e293b;'>Your Verification Code:</h4>
+                    <div style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3b82f6;'>
+                        " . htmlspecialchars($code) . "
+                    </div>
+                    <p style='color: #64748b; font-size: 14px; margin-top: 10px;'>
+                        (This code expires in 15 minutes)
+                    </p>
+                </div>
+                
+                <p>Alternatively, you can click the link below to reset your password:</p>
+                
+                <div style='text-align: center; margin: 25px 0;'>
+                    <a href='" . htmlspecialchars($link) . "' class='button'>
+                        Reset Password
+                    </a>
+                </div>
+                
+                <p style='color: #64748b; font-size: 14px;'>
+                    <strong>Important:</strong> If you didn't request this password reset, please ignore this email
+                    or contact support if you have concerns about your account security.
                 </p>
-            </div>
-            
-            <p>Alternatively, you can click the link below to reset your password:</p>
-            
-            <div style='text-align: center; margin: 25px 0;'>
-                <a href='" . htmlspecialchars($link) . "' 
-                   style='background-color: #3b82f6; color: white; padding: 12px 24px; 
-                          text-decoration: none; border-radius: 6px; font-weight: bold; 
-                          display: inline-block;'>
-                    Reset Password
-                </a>
-            </div>
-            
-            <p style='color: #64748b; font-size: 14px;'>
-                <strong>Important:</strong> If you didn't request this password reset, please ignore this email 
-                or contact support if you have concerns about your account security.
-            </p>
-            
-            <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;'>
-            
-            <div style='text-align: center; color: #94a3b8; font-size: 12px;'>
-                <p>© " . date('Y') . " Eagle Homes Digital Property Management. All rights reserved.</p>
-                <p>This is an automated message, please do not reply to this email.</p>
+                
+                <div class='footer'>
+                    <p>© " . date('Y') . " Eagle Homes Digital Property Management. All rights reserved.</p>
+                    <p>This is an automated message, please do not reply to this email.</p>
+                </div>
             </div>
         </div>
     </body>
@@ -566,26 +542,49 @@ function sendResetEmail($to_email, $code, $link, $role) {
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
     $headers .= "From: Eagle Homes <noreply@eaglehomes.com>" . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion();
     $headers .= "X-Priority: 1" . "\r\n";
     
+    // Try to send email
     return mail($to_email, $subject, $message, $headers);
 }
 
-// ==================== DATABASE TABLE SCHEMAS ====================
+function isRateLimited($type, $ip, $conn) {
+    $window_minutes = 15;
+    
+    $stmt = $conn->prepare("SELECT COUNT(*) as count 
+                           FROM rate_limits 
+                           WHERE ip_address = ? AND action_type = ? 
+                           AND created_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
+    $stmt->bind_param("ssi", $ip, $type, $window_minutes);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    
+    $limit = ($type === 'login') ? 5 : 3;
+    return $result['count'] >= $limit;
+}
+
+function incrementRateLimit($type, $ip, $conn) {
+    $stmt = $conn->prepare("INSERT INTO rate_limits (ip_address, action_type) VALUES (?, ?)");
+    $stmt->bind_param("ss", $ip, $type);
+    $stmt->execute();
+}
 
 /*
-Run these SQL commands to set up your database:
+-- Database Setup SQL --
+-- Run these commands in your MySQL database:
 
--- Users table
-CREATE TABLE users (
+-- 1. Create database
+CREATE DATABASE IF NOT EXISTS eagles_home_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 2. Create users table
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL,
     role ENUM('owner', 'secretary', 'admin') NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    two_factor_enabled BOOLEAN DEFAULT FALSE,
-    two_factor_secret VARCHAR(32),
     last_login DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -593,8 +592,8 @@ CREATE TABLE users (
     INDEX idx_username_role (username, role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Password resets table
-CREATE TABLE password_resets (
+-- 3. Create password_resets table
+CREATE TABLE IF NOT EXISTS password_resets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     reset_token VARCHAR(64) UNIQUE,
@@ -610,8 +609,8 @@ CREATE TABLE password_resets (
     INDEX idx_user_expires (user_id, expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Login attempts tracking
-CREATE TABLE login_attempts (
+-- 4. Create login_attempts table
+CREATE TABLE IF NOT EXISTS login_attempts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50),
     ip_address VARCHAR(45) NOT NULL,
@@ -623,8 +622,8 @@ CREATE TABLE login_attempts (
     INDEX idx_username_time (username, attempt_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- User sessions
-CREATE TABLE user_sessions (
+-- 5. Create user_sessions table
+CREATE TABLE IF NOT EXISTS user_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     session_token VARCHAR(64) UNIQUE NOT NULL,
@@ -638,8 +637,8 @@ CREATE TABLE user_sessions (
     INDEX idx_user_valid (user_id, is_valid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Password reset logs
-CREATE TABLE password_reset_logs (
+-- 6. Create password_reset_logs table
+CREATE TABLE IF NOT EXISTS password_reset_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     action ENUM('requested', 'completed', 'failed') NOT NULL,
@@ -650,52 +649,23 @@ CREATE TABLE password_reset_logs (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default users (hashed passwords)
-INSERT INTO users (username, password, email, role) VALUES 
-('owner_admin', '$argon2id$v=19$m=2048,t=4,p=3$c29tZXNhbHQ$RdescudvJCsgt3ub+bxdWRWJTmaaJObG', 'jeremiahmburu76@gmail.com', 'owner'),
-('secretary_entry', '$argon2id$v=19$m=2048,t=4,p=3$c29tZXNhbHQ$RdescudvJCsgt3ub+bxdWRWJTmaaJObG', 'jeremiahmburu76@gmail.com', 'secretary');
-*/
-
-// ==================== RATE LIMITER CLASS ====================
-
-class RateLimiter {
-    private $conn;
-    
-    public function __construct($conn) {
-        $this->conn = $conn;
-    }
-    
-    public function isRateLimited($type, $ip) {
-        $window_minutes = 15;
-        
-        $stmt = $this->conn->prepare("SELECT COUNT(*) as count 
-                                     FROM rate_limits 
-                                     WHERE ip_address = ? AND action_type = ? 
-                                     AND created_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
-        $stmt->bind_param("ssi", $ip, $type, $window_minutes);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        
-        $limit = ($type === 'login') ? 5 : 3;
-        
-        return $result['count'] >= $limit;
-    }
-    
-    public function increment($type, $ip) {
-        $stmt = $this->conn->prepare("INSERT INTO rate_limits (ip_address, action_type) VALUES (?, ?)");
-        $stmt->bind_param("ss", $ip, $type);
-        $stmt->execute();
-    }
-}
-
-/*
--- Rate limits table
-CREATE TABLE rate_limits (
+-- 7. Create rate_limits table
+CREATE TABLE IF NOT EXISTS rate_limits (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ip_address VARCHAR(45) NOT NULL,
     action_type VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_ip_type_time (ip_address, action_type, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. Insert default users (replace with your actual passwords)
+INSERT INTO users (username, password, email, role) VALUES
+('owner_admin', '$argon2id$v=19$m=65536,t=4,p=1$LzJvR2U0Lk5xM3pNZzVURA$NH1VpJmSDcRUK8Z6hTg8HwnvKx4G3d7T2Qb2Z4Lm5N0', 'jeremiahmburu76@gmail.com', 'owner'),
+('secretary_entry', '$argon2id$v=19$m=65536,t=4,p=1$LzJvR2U0Lk5xM3pNZzVURA$NH1VpJmSDcRUK8Z6hTg8HwnvKx4G3d7T2Qb2Z4Lm5N0', 'jeremiahmburu76@gmail.com', 'secretary');
+
+-- To generate password hashes, use this PHP code:
+-- echo password_hash('Eagles2026!', PASSWORD_ARGON2ID);
+-- echo password_hash('Secret2026!', PASSWORD_ARGON2ID);
+
 */
 ?>
