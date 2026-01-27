@@ -420,7 +420,7 @@
                 // Reset password state
                 showResetModal: false,
                 resetStep: 1,
-                resetEmail: '',
+                resetEmail: 'jeremiahmburu76@gmail.com', // Pre-filled with the specified email
                 resetCode: '',
                 newPassword: '',
                 confirmPassword: '',
@@ -693,7 +693,8 @@
                     this.showResetModal = false;
                     setTimeout(() => {
                         this.resetStep = 1;
-                        this.resetEmail = '';
+                        // Reset to the specified email
+                        this.resetEmail = 'jeremiahmburu76@gmail.com';
                         this.resetCode = '';
                         this.newPassword = '';
                         this.confirmPassword = '';
