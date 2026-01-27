@@ -35,7 +35,7 @@
     </style>
 </head>
 <body class="bg-gradient min-h-screen flex items-center justify-center p-4" x-data="loginApp()">
-    
+
     <!-- Main Login Container -->
     <div class="max-w-4xl w-full flex flex-col md:flex-row shadow-2xl rounded-3xl overflow-hidden border border-slate-700 fade-in">
         
@@ -81,14 +81,14 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Right Login Panel -->
         <div class="md:w-1/2 glass p-8 md:p-12">
             <div class="mb-10 text-center">
                 <h2 class="text-3xl font-bold text-slate-800">Secure Portal</h2>
                 <p class="text-slate-500 mt-2">Access your digital dashboard</p>
             </div>
-            
+
             <!-- Role Selection -->
             <div class="flex bg-slate-100 p-1 rounded-xl mb-8 shadow-inner">
                 <button 
@@ -108,7 +108,7 @@
                     Secretary
                 </button>
             </div>
-            
+
             <!-- Login Form -->
             <form @submit.prevent="handleLogin" class="space-y-6">
                 <div>
@@ -148,7 +148,7 @@
                     Log In as <span class="capitalize" x-text="role"></span>
                 </button>
             </form>
-            
+
             <!-- Forgot Password Link -->
             <div class="mt-6 text-center">
                 <button 
@@ -164,7 +164,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Password Reset Modal -->
     <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl fade-in" @click.away="closeResetModal">
@@ -193,7 +193,7 @@
                             <input 
                                 type="email" 
                                 x-model="resetEmail" 
-                                placeholder="jeremiahmburu76@gmail.com" 
+                                placeholder="your.email@example.com" 
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 @keyup.enter="sendResetEmail"
                             >
@@ -222,7 +222,7 @@
                     </div>
                 </div>
             </template>
-            
+
             <!-- Step 2: Enter Code from Email -->
             <template x-if="resetStep === 2">
                 <div>
@@ -293,7 +293,7 @@
                     </div>
                 </div>
             </template>
-            
+
             <!-- Step 3: Set New Password -->
             <template x-if="resetStep === 3">
                 <div>
@@ -330,7 +330,7 @@
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                         </div>
-                        
+
                         <button 
                             type="button"
                             @click="updatePassword()" 
@@ -354,7 +354,7 @@
                     </div>
                 </div>
             </template>
-            
+
             <button 
                 type="button"
                 @click="closeResetModal" 
@@ -364,7 +364,7 @@
             </button>
         </div>
     </div>
-    
+
     <!-- Success Message -->
     <div x-show="showSuccess" x-cloak class="fixed top-4 right-4 z-50 max-w-md fade-in">
         <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-5 shadow-xl">
@@ -386,7 +386,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Error Message -->
     <div x-show="showError" x-cloak class="fixed top-4 right-4 z-50 max-w-md fade-in">
         <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-5 shadow-xl">
@@ -408,7 +408,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         function loginApp() {
             return {
@@ -420,7 +420,7 @@
                 // Reset password state
                 showResetModal: false,
                 resetStep: 1,
-                resetEmail: 'jeremiahmburu76@gmail.com', // Pre-filled with the specified email
+                resetEmail: '',
                 resetCode: '',
                 newPassword: '',
                 confirmPassword: '',
@@ -693,8 +693,7 @@
                     this.showResetModal = false;
                     setTimeout(() => {
                         this.resetStep = 1;
-                        // Reset to the specified email
-                        this.resetEmail = 'jeremiahmburu76@gmail.com';
+                        this.resetEmail = '';
                         this.resetCode = '';
                         this.newPassword = '';
                         this.confirmPassword = '';
@@ -726,6 +725,6 @@
             }
         }
     </script>
-    
+
 </body>
 </html>
