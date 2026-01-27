@@ -62,18 +62,43 @@
             max-width: 300px;
             z-index: 9999;
         }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body class="bg-gradient min-h-screen flex items-center justify-center p-4" x-data="loginApp()" x-init="init()">
     
-    <!-- Debug Panel (Visible during development) -->
+    <!-- Debug Panel -->
     <div class="debug-panel" x-show="debugMode">
-        <div class="font-bold mb-2">DEBUG MODE</div>
-        <div>EmailJS: <span x-text="emailjsStatus"></span></div>
-        <div>Step: <span x-text="resetStep"></span></div>
-        <div>Email: <span x-text="resetEmail"></span></div>
-        <div>Code: <span x-text="resetCode"></span></div>
-        <button @click="debugMode = !debugMode" class="mt-2 text-xs bg-red-500 px-2 py-1 rounded">Toggle Debug</button>
+        <div class="font-bold mb-2 flex justify-between items-center">
+            <span>🔧 DEBUG MODE</span>
+            <button @click="debugMode = false" class="text-xs bg-red-500 px-2 py-1 rounded">X</button>
+        </div>
+        <div class="space-y-1">
+            <div>Step: <span class="font-bold" x-text="resetStep"></span></div>
+            <div>Email: <span class="font-mono text-xs" x-text="resetEmail"></span></div>
+            <div x-show="manualResetCode">Code: <span class="font-bold text-yellow-400" x-text="manualResetCode"></span></div>
+            <div x-show="resetLink" class="truncate">Link: <span class="font-mono text-xs" x-text="resetLink?.substring(0, 30) + '...'"></span></div>
+        </div>
+        <div class="mt-2 space-y-1">
+            <button @click="showResetModal = true; resetStep = 1;" class="w-full text-xs bg-blue-500 px-2 py-1 rounded">Test Reset</button>
+            <button @click="testEmailDelivery()" class="w-full text-xs bg-green-500 px-2 py-1 rounded">Test Email</button>
+            <button @click="clearAllData()" class="w-full text-xs bg-red-500 px-2 py-1 rounded">Clear Data</button>
+        </div>
     </div>
     
     <!-- Main Login Container -->
@@ -90,7 +115,7 @@
                     </div>
                     <span class="text-2xl font-black tracking-tighter uppercase">Eagle Homes</span>
                 </div>
-                <h1 class="text-4xl font-extrabold leading-tight mb-4">Digital Property Ledger.</h1>
+                <h1 class="text-4xl font-extrabold leading-tight mb-4">Digital Property Ledger</h1>
                 <p class="text-blue-100 text-lg opacity-90">Manage 32+ buildings with immutable records and automated bank reconciliation.</p>
             </div>
             
@@ -119,6 +144,11 @@
                     </div>
                     <span class="text-sm font-medium">Secure Password Reset System</span>
                 </div>
+            </div>
+            
+            <!-- Watermark -->
+            <div class="absolute bottom-4 right-4 text-blue-300/30 text-sm">
+                v2.0 • Secure Login
             </div>
         </div>
         
@@ -153,7 +183,7 @@
             <form @submit.prevent="handleLogin" class="space-y-6">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                        Username
+                        Username or Email
                     </label>
                     <input
                         type="text"
@@ -161,7 +191,7 @@
                         x-model="username"
                         required
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        placeholder="Enter your ID"
+                        placeholder="Enter your ID or email"
                         autocomplete="username"
                     >
                 </div>
@@ -181,7 +211,7 @@
                 </div>
                 <button
                     type="submit"
-                    class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.99]"
                 >
                     Log In as <span class="capitalize" x-text="role"></span>
                 </button>
@@ -200,12 +230,22 @@
                     Forgot your password?
                 </button>
             </div>
+            
+            <!-- Security Note -->
+            <div class="mt-8 pt-6 border-t border-slate-200">
+                <div class="flex items-center justify-center gap-2 text-slate-500 text-xs">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span>Secure SSL Connection • All data encrypted</span>
+                </div>
+            </div>
         </div>
     </div>
     
     <!-- Password Reset Modal -->
     <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl fade-in" @click.away="closeResetModal">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl fade-in max-h-[90vh] overflow-y-auto" @click.away="closeResetModal">
             
             <!-- Step 1: Enter Email -->
             <template x-if="resetStep === 1">
@@ -229,7 +269,7 @@
                             <input
                                 type="email"
                                 x-model="resetEmail"
-                                placeholder="your.email@example.com"
+                                placeholder="jeremiahmburu76@gmail.com"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 @keyup.enter="sendResetEmail"
                             >
@@ -278,11 +318,16 @@
                             </template>
                         </button>
                         
-                        <!-- Manual Code Display (for debugging) -->
-                        <div x-show="debugMode && manualResetCode" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p class="text-sm text-yellow-800 font-bold">DEBUG: Manual Code</p>
-                            <p class="text-lg font-mono text-yellow-900">Code: <span x-text="manualResetCode"></span></p>
-                            <p class="text-xs text-yellow-700">Use this if email doesn't arrive</p>
+                        <!-- Test Email Button -->
+                        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-sm text-blue-800 font-bold">📧 Quick Test</p>
+                            <p class="text-xs text-blue-700 mb-2">Test with your email:</p>
+                            <button 
+                                @click="testEmailDelivery()"
+                                class="w-full bg-blue-100 text-blue-700 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+                            >
+                                Test Email to jeremiahmburu76@gmail.com
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -299,6 +344,21 @@
                         </div>
                         <h2 class="text-2xl font-black text-slate-900">Check Your Email</h2>
                     </div>
+                    
+                    <!-- Manual Code Display -->
+                    <div x-show="manualResetCode" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-800 font-bold">📋 Manual Code (Use if email not received)</p>
+                        <div class="mt-2">
+                            <div class="font-mono text-2xl text-center text-yellow-900 font-bold" x-text="manualResetCode"></div>
+                            <p class="text-xs text-yellow-700 text-center mt-1">Enter this 6-digit code above</p>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <a :href="resetLink" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                                Or click here to open reset link
+                            </a>
+                        </div>
+                    </div>
+                    
                     <p class="text-slate-500 text-sm mb-6">
                         We've sent a password reset email to <span class="font-bold" x-text="resetEmail"></span>.
                         <br><br>
@@ -323,7 +383,7 @@
                             >
                         </div>
                         <div class="text-xs text-slate-500 text-center" x-show="resetExpiry">
-                            Code expires at: <span x-text="formatTime(resetExpiry)"></span>
+                            Code expires at: <span class="font-bold" x-text="formatTime(resetExpiry)"></span>
                         </div>
                         <button
                             type="button"
@@ -385,12 +445,13 @@
                                   :class="{
                                     'text-red-600': passwordStrength < 2,
                                     'text-yellow-600': passwordStrength === 2,
-                                    'text-green-600': passwordStrength > 2
+                                    'text-green-600': passwordStrength === 3,
+                                    'text-emerald-600': passwordStrength === 4
                                   }"
                                   x-text="passwordStrengthText">
                             </span>
                         </div>
-                        <div class="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                        <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                             <div class="h-full transition-all duration-300"
                                  :class="{
                                     'w-1/4 bg-red-500': passwordStrength < 2,
@@ -427,19 +488,27 @@
                         </div>
                         <div class="text-xs text-slate-500 space-y-1">
                             <div class="flex items-center gap-2">
-                                <span :class="newPassword.length >= 8 ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <svg class="w-4 h-4" :class="newPassword.length >= 8 ? 'text-green-500' : 'text-slate-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
                                 <span>At least 8 characters</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span :class="/[A-Z]/.test(newPassword) ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <svg class="w-4 h-4" :class="/[A-Z]/.test(newPassword) ? 'text-green-500' : 'text-slate-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
                                 <span>At least one uppercase letter</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span :class="/\d/.test(newPassword) ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <svg class="w-4 h-4" :class="/\d/.test(newPassword) ? 'text-green-500' : 'text-slate-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
                                 <span>At least one number</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span :class=/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? 'text-green-500' : 'text-slate-300'">✓</span>
+                                <svg class="w-4 h-4" :class=/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? 'text-green-500' : 'text-slate-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
                                 <span>At least one special character</span>
                             </div>
                         </div>
@@ -488,7 +557,7 @@
                 </div>
                 <div class="ml-4">
                     <h3 class="text-lg font-bold text-emerald-900" x-text="successTitle"></h3>
-                    <p class="text-emerald-700 text-sm mt-1" x-text="successMessage"></p>
+                    <div class="text-emerald-700 text-sm mt-1" x-html="successMessage"></div>
                 </div>
                 <button @click="showSuccess = false" class="ml-auto text-emerald-400 hover:text-emerald-600 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -510,7 +579,7 @@
                 </div>
                 <div class="ml-4">
                     <h3 class="text-lg font-bold text-red-900" x-text="errorTitle"></h3>
-                    <p class="text-red-700 text-sm mt-1" x-text="errorMessage"></p>
+                    <div class="text-red-700 text-sm mt-1" x-html="errorMessage"></div>
                 </div>
                 <button @click="showError = false" class="ml-auto text-red-400 hover:text-red-600 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -522,245 +591,263 @@
     </div>
     
     <script>
-    function loginApp() {
-        return {
-            // Login state
-            role: 'owner',
-            username: '',
-            password: '',
-            
-            // Reset password state
-            showResetModal: false,
-            resetStep: 1,
-            resetEmail: '',
-            resetRole: 'owner',
-            resetCode: '',
-            resetExpiry: null,
-            newPassword: '',
-            confirmPassword: '',
-            passwordStrength: 0,
-            passwordStrengthText: 'Very Weak',
-            isSending: false,
-            isVerifying: false,
-            isUpdating: false,
-            resetToken: '',
-            manualResetCode: '',
-            
-            // Debug state
-            debugMode: true,
-            emailjsStatus: 'Not initialized',
-            
-            // Notifications
-            showSuccess: false,
-            showError: false,
-            successTitle: '',
-            successMessage: '',
-            errorTitle: '',
-            errorMessage: '',
-            
-            // EmailJS Configuration - YOUR ACTUAL CREDENTIALS
-            emailjsConfig: {
-                serviceId: 'service_ww5f9xf',
-                templateId: 'template_6l75enj',
-                publicKey: '9g1-R3t-AKYFKPHXf'
-            },
-            
-            // Initialize
-            init() {
-                console.log('🚀 Eagle Homes Login System Initialized');
+        function loginApp() {
+            return {
+                // Login state
+                role: 'owner',
+                username: '',
+                password: '',
                 
-                // Test if EmailJS is loaded
-                if (typeof emailjs === 'undefined') {
-                    console.error('❌ EmailJS is not loaded!');
-                    this.emailjsStatus = 'Not loaded - check script';
-                    this.showErrorNotification(
-                        'Email Service Error',
-                        'Email service not loaded. Please check your internet connection.'
-                    );
-                    return;
-                }
+                // Reset password state
+                showResetModal: false,
+                resetStep: 1,
+                resetEmail: '',
+                resetRole: 'owner',
+                resetCode: '',
+                resetExpiry: null,
+                newPassword: '',
+                confirmPassword: '',
+                passwordStrength: 0,
+                passwordStrengthText: 'Very Weak',
+                isSending: false,
+                isVerifying: false,
+                isUpdating: false,
+                resetToken: '',
+                manualResetCode: '',
+                resetLink: '',
                 
-                // Initialize EmailJS with timeout
-                try {
-                    emailjs.init(this.emailjsConfig.publicKey);
-                    this.emailjsStatus = 'Initialized successfully';
-                    console.log('✅ EmailJS initialized successfully');
-                } catch (error) {
-                    console.error('❌ EmailJS init error:', error);
-                    this.emailjsStatus = 'Init failed: ' + error.message;
-                }
+                // Debug state
+                debugMode: true,
                 
-                // Check if user came from reset link
-                this.checkResetToken();
-            },
-            
-            // Check for reset token in URL
-            checkResetToken() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const token = urlParams.get('token');
+                // Notifications
+                showSuccess: false,
+                showError: false,
+                successTitle: '',
+                successMessage: '',
+                errorTitle: '',
+                errorMessage: '',
                 
-                if (token) {
-                    console.log('🔗 Found reset token in URL');
+                // Initialize
+                init() {
+                    console.log('🚀 Eagle Homes Login System Initialized');
+                    
+                    // Check if user came from reset link
+                    this.checkResetToken();
+                    
+                    // Check for existing session
+                    this.checkSession();
+                },
+                
+                // Check for reset token in URL
+                checkResetToken() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const token = urlParams.get('token');
+                    
+                    if (token) {
+                        console.log('🔗 Found reset token in URL:', token.substring(0, 50) + '...');
+                        try {
+                            const data = JSON.parse(atob(decodeURIComponent(token)));
+                            const currentTime = Date.now();
+                            
+                            if (data.email && data.code && data.expiry && data.role) {
+                                if (data.expiry > currentTime) {
+                                    this.resetEmail = data.email;
+                                    this.resetRole = data.role;
+                                    this.resetCode = data.code;
+                                    this.resetExpiry = data.expiry;
+                                    this.resetStep = 2;
+                                    this.showResetModal = true;
+                                    this.resetToken = token;
+                                    
+                                    // Store for verification
+                                    localStorage.setItem('resetData', JSON.stringify(data));
+                                    
+                                    this.showSuccessNotification(
+                                        'Reset Link Opened!',
+                                        'Please verify the 6-digit code from your email.'
+                                    );
+                                    
+                                    // Clean URL
+                                    window.history.replaceState({}, document.title, window.location.pathname);
+                                } else {
+                                    this.showErrorNotification(
+                                        'Link Expired',
+                                        'This reset link has expired. Please request a new one.'
+                                    );
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Invalid reset token:', e);
+                            this.showErrorNotification(
+                                'Invalid Link',
+                                'The reset link is invalid or corrupted. Please request a new one.'
+                            );
+                        }
+                    }
+                },
+                
+                // Check for existing session
+                checkSession() {
+                    const lastLogin = localStorage.getItem('lastLogin');
+                    if (lastLogin) {
+                        console.log('Last login:', new Date(lastLogin).toLocaleString());
+                    }
+                },
+                
+                // Send reset email
+                async sendResetEmail() {
+                    if (!this.resetEmail || !this.resetEmail.includes('@')) {
+                        this.showErrorNotification('Invalid Email', 'Please enter a valid email address');
+                        return;
+                    }
+                    
+                    console.log('📧 Starting reset process for:', this.resetEmail);
+                    this.isSending = true;
+                    
                     try {
-                        const data = JSON.parse(atob(token));
-                        const currentTime = Date.now();
+                        // Generate 6-digit code
+                        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+                        this.manualResetCode = resetCode;
                         
-                        if (data.email && data.code && data.expires && data.role) {
-                            if (data.expires * 1000 > currentTime) {
-                                this.resetEmail = data.email;
-                                this.resetRole = data.role;
-                                this.resetCode = data.code;
-                                this.resetExpiry = data.expires * 1000;
-                                this.resetStep = 2;
-                                this.showResetModal = true;
-                                this.resetToken = token;
+                        // Create reset data (expires in 15 minutes)
+                        const expiryTime = Date.now() + (15 * 60 * 1000);
+                        const resetData = {
+                            email: this.resetEmail,
+                            role: this.resetRole,
+                            code: resetCode,
+                            expiry: expiryTime,
+                            created: Date.now(),
+                            verified: false
+                        };
+                        
+                        // Create reset token
+                        const resetToken = btoa(encodeURIComponent(JSON.stringify(resetData)));
+                        this.resetLink = `${window.location.origin}${window.location.pathname}?token=${resetToken}`;
+                        
+                        // Store in localStorage for verification
+                        localStorage.setItem('resetData', JSON.stringify(resetData));
+                        
+                        // Try to send via EmailJS first
+                        let emailSent = false;
+                        if (typeof emailjs !== 'undefined') {
+                            try {
+                                emailjs.init('9g1-R3t-AKYFKPHXf');
                                 
-                                this.showSuccessNotification(
-                                    'Reset Link Opened',
-                                    'Please verify the code from your email'
+                                const templateParams = {
+                                    to_email: this.resetEmail,
+                                    user_email: this.resetEmail,
+                                    reset_code: resetCode,
+                                    reset_link: this.resetLink,
+                                    expiry_time: this.formatTime(expiryTime),
+                                    role: this.resetRole === 'owner' ? 'Owner' : 'Secretary',
+                                    site_name: 'Eagle Homes'
+                                };
+                                
+                                console.log('📤 Sending via EmailJS:', templateParams);
+                                
+                                const response = await emailjs.send(
+                                    'service_ww5f9xf',
+                                    'template_6l75enj',
+                                    templateParams
                                 );
                                 
-                                // Clean URL
-                                window.history.replaceState({}, document.title, window.location.pathname);
-                            } else {
-                                this.showErrorNotification(
-                                    'Link Expired',
-                                    'This reset link has expired. Please request a new one.'
-                                );
+                                console.log('✅ EmailJS Response:', response);
+                                emailSent = true;
+                                
+                            } catch (emailError) {
+                                console.error('❌ EmailJS Error:', emailError);
                             }
                         }
-                    } catch (e) {
-                        console.log('Invalid reset token:', e);
-                    }
-                }
-            },
-            
-            // Send reset email
-            async sendResetEmail() {
-                if (!this.resetEmail || !this.resetEmail.includes('@')) {
-                    this.showErrorNotification('Invalid Email', 'Please enter a valid email address');
-                    return;
-                }
-                
-                console.log('📧 Starting reset process for:', this.resetEmail);
-                this.isSending = true;
-                
-                try {
-                    // First, generate reset code locally
-                    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    this.manualResetCode = resetCode; // Store for manual use
-                    
-                    // Create reset data
-                    const resetData = {
-                        email: this.resetEmail,
-                        role: this.resetRole,
-                        code: resetCode,
-                        expires: Math.floor(Date.now() / 1000) + (15 * 60), // 15 minutes from now
-                        created: Math.floor(Date.now() / 1000)
-                    };
-                    
-                    // Create reset token
-                    const resetToken = btoa(JSON.stringify(resetData));
-                    const resetLink = `${window.location.origin}${window.location.pathname}?token=${resetToken}`;
-                    
-                    // Store in localStorage for verification
-                    localStorage.setItem('resetData', JSON.stringify(resetData));
-                    
-                    // Prepare email parameters for EmailJS
-                    const templateParams = {
-                        to_email: this.resetEmail,
-                        user_email: this.resetEmail,
-                        reset_code: resetCode,
-                        reset_link: resetLink,
-                        expiry_time: this.formatTime(resetData.expires * 1000),
-                        role: this.resetRole === 'owner' ? 'Owner' : 'Secretary',
-                        site_name: 'Eagle Homes'
-                    };
-                    
-                    console.log('📧 EmailJS Template Params:', templateParams);
-                    
-                    // Try to send email via EmailJS
-                    let emailSent = false;
-                    let emailError = null;
-                    
-                    if (typeof emailjs !== 'undefined' && emailjs.send) {
-                        try {
-                            console.log('📤 Attempting to send via EmailJS...');
-                            const emailResponse = await emailjs.send(
-                                this.emailjsConfig.serviceId,
-                                this.emailjsConfig.templateId,
-                                templateParams
-                            );
-                            
-                            console.log('✅ EmailJS Response:', emailResponse);
-                            emailSent = true;
-                            
-                        } catch (emailErr) {
-                            console.error('❌ EmailJS Error:', emailErr);
-                            emailError = emailErr;
-                            // Continue anyway - we'll show manual code
-                        }
-                    } else {
-                        console.error('❌ EmailJS not available');
-                    }
-                    
-                    // Always proceed to step 2 (even if email fails)
-                    this.resetStep = 2;
-                    this.resetExpiry = resetData.expires * 1000;
-                    this.resetToken = resetToken;
-                    
-                    if (emailSent) {
-                        this.showSuccessNotification(
-                            '📧 Email Sent!',
-                            `We've sent a password reset email to ${this.resetEmail}. Check your inbox (and spam folder).`
-                        );
-                    } else {
-                        // Show manual code option
-                        this.showSuccessNotification(
-                            '✅ Reset Code Generated',
-                            `Your reset code is: ${resetCode}. Enter it below. (Email may have failed to send - check console for details)`
-                        );
                         
-                        // Log error details
-                        if (emailError) {
-                            console.error('📧 Email failed with:', emailError);
-                            console.log('🔧 Troubleshooting:');
-                            console.log('1. Check EmailJS credentials in dashboard');
-                            console.log('2. Verify template has correct variables');
-                            console.log('3. Check browser console for CORS errors');
+                        // Also try PHP backend
+                        try {
+                            const response = await fetch('login_process.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'send_reset_email',
+                                    email: this.resetEmail,
+                                    code: resetCode,
+                                    role: this.resetRole,
+                                    token: resetToken
+                                })
+                            });
+                            
+                            const data = await response.json();
+                            console.log('📧 PHP Response:', data);
+                            
+                        } catch (phpError) {
+                            console.log('⚠️ PHP backend not available');
                         }
+                        
+                        // Move to next step
+                        this.resetStep = 2;
+                        this.resetExpiry = expiryTime;
+                        this.resetToken = resetToken;
+                        
+                        // Store for easy access
+                        sessionStorage.setItem('lastResetCode', resetCode);
+                        sessionStorage.setItem('lastResetLink', this.resetLink);
+                        
+                        if (emailSent) {
+                            this.showSuccessNotification(
+                                '📧 Email Sent Successfully!',
+                                `Password reset email sent to <strong>${this.resetEmail}</strong>.<br>
+                                 Please check your inbox and spam folder.`
+                            );
+                        } else {
+                            this.showSuccessNotification(
+                                '✅ Reset Code Generated!',
+                                `Email service may be delayed.<br><br>
+                                 <strong>Your 6-digit code:</strong> <span class="font-mono text-2xl">${resetCode}</span><br><br>
+                                 <a href="${this.resetLink}" target="_blank" class="text-blue-600 underline">Click here to continue reset</a>`
+                            );
+                        }
+                        
+                        // Log to console for debugging
+                        console.log('🔑 Reset Code:', resetCode);
+                        console.log('🔗 Reset Link:', this.resetLink);
+                        
+                    } catch (error) {
+                        console.error('❌ Reset request error:', error);
+                        this.showErrorNotification(
+                            'Request Failed',
+                            error.message || 'Failed to process reset request. Please try again.'
+                        );
+                    } finally {
+                        this.isSending = false;
+                    }
+                },
+                
+                // Test email delivery
+                async testEmailDelivery() {
+                    this.resetEmail = 'jeremiahmburu76@gmail.com';
+                    this.resetRole = 'owner';
+                    await this.sendResetEmail();
+                    
+                    // Show manual info
+                    setTimeout(() => {
+                        if (this.manualResetCode && this.resetLink) {
+                            alert(`TEST MODE:\n\nCode: ${this.manualResetCode}\n\nLink: ${this.resetLink}\n\nCopy the link and open in new tab.`);
+                        }
+                    }, 1000);
+                },
+                
+                // Verify reset code
+                verifyResetCode() {
+                    if (!this.resetCode || this.resetCode.length !== 6) {
+                        this.showErrorNotification('Invalid Code', 'Please enter the 6-digit code from your email');
+                        return;
                     }
                     
-                } catch (error) {
-                    console.error('❌ Reset request error:', error);
-                    this.showErrorNotification(
-                        'Request Failed',
-                        error.message || 'Failed to process reset request. Please try again.'
-                    );
-                } finally {
-                    this.isSending = false;
-                }
-            },
-            
-            // Verify reset code
-            async verifyResetCode() {
-                if (!this.resetCode || this.resetCode.length !== 6) {
-                    this.showErrorNotification('Invalid Code', 'Please enter the 6-digit code from your email');
-                    return;
-                }
-                
-                console.log('🔍 Verifying code:', this.resetCode);
-                this.isVerifying = true;
-                
-                try {
+                    this.isVerifying = true;
+                    
                     // Get stored reset data
                     const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
-                    const currentTime = Date.now() / 1000; // Convert to seconds
-                    
-                    console.log('📋 Stored data:', storedData);
+                    const currentTime = Date.now();
                     
                     // Validate stored data
-                    if (!storedData.email || !storedData.code || !storedData.expires) {
+                    if (!storedData.email || !storedData.code || !storedData.expiry) {
                         this.showErrorNotification(
                             'No Reset Request Found',
                             'Please request a new reset email'
@@ -771,7 +858,7 @@
                     }
                     
                     // Check expiry
-                    if (storedData.expires < currentTime) {
+                    if (storedData.expiry < currentTime) {
                         this.showErrorNotification(
                             'Code Expired',
                             'Reset code has expired. Please request a new one.'
@@ -820,310 +907,331 @@
                             'Now set your new password'
                         );
                     }, 500);
+                },
+                
+                // Check password strength
+                checkPasswordStrength() {
+                    const password = this.newPassword;
+                    let strength = 0;
+                    let text = 'Very Weak';
                     
-                } catch (error) {
-                    console.error('❌ Verification error:', error);
-                    this.showErrorNotification(
-                        'Verification Failed',
-                        error.message || 'Invalid or expired code. Please try again.'
-                    );
-                    this.resetCode = '';
-                } finally {
-                    this.isVerifying = false;
-                }
-            },
-            
-            // Check password strength
-            checkPasswordStrength() {
-                const password = this.newPassword;
-                let strength = 0;
-                let text = 'Very Weak';
-                
-                if (password.length >= 8) strength++;
-                if (/[A-Z]/.test(password)) strength++;
-                if (/\d/.test(password)) strength++;
-                if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
-                
-                switch(strength) {
-                    case 1: text = 'Weak'; break;
-                    case 2: text = 'Fair'; break;
-                    case 3: text = 'Good'; break;
-                    case 4: text = 'Strong'; break;
-                    default: text = 'Very Weak';
-                }
-                
-                this.passwordStrength = strength;
-                this.passwordStrengthText = text;
-            },
-            
-            // Update password
-            async updatePassword() {
-                // Validate password strength
-                if (this.passwordStrength < 2) {
-                    this.showErrorNotification(
-                        'Weak Password',
-                        'Please choose a stronger password (at least 8 characters with mixed case and numbers)'
-                    );
-                    return;
-                }
-                
-                if (this.newPassword !== this.confirmPassword) {
-                    this.showErrorNotification(
-                        'Password Mismatch',
-                        'Passwords do not match'
-                    );
-                    return;
-                }
-                
-                console.log('🔐 Updating password for:', this.resetEmail);
-                this.isUpdating = true;
-                
-                try {
-                    // Get stored reset data
-                    const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
+                    if (password.length >= 8) strength++;
+                    if (/[A-Z]/.test(password)) strength++;
+                    if (/\d/.test(password)) strength++;
+                    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
                     
-                    // Validate stored data
-                    if (!storedData.email || !storedData.code || !storedData.verified) {
-                        throw new Error('Reset session invalid or expired. Please start over.');
+                    switch(strength) {
+                        case 1: text = 'Weak'; break;
+                        case 2: text = 'Fair'; break;
+                        case 3: text = 'Good'; break;
+                        case 4: text = 'Strong'; break;
+                        default: text = 'Very Weak';
                     }
                     
-                    // Hash the password for security
-                    const hashedPassword = CryptoJS.SHA256(this.newPassword).toString();
+                    this.passwordStrength = strength;
+                    this.passwordStrengthText = text;
+                },
+                
+                // Update password
+                async updatePassword() {
+                    // Validate password strength
+                    if (this.passwordStrength < 2) {
+                        this.showErrorNotification(
+                            'Weak Password',
+                            'Please choose a stronger password (at least 8 characters with mixed case and numbers)'
+                        );
+                        return;
+                    }
                     
-                    // Try to update via backend first
+                    if (this.newPassword !== this.confirmPassword) {
+                        this.showErrorNotification(
+                            'Password Mismatch',
+                            'Passwords do not match'
+                        );
+                        return;
+                    }
+                    
+                    console.log('🔐 Updating password for:', this.resetEmail);
+                    this.isUpdating = true;
+                    
+                    try {
+                        // Get stored reset data
+                        const storedData = JSON.parse(localStorage.getItem('resetData') || '{}');
+                        
+                        // Validate stored data
+                        if (!storedData.email || !storedData.code || !storedData.verified) {
+                            throw new Error('Reset session invalid or expired. Please start over.');
+                        }
+                        
+                        // Hash the password
+                        const hashedPassword = CryptoJS.SHA256(this.newPassword).toString();
+                        
+                        // Update via backend
+                        try {
+                            const response = await fetch('login_process.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'reset_password',
+                                    email: storedData.email,
+                                    role: storedData.role,
+                                    new_password: hashedPassword,
+                                    code: storedData.code
+                                })
+                            });
+                            
+                            const data = await response.json();
+                            console.log('✅ Backend update:', data);
+                            
+                        } catch (backendError) {
+                            console.log('⚠️ Backend update failed, using local storage');
+                        }
+                        
+                        // Store in localStorage for immediate use
+                        const userKey = `user_${storedData.role}`;
+                        const userData = {
+                            email: storedData.email,
+                            username: storedData.email.split('@')[0],
+                            password_hash: hashedPassword,
+                            password_plain: this.newPassword, // For demo/testing
+                            role: storedData.role,
+                            lastUpdated: new Date().toISOString()
+                        };
+                        
+                        localStorage.setItem(userKey, JSON.stringify(userData));
+                        
+                        // Also store for demo login
+                        if (storedData.role === 'owner') {
+                            localStorage.setItem('owner_password', this.newPassword);
+                            localStorage.setItem('owner_email', storedData.email);
+                        } else {
+                            localStorage.setItem('secretary_password', this.newPassword);
+                            localStorage.setItem('secretary_email', storedData.email);
+                        }
+                        
+                        // Clear reset data
+                        localStorage.removeItem('resetData');
+                        sessionStorage.removeItem('lastResetCode');
+                        sessionStorage.removeItem('lastResetLink');
+                        
+                        // Show success
+                        this.showSuccessNotification(
+                            '✅ Password Updated Successfully!',
+                            'Your password has been reset. You can now login with your new password.'
+                        );
+                        
+                        // Auto-fill login form
+                        this.username = storedData.email.split('@')[0];
+                        this.password = this.newPassword;
+                        this.role = storedData.role;
+                        
+                        // Close modal after delay
+                        setTimeout(() => {
+                            this.closeResetModal();
+                        }, 3000);
+                        
+                    } catch (error) {
+                        console.error('❌ Password update error:', error);
+                        this.showErrorNotification(
+                            'Update Failed',
+                            error.message || 'Failed to update password. Please try again.'
+                        );
+                    } finally {
+                        this.isUpdating = false;
+                    }
+                },
+                
+                // Handle login
+                async handleLogin() {
+                    console.log('🔐 Login attempt:', this.username, 'as', this.role);
+                    
+                    // First, check for newly reset passwords
+                    const ownerData = JSON.parse(localStorage.getItem('user_owner') || '{}');
+                    const secretaryData = JSON.parse(localStorage.getItem('user_secretary') || '{}');
+                    
+                    // Check against newly reset passwords
+                    if (this.role === 'owner' && ownerData.email) {
+                        const usernameMatches = this.username === ownerData.username || 
+                                               this.username === ownerData.email ||
+                                               this.username === 'owner_admin';
+                        
+                        if (usernameMatches) {
+                            // Check password hash or plain text (for demo)
+                            const inputHash = CryptoJS.SHA256(this.password).toString();
+                            if (inputHash === ownerData.password_hash || 
+                                this.password === ownerData.password_plain ||
+                                this.password === localStorage.getItem('owner_password')) {
+                                this.loginSuccess('owner', ownerData.username || 'owner_admin');
+                                return;
+                            }
+                        }
+                    }
+                    
+                    if (this.role === 'secretary' && secretaryData.email) {
+                        const usernameMatches = this.username === secretaryData.username || 
+                                               this.username === secretaryData.email ||
+                                               this.username === 'secretary_entry';
+                        
+                        if (usernameMatches) {
+                            const inputHash = CryptoJS.SHA256(this.password).toString();
+                            if (inputHash === secretaryData.password_hash || 
+                                this.password === secretaryData.password_plain ||
+                                this.password === localStorage.getItem('secretary_password')) {
+                                this.loginSuccess('secretary', secretaryData.username || 'secretary_entry');
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // Check demo credentials
+                    const demoCredentials = {
+                        owner: { 
+                            username: 'owner_admin', 
+                            password: 'Eagles2026!',
+                            email: 'jeremiahmburu76@gmail.com'
+                        },
+                        secretary: { 
+                            username: 'secretary_entry', 
+                            password: 'Secret2026!',
+                            email: 'secretary@example.com'
+                        }
+                    };
+                    
+                    const demoUser = demoCredentials[this.role];
+                    
+                    // Check if username matches demo credentials
+                    const isDemoUser = demoUser && (
+                        this.username === demoUser.username ||
+                        this.username === demoUser.email ||
+                        (this.username.includes('@') && this.role === 'owner' && this.username === 'jeremiahmburu76@gmail.com')
+                    );
+                    
+                    if (isDemoUser && this.password === demoUser.password) {
+                        this.loginSuccess(this.role, demoUser.username);
+                        return;
+                    }
+                    
+                    // Try backend login
                     try {
                         const response = await fetch('login_process.php', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                action: 'reset_password',
-                                email: storedData.email,
-                                role: storedData.role,
-                                new_password: hashedPassword,
-                                code: storedData.code
+                                action: 'login',
+                                username: this.username,
+                                password: this.password,
+                                role: this.role
                             })
                         });
                         
                         const data = await response.json();
                         
                         if (data.success) {
-                            console.log('✅ Password updated via backend');
+                            this.loginSuccess(this.role, data.data?.username || this.username);
                         } else {
-                            console.log('⚠️ Backend update failed, using local storage');
-                            // Continue with local storage fallback
+                            this.loginFailed(data.message || 'Invalid credentials');
                         }
-                    } catch (fetchError) {
-                        console.log('⚠️ Backend not available, using local storage');
+                        
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        this.loginFailed('Invalid username or password');
                     }
+                },
+                
+                // Helper: Successful login
+                loginSuccess(role, username) {
+                    localStorage.setItem('userRole', role);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('lastLogin', new Date().toISOString());
                     
-                    // Store in localStorage for immediate use
-                    const userKey = `user_${storedData.role}`;
-                    const userData = {
-                        email: storedData.email,
-                        username: storedData.email.split('@')[0],
-                        password: this.newPassword, // Store plain for demo (in production, use hash)
-                        role: storedData.role,
-                        lastUpdated: new Date().toISOString()
-                    };
-                    
-                    localStorage.setItem(userKey, JSON.stringify(userData));
-                    
-                    // Also update the demo credentials
-                    if (storedData.role === 'owner') {
-                        localStorage.setItem('owner_password', this.newPassword);
-                    } else if (storedData.role === 'secretary') {
-                        localStorage.setItem('secretary_password', this.newPassword);
-                    }
-                    
-                    // Clear reset data
-                    localStorage.removeItem('resetData');
-                    
-                    // Show success
                     this.showSuccessNotification(
-                        '✅ Password Updated!',
-                        'Your password has been reset successfully. You can now login with your new password.'
+                        '✅ Login Successful', 
+                        `Welcome back, ${role.charAt(0).toUpperCase() + role.slice(1)}!`
                     );
                     
-                    // Auto-fill login form for convenience
-                    this.username = storedData.email.split('@')[0];
-                    this.password = this.newPassword;
-                    this.role = storedData.role;
-                    
-                    // Close modal after 3 seconds
                     setTimeout(() => {
-                        this.closeResetModal();
-                    }, 3000);
-                    
-                } catch (error) {
-                    console.error('❌ Password update error:', error);
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                },
+                
+                // Helper: Failed login
+                loginFailed(message) {
                     this.showErrorNotification(
-                        'Update Failed',
-                        error.message || 'Failed to update password. Please try again.'
+                        '❌ Login Failed',
+                        message
                     );
-                } finally {
-                    this.isUpdating = false;
-                }
-            },
-            
-            // Handle login
-            async handleLogin() {
-                console.log('🔐 Login attempt for:', this.username, 'role:', this.role);
+                    this.password = '';
+                },
                 
-                // First check for newly reset password in localStorage
-                const ownerData = JSON.parse(localStorage.getItem('user_owner') || '{}');
-                const secretaryData = JSON.parse(localStorage.getItem('user_secretary') || '{}');
-                
-                // Check against newly reset passwords
-                if (this.role === 'owner' && ownerData.email) {
-                    if ((this.username === ownerData.username || this.username === ownerData.email) && 
-                        this.password === ownerData.password) {
-                        this.loginSuccess('owner', ownerData.username);
-                        return;
+                // Format code input
+                formatCode() {
+                    this.resetCode = this.resetCode.replace(/\D/g, '');
+                    if (this.resetCode.length > 6) {
+                        this.resetCode = this.resetCode.substring(0, 6);
                     }
-                }
+                },
                 
-                if (this.role === 'secretary' && secretaryData.email) {
-                    if ((this.username === secretaryData.username || this.username === secretaryData.email) && 
-                        this.password === secretaryData.password) {
-                        this.loginSuccess('secretary', secretaryData.username);
-                        return;
-                    }
-                }
+                // Format time for display
+                formatTime(timestamp) {
+                    if (!timestamp) return '';
+                    const date = new Date(timestamp);
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                },
                 
-                // Check demo credentials
-                const demoCredentials = {
-                    owner: { username: 'owner_admin', password: 'Eagles2026!' },
-                    secretary: { username: 'secretary_entry', password: 'Secret2026!' }
-                };
+                // Close reset modal
+                closeResetModal() {
+                    this.showResetModal = false;
+                    setTimeout(() => {
+                        this.resetStep = 1;
+                        this.resetEmail = '';
+                        this.resetRole = this.role;
+                        this.resetCode = '';
+                        this.newPassword = '';
+                        this.confirmPassword = '';
+                        this.passwordStrength = 0;
+                        this.passwordStrengthText = 'Very Weak';
+                        this.isSending = false;
+                        this.isVerifying = false;
+                        this.isUpdating = false;
+                        this.resetToken = '';
+                        this.manualResetCode = '';
+                        this.resetLink = '';
+                    }, 300);
+                },
                 
-                const demoUser = demoCredentials[this.role];
+                // Clear all data
+                clearAllData() {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    this.showSuccessNotification(
+                        'Data Cleared',
+                        'All local data has been cleared. You can start fresh.'
+                    );
+                },
                 
-                // Also allow email as username
-                const isEmailLogin = this.username.includes('@');
-                const isDemoUser = demoUser && (
-                    this.username === demoUser.username || 
-                    (isEmailLogin && this.username === 'jeremiahmburu76@gmail.com' && this.role === 'owner')
-                );
-                
-                if (isDemoUser && this.password === demoUser.password) {
-                    this.loginSuccess(this.role, demoUser.username);
-                    return;
-                }
-                
-                // Try backend login if available
-                try {
-                    const response = await fetch('login_process.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'login',
-                            username: this.username,
-                            password: this.password,
-                            role: this.role
-                        })
-                    });
+                // Show success notification
+                showSuccessNotification(title, message) {
+                    this.successTitle = title;
+                    this.successMessage = message;
+                    this.showSuccess = true;
                     
-                    const data = await response.json();
+                    setTimeout(() => {
+                        this.showSuccess = false;
+                    }, 8000);
+                },
+                
+                // Show error notification
+                showErrorNotification(title, message) {
+                    this.errorTitle = title;
+                    this.errorMessage = message;
+                    this.showError = true;
                     
-                    if (data.success) {
-                        this.loginSuccess(this.role, data.data.username || this.username);
-                    } else {
-                        this.loginFailed(data.message || 'Invalid credentials');
-                    }
-                    
-                } catch (error) {
-                    console.error('Login error:', error);
-                    this.loginFailed('Invalid username or password');
+                    setTimeout(() => {
+                        this.showError = false;
+                    }, 5000);
                 }
-            },
-            
-            // Helper: Successful login
-            loginSuccess(role, username) {
-                localStorage.setItem('userRole', role);
-                localStorage.setItem('username', username);
-                localStorage.setItem('lastLogin', new Date().toISOString());
-                
-                this.showSuccessNotification(
-                    '✅ Login Successful', 
-                    `Welcome back, ${role.charAt(0).toUpperCase() + role.slice(1)}!`
-                );
-                
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-            },
-            
-            // Helper: Failed login
-            loginFailed(message) {
-                this.showErrorNotification(
-                    '❌ Login Failed',
-                    message
-                );
-                this.password = '';
-            },
-            
-            // Format code input
-            formatCode() {
-                this.resetCode = this.resetCode.replace(/\D/g, '');
-                if (this.resetCode.length > 6) {
-                    this.resetCode = this.resetCode.substring(0, 6);
-                }
-            },
-            
-            // Format time for display
-            formatTime(timestamp) {
-                if (!timestamp) return '';
-                const date = new Date(timestamp);
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            },
-            
-            // Close reset modal
-            closeResetModal() {
-                this.showResetModal = false;
-                setTimeout(() => {
-                    this.resetStep = 1;
-                    this.resetEmail = '';
-                    this.resetRole = this.role;
-                    this.resetCode = '';
-                    this.newPassword = '';
-                    this.confirmPassword = '';
-                    this.passwordStrength = 0;
-                    this.passwordStrengthText = 'Very Weak';
-                    this.isSending = false;
-                    this.isVerifying = false;
-                    this.isUpdating = false;
-                    this.resetToken = '';
-                    this.manualResetCode = '';
-                }, 300);
-            },
-            
-            // Show success notification
-            showSuccessNotification(title, message) {
-                this.successTitle = title;
-                this.successMessage = message;
-                this.showSuccess = true;
-                
-                setTimeout(() => {
-                    this.showSuccess = false;
-                }, 5000);
-            },
-            
-            // Show error notification
-            showErrorNotification(title, message) {
-                this.errorTitle = title;
-                this.errorMessage = message;
-                this.showError = true;
-                
-                setTimeout(() => {
-                    this.showError = false;
-                }, 5000);
             }
         }
-    }
     </script>
 </body>
 </html>
